@@ -1,0 +1,98 @@
+project_root: ~/Workspace/InstruktAI/erpnext-ops
+snippets_root: ~/Workspace/InstruktAI/erpnext-ops/docs/project
+snippets:
+- id: project/spec/feature/erp-operations/activity-trail
+  description: Capture, recall, and follow-up over business activity and evidence,
+    mapped to native Frappe and ERPNext records.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/activity-trail.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/bulk-import
+  description: Batch import of external business data with preview batches and explicit,
+    drift-safe apply.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/bulk-import.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/document-lifecycle
+  description: "ERPNext document lifecycle operations \u2014 submit, cancel, amend,\
+    \ and workflow methods honoring docstatus semantics."
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/document-lifecycle.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/document-operations
+  description: Metadata-validated ERPNext document operations with preview-by-default
+    mutation and explicit apply.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/document-operations.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/operating-context
+  description: "Company and privilege context selection for the erpnext CLI \u2014\
+    \ explicit identity, fail-closed credentials, secret-safe display."
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/operating-context.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/reference-resolution
+  description: Deterministic resolution of parties, items, and documents from loose
+    business queries, with ambiguity as a structured blocker.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/reference-resolution.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/reporting
+  description: Running native ERPNext reports with filters and machine-readable results.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/reporting.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/tenancy-diagnostics
+  description: Operational diagnosis of site identity, privilege mode, and company
+    isolation, including negative cross-company evidence.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/tenancy-diagnostics.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
