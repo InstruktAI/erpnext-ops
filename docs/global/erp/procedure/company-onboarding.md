@@ -15,9 +15,9 @@ routine work.
 
 - The `itsup` CLI is installed and on PATH.
 - The company slug, site FQDN, and required company details are known.
-- The TeleClaude company registry has (or will get) the company's scaffold — the company
-  credential home. Neither this repository nor the procedure holds any state; deployment
-  state lives in itsUP, operating credentials live in the TeleClaude company registry.
+- The TeleClaude company registry contains the company's scaffold — the company credential
+  home. Neither this repository nor the procedure holds any state; deployment state lives in
+  itsUP, operating credentials live in the TeleClaude company registry.
 
 ## Steps
 
