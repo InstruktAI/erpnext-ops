@@ -1,0 +1,151 @@
+project_root: ~/.teleclaude
+snippets_root: ~/.teleclaude/docs
+snippets:
+- id: erp/concept/business-activity-trail
+  description: The ERP activity trail is the queryable memory layer over communications,
+    comments, tasks, events, notes, and linked business documents.
+  type: concept
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/concept/business-activity-trail.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/concept/composable-business-procedures
+  description: ERP procedures are composable business safeguards, not replacements
+    for agent intelligence or CLI metadata.
+  type: concept
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/concept/composable-business-procedures.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/concept/multi-tenancy
+  description: "Site-per-tenant ERPNext hosting \u2014 Frappe sites as the isolation\
+    \ boundary, companies as accounting scopes inside a site."
+  type: concept
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/concept/multi-tenancy.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/concept/operation-model
+  description: How agents operate per-tenant ERPNext sites through the erpnext CLI,
+    runtime metadata, and site-scoped identities.
+  type: concept
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/concept/operation-model.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/policy/operating-disciplines
+  description: Disciplines for agents acting on ERPNext site data through the erpnext
+    CLI.
+  type: policy
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/policy/operating-disciplines.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/principle/business-input-traceability
+  description: Meaningful human business input that affects or may later justify ERP
+    state leaves a traceable activity record.
+  type: principle
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/principle/business-input-traceability.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/principle/determinate-autonomy
+  description: ERP agents act autonomously whenever the correct business action is
+    determined; they surface only missing human decision input.
+  type: principle
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/principle/determinate-autonomy.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/company-onboarding
+  description: "Onboard a company onto its own ERPNext site \u2014 mutate itsUP desired\
+    \ state to create the site, then establish the company and its operator identity."
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a business, legal company, or operating entity must
+    become an operable tenant with its own ERPNext site.
+  path: docs/erp/procedure/company-onboarding.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/custom-order-to-fulfillment
+  description: Playbook for custom product businesses moving from configured customer
+    order to production batch, delivery, invoice, and follow-up.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a business sells custom or batch-produced goods that
+    must be tracked from order intake through production, delivery, invoice, and customer
+    follow-up.
+  path: docs/erp/procedure/custom-order-to-fulfillment.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/offer-to-installation
+  description: Playbook for a business moving from lead and proposal to procurement,
+    installation, invoice, payment, and follow-up.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a business needs to turn a lead, site discussion, or
+    accepted proposal into tracked ERP work through installation and payment.
+  path: docs/erp/procedure/offer-to-installation.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/person-onboarding
+  description: Onboard a person onto a company's ERPNext site with permission-scoped
+    access.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a human user needs ERPNext login access, roles, and
+    permissions on a company's site.
+  path: docs/erp/procedure/person-onboarding.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/project-work-to-invoice
+  description: Playbook for service or project businesses moving from proposal and
+    tasks to completed work, invoice, payment, and unresolved follow-up.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a service, production, tour, or custom project business
+    needs to track work, obligations, billing, and payment without stock-centric assumptions.
+  path: docs/erp/procedure/project-work-to-invoice.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/spec/cli-surface
+  description: Agent-facing erpnext CLI command surface for operating per-tenant ERPNext
+    sites.
+  type: spec
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/spec/cli-surface.md
+  visibility: internal
+  delivered_by:
+  - erpnext-cli-initial
+  source_project: erpnext-ops
+- id: erp/spec/company-layout
+  description: Site and company identity and credential layout for operating per-tenant
+    ERPNext sites.
+  type: spec
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/spec/company-layout.md
+  visibility: internal
+  source_project: erpnext-ops
