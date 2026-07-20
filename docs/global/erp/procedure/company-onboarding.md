@@ -15,8 +15,8 @@ routine work.
 
 - The company slug, site FQDN, and required company details are known.
 - The TeleClaude company registry contains the company's scaffold — the company credential
-  home. Neither this repository nor the procedure holds any state; deployment state lives in
-  itsUP, operating credentials live in the TeleClaude company registry.
+  home. Deployment state lives in itsUP; operating credentials live in the TeleClaude
+  company registry.
 
 ## Steps
 
@@ -77,9 +77,8 @@ authority.
 
 This procedure crosses the strongest privilege boundary in ERP operations. Administrator
 authority exists only to bootstrap the site and create the scoped operator; it is not the
-operating identity for business work. State lives where it belongs: site deployment with
-the fleet, operating credentials in the TeleClaude company registry, nothing in this
-repository. Verify
+operating identity for business work. State lives where it belongs: site deployment in
+itsUP, operating credentials in the TeleClaude company registry. Verify
 the operator identity before declaring the company operable. Never echo secrets into chat,
 logs, or shell history.
 
