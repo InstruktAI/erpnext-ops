@@ -72,8 +72,8 @@ snippets:
   visibility: internal
   source_project: erpnext-ops
 - id: erp/procedure/company-onboarding
-  description: "Onboard a company onto its own ERPNext site \u2014 mutate itsUP desired\
-    \ state to create the site, then establish the company and its operator identity."
+  description: "Onboard a company onto its own ERPNext site \u2014 ensure the site\
+    \ exists, then establish the company and its operator identity."
   type: procedure
   scope: global
   domain: erp
