@@ -57,7 +57,7 @@ authority.
 
 ## Outputs
 
-- The site exists in itsUP desired state and answers at its FQDN.
+- The company's site exists and answers at its FQDN.
 - ERPNext `Company` record inside the site.
 - Site operator user with API credentials stored in the company credential home.
 - Verified operator identity.
@@ -69,15 +69,17 @@ authority.
   the operator credential as wrong.
 - If verification shows administrator authority on the operator, revoke the operator
   credentials and repair roles before continuing.
-- If reconciliation does not surface the site, follow the itsUP GitOps workflow's recovery
-  guidance rather than mutating the host directly.
+- If the site does not answer at its FQDN, route back through the apps-domain entry point
+  (`apps/procedure/operate-a-deployed-app`) — site availability is app infrastructure, not
+  ERP work.
 
 ## Discipline
 
 This procedure crosses the strongest privilege boundary in ERP operations. Administrator
 authority exists only to bootstrap the site and create the scoped operator; it is not the
-operating identity for business work. State lives where it belongs: sites in itsUP,
-operating credentials in the TeleClaude company registry, nothing in this repository. Verify
+operating identity for business work. State lives where it belongs: site deployment with
+the fleet, operating credentials in the TeleClaude company registry, nothing in this
+repository. Verify
 the operator identity before declaring the company operable. Never echo secrets into chat,
 logs, or shell history.
 
