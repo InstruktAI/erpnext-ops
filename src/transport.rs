@@ -67,12 +67,18 @@ pub struct Client {
     ctx: Context,
 }
 
+/// Finite transport bounds: a blocked or black-holed connection surfaces as a
+/// structured transport failure instead of hanging the command.
+const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+const REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
 impl Client {
-    pub fn new(ctx: Context) -> Self {
-        Client {
-            http: reqwest::Client::new(),
-            ctx,
-        }
+    pub fn new(ctx: Context) -> Result<Self, ApiError> {
+        let http = reqwest::Client::builder()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .timeout(REQUEST_TIMEOUT)
+            .build()?;
+        Ok(Client { http, ctx })
     }
 
     pub fn context(&self) -> &Context {

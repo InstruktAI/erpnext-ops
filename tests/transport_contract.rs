@@ -26,7 +26,7 @@ async fn preview_sends_no_request_at_all() {
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server));
+    let client = Client::new(context_for(&server)).expect("client");
     let exit =
         commands::doc::create(&client, "Customer", r#"{"customer_name":"Acme"}"#, false).await;
 
@@ -53,7 +53,7 @@ async fn apply_sends_the_exact_native_request_with_auth() {
             .json_body(json!({ "data": { "name": "CUST-0001" } }));
     });
 
-    let client = Client::new(context_for(&server));
+    let client = Client::new(context_for(&server)).expect("client");
     let exit =
         commands::doc::create(&client, "Customer", r#"{"customer_name":"Acme"}"#, true).await;
 
@@ -77,7 +77,7 @@ async fn preflight_blocks_invalid_payload_before_any_write() {
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server));
+    let client = Client::new(context_for(&server)).expect("client");
     let exit = commands::doc::create(&client, "Customer", r#"{"bogus":1}"#, true).await;
 
     assert_eq!(exit, 1);
@@ -99,7 +99,7 @@ async fn rejected_credentials_surface_as_typed_auth_error() {
             .json_body(json!({ "message": "Invalid API Key" }));
     });
 
-    let client = Client::new(context_for(&server));
+    let client = Client::new(context_for(&server)).expect("client");
     let err = client.whoami().await.expect_err("401 must be an error");
 
     assert!(matches!(err, ApiError::Auth { status: 401 }));
@@ -118,7 +118,7 @@ async fn workflow_method_preview_sends_nothing_and_apply_hits_method_envelope() 
             .json_body(json!({ "data": { "docstatus": 1 } }));
     });
 
-    let client = Client::new(context_for(&server));
+    let client = Client::new(context_for(&server)).expect("client");
 
     let preview_exit =
         commands::workflow::run_method(&client, "Sales Invoice", "INV-0001", "submit", None, false)

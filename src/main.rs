@@ -152,6 +152,17 @@ fn parse_filter(raw: &str) -> Result<(String, String), String> {
         .ok_or_else(|| format!("filter must be field=value, got '{raw}'"))
 }
 
+fn client_or_exit(ctx: Context) -> Client {
+    match Client::new(ctx) {
+        Ok(client) => client,
+        Err(e) => std::process::exit(output::fail(
+            "transport",
+            &e.to_string(),
+            output::EXIT_CONFIG,
+        )),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
@@ -167,9 +178,9 @@ async fn main() {
         } => commands::context::show(&ctx),
         Command::Meta {
             command: MetaCommand::Show { doctype },
-        } => commands::meta::show(&Client::new(ctx), &doctype).await,
+        } => commands::meta::show(&client_or_exit(ctx), &doctype).await,
         Command::Doc { command } => {
-            let client = Client::new(ctx);
+            let client = client_or_exit(ctx);
             match command {
                 DocCommand::List {
                     doctype,
@@ -204,7 +215,7 @@ async fn main() {
             }
         }
         Command::Workflow { command } => {
-            let client = Client::new(ctx);
+            let client = client_or_exit(ctx);
             match command {
                 WorkflowCommand::Submit {
                     doctype,
@@ -243,7 +254,7 @@ async fn main() {
         }
         Command::Ops {
             command: OpsCommand::Doctor,
-        } => commands::ops::doctor(&Client::new(ctx)).await,
+        } => commands::ops::doctor(&client_or_exit(ctx)).await,
     };
 
     std::process::exit(exit);
