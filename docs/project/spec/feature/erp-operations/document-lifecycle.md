@@ -10,8 +10,9 @@ delivered_by:
 
 Submitted ERPNext documents are financial or operational records with native lifecycle
 semantics: `docstatus` 0 is draft, 1 is submitted, 2 is cancelled. Agents drive that
-lifecycle through explicit workflow commands that preview consequences before applying,
-per the command contract in `erp/spec/cli-surface` and the submitted-document rules in
+lifecycle through explicit workflow commands that preview the native operation before
+sending it; ERPNext owns the lifecycle rules and their consequences. The command contract is
+`erp/spec/cli-surface`; the submitted-document rules are in
 `erp/policy/operating-disciplines`.
 
 ## Canonical fields
@@ -20,28 +21,27 @@ per the command contract in `erp/spec/cli-surface` and the submitted-document ru
 
 #### UC-1
 
-Scenario: Submit previews its consequences
+Scenario: Submit previews the native operation
 Given a draft document of a submittable doctype
 When the agent runs `erpnext workflow submit <doctype> <name>` without `--apply`
-Then the preview names the expected docstatus transition and known side effects such as
-stock, accounting, or linked-document effects
-And no state changes on the instance.
+Then the preview names the exact native request and the intended docstatus transition
+And no mutating request is sent to the site.
 
 #### UC-2
 
 Scenario: Submit applies the lifecycle transition
 Given a clean submit preview
 When the agent applies the submit
-Then the document's docstatus becomes submitted
-And the result is returned in machine-readable form.
+Then the native submit is sent and ERPNext's result is reported
+And on success the document's docstatus is submitted.
 
 #### UC-3
 
 Scenario: Cancel a submitted document
 Given a submitted document
 When the agent previews and applies `erpnext workflow cancel <doctype> <name>`
-Then the document's docstatus becomes cancelled
-And side effects known before application appear in the preview.
+Then the native cancel is sent and ERPNext's result is reported
+And on success the document's docstatus is cancelled.
 
 #### UC-4
 
@@ -52,10 +52,10 @@ Then a new amended draft linked to the cancelled document is created with the pa
 
 #### UC-5
 
-Scenario: Direct edits to submitted documents are refused
+Scenario: Direct edits to submitted documents fail toward cancel-and-amend
 Given a submitted document
 When the agent attempts `erpnext doc update` on it
-Then the command fails with a structured failure naming the lifecycle conflict
+Then the command fails with a structured failure carrying ERPNext's lifecycle rejection
 And the failure points to the cancel-and-amend path instead of editing in place.
 
 #### UC-6
@@ -63,4 +63,5 @@ And the failure points to the cancel-and-amend path instead of editing in place.
 Scenario: Doctype-specific workflow methods follow the preview contract
 Given a doctype exposing a native workflow method
 When the agent runs `erpnext workflow method <doctype> <name> <method>`
-Then the method call previews by default and executes only with explicit `--apply`.
+Then the method call previews the native request by default and sends it only with explicit
+`--apply`.
