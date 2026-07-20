@@ -1,16 +1,16 @@
-# No native toolchain in this repository yet; targets are no-ops until the
-# Rust workspace lands and provides real fmt/clippy/test/build recipes.
-
-.PHONY: install format lint test
+.PHONY: install format lint test build
 
 install:
-	@true
+	cargo fetch
 
 format:
-	@true
+	cargo fmt
 
 lint:
-	@true
+	cargo clippy --all-targets -- -D warnings
 
 test:
-	@true
+	cargo test
+
+build:
+	cargo build --release
