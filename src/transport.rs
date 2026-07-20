@@ -20,6 +20,39 @@ pub enum ApiError {
     Shape(String),
 }
 
+/// Characters percent-encoded in a URL path segment (space stays %20, never '+').
+const PATH_SEGMENT: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'<')
+    .add(b'>')
+    .add(b'`')
+    .add(b'#')
+    .add(b'?')
+    .add(b'{')
+    .add(b'}')
+    .add(b'/')
+    .add(b'%');
+
+/// Encode a value for use as one URL path segment.
+pub fn encode_segment(s: &str) -> String {
+    percent_encoding::utf8_percent_encode(s, PATH_SEGMENT).to_string()
+}
+
+impl ApiError {
+    /// Stable machine-readable kind for the failure envelope.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            ApiError::Auth { .. } => "auth",
+            ApiError::Forbidden { .. } => "permission",
+            ApiError::NotFound { .. } => "not_found",
+            ApiError::Rejected { .. } => "rejected",
+            ApiError::Transport(_) => "transport",
+            ApiError::Shape(_) => "shape",
+        }
+    }
+}
+
 impl From<reqwest::Error> for ApiError {
     fn from(e: reqwest::Error) -> Self {
         // reqwest errors can embed the full URL; keep the message but never credentials,
@@ -93,6 +126,27 @@ impl Client {
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
+            .send()
+            .await?;
+        Self::read_json(resp).await
+    }
+
+    pub async fn put(&self, path: &str, body: &Value) -> Result<Value, ApiError> {
+        let resp = self
+            .http
+            .put(self.url(path))
+            .header("Authorization", self.auth_header())
+            .json(body)
+            .send()
+            .await?;
+        Self::read_json(resp).await
+    }
+
+    pub async fn delete(&self, path: &str) -> Result<Value, ApiError> {
+        let resp = self
+            .http
+            .delete(self.url(path))
+            .header("Authorization", self.auth_header())
             .send()
             .await?;
         Self::read_json(resp).await

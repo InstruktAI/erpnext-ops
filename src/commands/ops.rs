@@ -61,7 +61,10 @@ pub async fn doctor(client: &Client) -> i32 {
             "no company selected in context",
         )),
         Some(company) => {
-            let path = format!("/api/v2/document/Company/{}", urlencode(&company));
+            let path = format!(
+                "/api/v2/document/Company/{}",
+                crate::transport::encode_segment(&company)
+            );
             match client.get(&path).await {
                 Ok(_) => checks.push(check("company_selected", "pass", &company)),
                 Err(e) => {
@@ -88,8 +91,4 @@ pub async fn doctor(client: &Client) -> i32 {
 
 fn check(name: &str, state: &str, detail: &str) -> Value {
     json!({ "check": name, "state": state, "detail": detail })
-}
-
-fn urlencode(s: &str) -> String {
-    url::form_urlencoded::byte_serialize(s.as_bytes()).collect()
 }

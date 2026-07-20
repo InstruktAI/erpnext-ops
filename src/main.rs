@@ -1,12 +1,8 @@
-mod commands;
-mod config;
-mod output;
-mod transport;
-
 use clap::{Parser, Subcommand};
 
-use config::Context;
-use transport::Client;
+use erpnext::config::Context;
+use erpnext::transport::Client;
+use erpnext::{commands, output};
 
 /// Agent-facing operating surface for per-tenant ERPNext sites.
 ///
@@ -35,6 +31,11 @@ enum Command {
     Doc {
         #[command(subcommand)]
         command: DocCommand,
+    },
+    /// Document lifecycle operations honoring docstatus semantics
+    Workflow {
+        #[command(subcommand)]
+        command: WorkflowCommand,
     },
     /// Operational diagnostics of the CLI's own ground
     Ops {
@@ -68,6 +69,36 @@ enum DocCommand {
     },
     /// Get one document by name
     Get { doctype: String, name: String },
+    /// Update a document (preview by default; --apply sends it)
+    Update {
+        doctype: String,
+        name: String,
+        /// JSON object payload of fields to change
+        #[arg(long)]
+        data: String,
+        /// Send the native operation instead of previewing it
+        #[arg(long)]
+        apply: bool,
+    },
+    /// Delete a document (preview by default; --apply sends it)
+    Delete {
+        doctype: String,
+        name: String,
+        /// Send the native operation instead of previewing it
+        #[arg(long)]
+        apply: bool,
+    },
+    /// Copy a document into a new draft (preview by default; --apply sends it)
+    Copy {
+        doctype: String,
+        name: String,
+        /// JSON object of field overrides for the copy
+        #[arg(long)]
+        data: Option<String>,
+        /// Send the native operation instead of previewing it
+        #[arg(long)]
+        apply: bool,
+    },
     /// Create a document (preview by default; --apply sends it)
     Create {
         doctype: String,
@@ -75,6 +106,35 @@ enum DocCommand {
         #[arg(long)]
         data: String,
         /// Send the native operation instead of previewing it
+        #[arg(long)]
+        apply: bool,
+    },
+}
+
+#[derive(Subcommand)]
+enum WorkflowCommand {
+    /// Submit a draft document (preview by default)
+    Submit {
+        doctype: String,
+        name: String,
+        #[arg(long)]
+        apply: bool,
+    },
+    /// Cancel a submitted document (preview by default)
+    Cancel {
+        doctype: String,
+        name: String,
+        #[arg(long)]
+        apply: bool,
+    },
+    /// Run a whitelisted controller method on a document (preview by default)
+    Method {
+        doctype: String,
+        name: String,
+        method: String,
+        /// JSON object payload for the method
+        #[arg(long)]
+        data: Option<String>,
         #[arg(long)]
         apply: bool,
     },
@@ -124,6 +184,61 @@ async fn main() {
                     data,
                     apply,
                 } => commands::doc::create(&client, &doctype, &data, apply).await,
+                DocCommand::Update {
+                    doctype,
+                    name,
+                    data,
+                    apply,
+                } => commands::doc::update(&client, &doctype, &name, &data, apply).await,
+                DocCommand::Delete {
+                    doctype,
+                    name,
+                    apply,
+                } => commands::doc::delete(&client, &doctype, &name, apply).await,
+                DocCommand::Copy {
+                    doctype,
+                    name,
+                    data,
+                    apply,
+                } => commands::doc::copy(&client, &doctype, &name, data.as_deref(), apply).await,
+            }
+        }
+        Command::Workflow { command } => {
+            let client = Client::new(ctx);
+            match command {
+                WorkflowCommand::Submit {
+                    doctype,
+                    name,
+                    apply,
+                } => {
+                    commands::workflow::run_method(&client, &doctype, &name, "submit", None, apply)
+                        .await
+                }
+                WorkflowCommand::Cancel {
+                    doctype,
+                    name,
+                    apply,
+                } => {
+                    commands::workflow::run_method(&client, &doctype, &name, "cancel", None, apply)
+                        .await
+                }
+                WorkflowCommand::Method {
+                    doctype,
+                    name,
+                    method,
+                    data,
+                    apply,
+                } => {
+                    commands::workflow::run_method(
+                        &client,
+                        &doctype,
+                        &name,
+                        &method,
+                        data.as_deref(),
+                        apply,
+                    )
+                    .await
+                }
             }
         }
         Command::Ops {

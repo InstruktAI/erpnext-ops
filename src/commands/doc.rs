@@ -1,22 +1,7 @@
 use serde_json::{json, Map, Value};
 
 use crate::output;
-use crate::transport::{ApiError, Client};
-
-fn encode(s: &str) -> String {
-    url::form_urlencoded::byte_serialize(s.as_bytes()).collect()
-}
-
-fn kind(e: &ApiError) -> &'static str {
-    match e {
-        ApiError::Auth { .. } => "auth",
-        ApiError::Forbidden { .. } => "permission",
-        ApiError::NotFound { .. } => "not_found",
-        ApiError::Rejected { .. } => "rejected",
-        ApiError::Transport(_) => "transport",
-        ApiError::Shape(_) => "shape",
-    }
-}
+use crate::transport::{encode_segment, Client};
 
 /// `erpnext doc list <doctype> [--filter k=v]... [--limit n]`
 pub async fn list(client: &Client, doctype: &str, filters: &[(String, String)], limit: u32) -> i32 {
@@ -26,26 +11,30 @@ pub async fn list(client: &Client, doctype: &str, filters: &[(String, String)], 
         .collect();
     let mut path = format!(
         "/api/v2/document/{}?limit={}&fields={}",
-        encode(doctype),
+        encode_segment(doctype),
         limit,
-        encode("[\"name\"]")
+        encode_segment("[\"name\"]")
     );
     if !filter_json.is_empty() {
         let rendered = serde_json::to_string(&filter_json).unwrap_or_default();
-        path.push_str(&format!("&filters={}", encode(&rendered)));
+        path.push_str(&format!("&filters={}", encode_segment(&rendered)));
     }
     match client.get(&path).await {
         Ok(v) => output::ok(v),
-        Err(e) => output::fail(kind(&e), &e.to_string(), output::EXIT_API),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
 
 /// `erpnext doc get <doctype> <name>`
 pub async fn get(client: &Client, doctype: &str, name: &str) -> i32 {
-    let path = format!("/api/v2/document/{}/{}", encode(doctype), encode(name));
+    let path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
     match client.get(&path).await {
         Ok(v) => output::ok(v),
-        Err(e) => output::fail(kind(&e), &e.to_string(), output::EXIT_API),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
 
@@ -73,7 +62,7 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
         );
     };
 
-    let path = format!("/api/v2/document/{}", encode(doctype));
+    let path = format!("/api/v2/document/{}", encode_segment(doctype));
 
     if !apply {
         return output::ok(json!({
@@ -94,7 +83,7 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
         Ok(m) => m,
         Err(e) => {
             return output::fail(
-                kind(&e),
+                e.kind(),
                 &format!("metadata preflight failed: {e}"),
                 output::EXIT_API,
             )
@@ -106,7 +95,180 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
 
     match client.post(&path, &payload).await {
         Ok(v) => output::ok(v),
-        Err(e) => output::fail(kind(&e), &e.to_string(), output::EXIT_API),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+/// `erpnext doc update <doctype> <name> --data <json> [--apply]`
+///
+/// Preview by default. On apply, unknown payload fields are rejected against live
+/// metadata (mandatory checks do not apply to partial updates), then the native PUT
+/// is sent and the site's result reported.
+pub async fn update(client: &Client, doctype: &str, name: &str, data: &str, apply: bool) -> i32 {
+    let payload: Value = match serde_json::from_str(data) {
+        Ok(v) => v,
+        Err(e) => {
+            return output::fail(
+                "payload",
+                &format!("--data is not valid JSON: {e}"),
+                output::EXIT_CONFIG,
+            )
+        }
+    };
+    let Some(payload_map) = payload.as_object() else {
+        return output::fail(
+            "payload",
+            "--data must be a JSON object",
+            output::EXIT_CONFIG,
+        );
+    };
+
+    let path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+
+    if !apply {
+        return output::ok(preview_envelope(client, "PUT", &path, &payload));
+    }
+
+    let meta = match super::meta::fetch(client, doctype).await {
+        Ok(m) => m,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("metadata preflight failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
+    if let Some(findings) = unknown_fields(&meta, payload_map) {
+        return output::fail("preflight", &findings, output::EXIT_API);
+    }
+
+    match client.put(&path, &payload).await {
+        Ok(v) => output::ok(v),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+/// `erpnext doc delete <doctype> <name> [--apply]` — preview by default.
+pub async fn delete(client: &Client, doctype: &str, name: &str, apply: bool) -> i32 {
+    let path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+
+    if !apply {
+        return output::ok(preview_envelope(client, "DELETE", &path, &Value::Null));
+    }
+
+    match client.delete(&path).await {
+        Ok(v) => output::ok(v),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+/// `erpnext doc copy <doctype> <name> [--data <json>] [--apply]`
+///
+/// Fetches the site's native copy template, merges optional overrides, then follows
+/// the create contract: preview by default, preflight + POST on apply.
+pub async fn copy(
+    client: &Client,
+    doctype: &str,
+    name: &str,
+    data: Option<&str>,
+    apply: bool,
+) -> i32 {
+    let overrides: Map<String, Value> = match data {
+        None => Map::new(),
+        Some(raw) => match serde_json::from_str::<Value>(raw) {
+            Ok(Value::Object(m)) => m,
+            Ok(_) => {
+                return output::fail(
+                    "payload",
+                    "--data must be a JSON object",
+                    output::EXIT_CONFIG,
+                )
+            }
+            Err(e) => {
+                return output::fail(
+                    "payload",
+                    &format!("--data is not valid JSON: {e}"),
+                    output::EXIT_CONFIG,
+                )
+            }
+        },
+    };
+
+    let copy_path = format!(
+        "/api/v2/document/{}/{}/copy",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+    let template = match client.get(&copy_path).await {
+        Ok(v) => v,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+    let mut payload_map = template
+        .pointer("/data")
+        .or_else(|| template.pointer("/message"))
+        .and_then(Value::as_object)
+        .cloned()
+        .unwrap_or_default();
+    for (k, v) in overrides {
+        payload_map.insert(k, v);
+    }
+    let payload = Value::Object(payload_map);
+
+    let path = format!("/api/v2/document/{}", encode_segment(doctype));
+
+    if !apply {
+        return output::ok(preview_envelope(client, "POST", &path, &payload));
+    }
+
+    match client.post(&path, &payload).await {
+        Ok(v) => output::ok(v),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+/// The documented preview shape: context, exact native operation, apply pointer.
+fn preview_envelope(client: &Client, method: &str, path: &str, payload: &Value) -> Value {
+    json!({
+        "preview": true,
+        "context": {
+            "site": client.context().site(),
+            "company": client.context().company,
+            "privilege": client.context().privilege,
+        },
+        "operation": { "method": method, "path": path, "payload": payload },
+        "preflight": "runs against live DocType metadata on apply",
+        "apply_command": "re-run the same command with --apply",
+    })
+}
+
+/// Unknown-field check for partial payloads (updates), against live metadata.
+fn unknown_fields(meta: &Value, payload: &Map<String, Value>) -> Option<String> {
+    let fields = meta
+        .pointer("/data/fields")
+        .or_else(|| meta.pointer("/message/fields"))?
+        .as_array()?;
+    let known: Vec<&str> = fields
+        .iter()
+        .filter_map(|f| f.pointer("/fieldname").and_then(Value::as_str))
+        .collect();
+    let findings: Vec<String> = payload
+        .keys()
+        .filter(|k| k.as_str() != "doctype" && k.as_str() != "name" && !known.contains(&k.as_str()))
+        .map(|k| format!("unknown field '{k}'"))
+        .collect();
+    if findings.is_empty() {
+        None
+    } else {
+        Some(findings.join("; "))
     }
 }
 

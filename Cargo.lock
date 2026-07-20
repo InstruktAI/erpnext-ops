@@ -524,6 +524,7 @@ dependencies = [
  "clap",
  "dotenvy",
  "httpmock",
+ "percent-encoding",
  "reqwest",
  "serde",
  "serde_json",
