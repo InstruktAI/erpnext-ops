@@ -135,26 +135,79 @@ async fn workflow_method_preview_sends_nothing_and_apply_hits_method_envelope() 
 }
 
 #[tokio::test]
-async fn resolve_party_reports_cross_doctype_ambiguity_without_guessing() {
+async fn resolve_party_queries_exact_filters_and_reports_ambiguity() {
     let server = MockServer::start_async().await;
+    let customer = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Customer")
+            .query_param("filters", r#"[["Customer","name","=","Acme"]]"#);
+        then.status(200)
+            .json_body(json!({ "data": [ { "name": "Acme", "customer_name": "Acme BV" } ] }));
+    });
     server.mock(|when, then| {
         when.method(GET).path("/api/v2/document/Customer");
+        then.status(200).json_body(json!({ "data": [] }));
+    });
+    let supplier = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Supplier")
+            .query_param("filters", r#"[["Supplier","name","=","Acme"]]"#);
         then.status(200)
-            .json_body(json!({ "data": [ { "name": "Acme", "customer_name": "Acme" } ] }));
+            .json_body(json!({ "data": [ { "name": "Acme", "supplier_name": "Acme BV" } ] }));
     });
     server.mock(|when, then| {
         when.method(GET).path("/api/v2/document/Supplier");
-        then.status(200)
-            .json_body(json!({ "data": [ { "name": "Acme", "supplier_name": "Acme" } ] }));
+        then.status(200).json_body(json!({ "data": [] }));
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::resolve::party(&client, "Acme").await;
+    let resolution = commands::resolve::party_resolution(&client, "Acme")
+        .await
+        .expect("query succeeds");
 
-    assert_eq!(
-        exit, 0,
-        "an ambiguous resolution is a structured result, not an error"
-    );
+    customer.assert();
+    supplier.assert();
+    match resolution {
+        commands::resolve::Resolution::Ambiguous(candidates) => {
+            assert_eq!(candidates.len(), 2);
+            assert_eq!(candidates[0].doctype, "Customer");
+            assert_eq!(candidates[0].name, "Acme");
+            assert_eq!(candidates[0].title, "Acme BV");
+            assert_eq!(candidates[1].doctype, "Supplier");
+        }
+        other => panic!("expected ambiguity, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn resolve_item_returns_the_single_reference() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Item")
+            .query_param("filters", r#"[["Item","item_name","=","Business in a Box Onboarding"]]"#);
+        then.status(200).json_body(
+            json!({ "data": [ { "name": "BIB-ONBOARDING", "item_name": "Business in a Box Onboarding" } ] }),
+        );
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Item");
+        then.status(200).json_body(json!({ "data": [] }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let resolution = commands::resolve::item_resolution(&client, "Business in a Box Onboarding")
+        .await
+        .expect("query succeeds");
+
+    match resolution {
+        commands::resolve::Resolution::Resolved(reference) => {
+            assert_eq!(reference.doctype, "Item");
+            assert_eq!(reference.name, "BIB-ONBOARDING");
+            assert_eq!(reference.title, "Business in a Box Onboarding");
+        }
+        other => panic!("expected resolved, got {other:?}"),
+    }
 }
 
 #[tokio::test]
@@ -168,10 +221,9 @@ async fn resolve_document_miss_is_structured_none() {
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::resolve::document(&client, "Quotation", "MISSING-1").await;
+    let resolution = commands::resolve::document_resolution(&client, "Quotation", "MISSING-1")
+        .await
+        .expect("query succeeds");
 
-    assert_eq!(
-        exit, 0,
-        "a miss is a structured resolution result, not a failure"
-    );
+    assert_eq!(resolution, commands::resolve::Resolution::None);
 }
