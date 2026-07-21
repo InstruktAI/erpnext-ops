@@ -28,26 +28,35 @@ site-creation procedure. Continue only when the site answers at its FQDN and its
 administrator bootstrap credentials are reachable through the approved secret channel.
 Site deletion is likewise apps-domain work, human-gated, and never part of onboarding.
 
-### 2. Create the Company record
+### 2. Initialize the site and create the Company record
 
-Create the ERPNext `Company` record inside the site. This is the legal and accounting scope
-the site's documents attach to; the site itself is the tenant boundary.
+A fresh site refuses company creation until ERPNext's native setup wizard has run: the
+wizard seeds the masters (warehouse types, fiscal year, chart of accounts) and creates the
+first company. Complete it as the site administrator with the company's grounded payload —
+name, abbreviation, country, currency, fiscal year, chart of accounts, timezone, no demo
+data. The step is repeatable: a completed wizard is skipped, and additional companies on a
+site are created as ordinary `Company` documents through the CLI's preview/apply flow.
 
 ### 3. Create the operator user
 
-Create an ERPNext user for the site's operator agent. Grant only the roles needed for
-routine business operations. The operator must not carry administrator authority.
+Create an ERPNext user for the site's operator agent. ERPNext roles are additive, not
+hierarchical: a Manager role does not imply its User role. Grant the User role for each
+business surface the operator works (e.g. `Sales User` alongside `Sales Manager`), plus the
+dedicated `Item Manager` role for item master maintenance. The operator must not carry
+administrator authority. Re-granting an existing role is a no-op; the step is repeatable.
 
 ### 4. Mint the operator API credentials
 
 Generate the operator user's API key and secret. Treat the secret as one-time sensitive
-output.
+output. Re-generation is rotation: update the credential home in the same pass.
 
 ### 5. Store the operator credentials
 
-Record the site base URL, operator API key, and operator API secret in the company
-credential home in the TeleClaude company registry. Do not copy administrator credentials
-there — administrator bootstrap secrets live only in itsUP.
+Record the site base URL, company name, operator API key, and operator API secret in the
+company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
+readable only by its owner. Writing it is idempotent — the entry is the single source the
+CLI resolves at command time. Do not copy administrator credentials there — administrator
+bootstrap secrets live only in itsUP.
 
 ### 6. Verify the operator identity
 

@@ -21,9 +21,10 @@ work on that site.
   scope, not a tenancy boundary.
 - **Operator identity** — ERPNext user and API credentials on the site, used for routine
   business operations.
-- **Company credential home** — storage location for the site base URL and the operator API
-  key and secret, in the TeleClaude company registry's per-company scaffold. It belongs to
-  the company, not to a human user.
+- **Company credential home** — `erpnext.json` in the TeleClaude company registry's
+  per-company scaffold: the site base URL, company name, and operator API key and secret,
+  owner-readable only. It belongs to the company, not to a human user, and is the single
+  source the CLI resolves credentials from at command time.
 - **Business knowledge** — company-specific operating context such as products, price lists,
   proposal templates, pipeline meaning, and tone.
 

@@ -24,7 +24,9 @@ the CLI contract below, not raw transport mechanics.
 ## Canonical fields
 
 - `erpnext context show`
-- `erpnext context use --site <fqdn> [--company <company>] [--as operator|admin]`
+- `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
+  at least one selector; the selection persists and credentials resolve from the company
+  credential home at command time, fail-closed on unknown or ambiguous input.
 - `erpnext meta show <doctype> [--refresh]`
 - `erpnext resolve party <query>`
 - `erpnext resolve item <query>`
