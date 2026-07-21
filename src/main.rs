@@ -32,6 +32,11 @@ enum Command {
         #[command(subcommand)]
         command: ActivityCommand,
     },
+    /// Attach evidence files to business documents
+    Evidence {
+        #[command(subcommand)]
+        command: EvidenceCommand,
+    },
     /// Deterministic resolution of parties, items, and documents
     Resolve {
         #[command(subcommand)]
@@ -125,6 +130,22 @@ fn reference_pair(reference: &Option<Vec<String>>) -> Option<(&str, &str)> {
     reference
         .as_ref()
         .and_then(|r| Some((r.first()?.as_str(), r.get(1)?.as_str())))
+}
+
+#[derive(Subcommand)]
+enum EvidenceCommand {
+    /// Attach a file to the referenced document (permission-checked by the site)
+    Attach {
+        /// Linked business document: DOCTYPE NAME
+        #[arg(long, num_args = 2, value_names = ["DOCTYPE", "NAME"], required = true)]
+        reference: Vec<String>,
+        /// Path of the file to attach
+        #[arg(long)]
+        file: String,
+        /// Timeline note recorded with the attachment
+        #[arg(long)]
+        summary: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -320,6 +341,23 @@ async fn main() {
             ActivityCommand::OpenLoops { reference, due } => {
                 commands::activity::open_loops(&client, reference_pair(&reference), due.as_deref())
                     .await
+            }
+        },
+        Command::Evidence { command } => match command {
+            EvidenceCommand::Attach {
+                reference,
+                file,
+                summary,
+            } => {
+                let reference = Some(reference);
+                let Some(pair) = reference_pair(&reference) else {
+                    std::process::exit(output::fail(
+                        "reference-required",
+                        "evidence attach requires --reference <doctype> <name>",
+                        output::EXIT_CONFIG,
+                    ));
+                };
+                commands::evidence::attach(&client, pair, &file, summary.as_deref()).await
             }
         },
         Command::Resolve { command } => match command {

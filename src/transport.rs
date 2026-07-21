@@ -158,6 +158,30 @@ impl Client {
         Self::read_json(resp).await
     }
 
+    /// Multipart file upload to a native method endpoint (e.g. `upload_file`), with
+    /// extra form fields carried alongside the file part.
+    pub async fn post_file(
+        &self,
+        path: &str,
+        file_name: &str,
+        bytes: Vec<u8>,
+        fields: &[(&str, &str)],
+    ) -> Result<Value, ApiError> {
+        let part = reqwest::multipart::Part::bytes(bytes).file_name(file_name.to_owned());
+        let mut form = reqwest::multipart::Form::new().part("file", part);
+        for (key, value) in fields {
+            form = form.text((*key).to_owned(), (*value).to_owned());
+        }
+        let resp = self
+            .http
+            .post(self.url(path))
+            .header("Authorization", self.auth_header())
+            .multipart(form)
+            .send()
+            .await?;
+        Self::read_json(resp).await
+    }
+
     async fn read_json(resp: reqwest::Response) -> Result<Value, ApiError> {
         let status = resp.status().as_u16();
         let text = resp.text().await?;

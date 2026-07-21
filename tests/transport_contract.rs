@@ -448,3 +448,62 @@ async fn activity_capture_rejects_non_native_medium_client_side() {
     assert_eq!(exit, 2);
     assert_eq!(catch_all.hits(), 0);
 }
+
+#[tokio::test]
+async fn evidence_attach_uploads_via_native_endpoint_and_notes_the_timeline() {
+    let server = MockServer::start_async().await;
+    let upload = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/upload_file")
+            .body_contains("SAL-QTN-2026-00001");
+        then.status(200)
+            .json_body(json!({ "message": { "file_url": "/private/files/x.txt" } }));
+    });
+    let comment = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.form.utils.add_comment")
+            .body_matches(Regex::new("attachment: /private/files/x.txt").expect("regex"));
+        then.status(200)
+            .json_body(json!({ "message": { "name": "cmt-2" } }));
+    });
+
+    let dir = std::env::temp_dir().join(format!("erpnext-evidence-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("dir");
+    let file = dir.join("x.txt");
+    std::fs::write(&file, b"evidence").expect("write");
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::evidence::attach(
+        &client,
+        ("Quotation", "SAL-QTN-2026-00001"),
+        file.to_str().expect("utf8 path"),
+        Some("noted"),
+    )
+    .await;
+
+    assert_eq!(exit, 0);
+    upload.assert();
+    comment.assert();
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[tokio::test]
+async fn evidence_attach_missing_file_fails_closed_before_any_request() {
+    let server = MockServer::start_async().await;
+    let catch_all = server.mock(|when, then| {
+        when.path_matches(Regex::new(".*").expect("regex"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::evidence::attach(
+        &client,
+        ("Quotation", "SAL-QTN-2026-00001"),
+        "/nonexistent/evidence.txt",
+        None,
+    )
+    .await;
+
+    assert_eq!(exit, 2);
+    assert_eq!(catch_all.hits(), 0);
+}
