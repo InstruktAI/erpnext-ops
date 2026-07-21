@@ -1,7 +1,5 @@
 ---
 description: Site, company, and privilege context selection for the erpnext CLI — explicit identity, fail-closed credentials, secret-safe display.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Operating Context — Spec
@@ -38,11 +36,13 @@ And the selection is visible in `erpnext context show`.
 
 #### UC-3
 
-Scenario: Administrator context is explicit
-Given administrator credentials are available for the site
+Scenario: Administrator context selection is refused
+Given any site context
 When the agent runs `erpnext context use --site <fqdn> --as admin`
-Then subsequent commands run under the site's administrator identity
-And the privilege mode is reported as administrator, never implied silently.
+Then the command fails with a structured failure naming administrator resolution as
+unavailable
+And it states that administrator bootstrap secrets live only in itsUP, never in the
+company credential home.
 
 #### UC-4
 

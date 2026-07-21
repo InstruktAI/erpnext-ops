@@ -10,8 +10,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/activity-trail.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/bulk-import
   description: Batch import of external business data through ERPNext's native import
@@ -22,8 +20,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/bulk-import.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/document-lifecycle
   description: "ERPNext document lifecycle operations \u2014 submit, cancel, amend,\
@@ -34,8 +30,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/document-lifecycle.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/document-operations
   description: Metadata-checked ERPNext document operations with preview-by-default
@@ -46,8 +40,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/document-operations.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/operating-context
   description: "Site, company, and privilege context selection for the erpnext CLI\
@@ -58,8 +50,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/operating-context.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/operational-diagnostics
   description: "Read-only diagnosis of the CLI's operating ground \u2014 endpoint,\
@@ -70,8 +60,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/operational-diagnostics.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/reference-resolution
   description: Deterministic resolution of parties, items, and documents from business
@@ -82,8 +70,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/reference-resolution.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/reporting
   description: Running native ERPNext reports with filters and machine-readable results.
@@ -93,6 +79,4 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/reporting.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops

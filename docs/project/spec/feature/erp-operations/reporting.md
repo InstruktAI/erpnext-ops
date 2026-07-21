@@ -1,7 +1,5 @@
 ---
 description: Running native ERPNext reports with filters and machine-readable results.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Reporting — Spec

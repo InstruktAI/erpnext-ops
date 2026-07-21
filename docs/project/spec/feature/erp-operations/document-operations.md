@@ -1,7 +1,5 @@
 ---
 description: Metadata-checked ERPNext document operations with preview-by-default mutation and explicit apply.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Document Operations — Spec
@@ -78,3 +76,12 @@ When the agent runs `erpnext doc update`, `erpnext doc delete`, or `erpnext doc 
 without `--apply`
 Then each returns a preview and sends no mutating request
 And each sends the native operation only with explicit `--apply`.
+
+#### UC-8
+
+Scenario: A source token makes creation exactly idempotent
+Given a create carrying `--source <token>`
+When the agent applies it, loses the response, and applies the same command again
+Then the retry finds the document whose name derives from the token and reports it as
+replayed, sending no second create
+And reusing the token with different data fails as a structured idempotency conflict.

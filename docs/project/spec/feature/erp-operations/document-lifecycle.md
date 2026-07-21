@@ -1,7 +1,5 @@
 ---
 description: ERPNext document lifecycle operations — submit, cancel, amend, and workflow methods honoring docstatus semantics.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Document Lifecycle — Spec

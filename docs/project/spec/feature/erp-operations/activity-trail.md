@@ -1,7 +1,5 @@
 ---
 description: Capture, recall, and follow-up over business activity and evidence as thin operations on native Frappe and ERPNext records.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Activity Trail — Spec
@@ -40,8 +38,8 @@ And it appears in `erpnext activity open-loops` until resolved.
 Scenario: Recall the trail for a reference and window
 Given activity records exist for a document across time
 When the agent runs `erpnext activity list --reference <doctype> <name> --since <when>`
-Then the matching records are returned in machine-readable, time-ordered form
-And `erpnext activity recall` runs the same query across the native record kinds.
+Then the matching records are returned in machine-readable, time-ordered form across the
+native record kinds.
 
 #### UC-4
 

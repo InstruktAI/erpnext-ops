@@ -1,7 +1,5 @@
 ---
 description: Read-only diagnosis of the CLI's operating ground — endpoint, identity, company, privilege mode, credential separation, fail-closed configuration.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Operational Diagnostics — Spec
@@ -43,12 +41,12 @@ And the command exits non-zero without guessing a working configuration.
 
 Scenario: Diagnostics never mutate
 Given any context
-When the agent runs `erpnext ops doctor` or `erpnext ops open-loops`
+When the agent runs `erpnext ops doctor`
 Then no document, setting, or activity record on the site is created or changed.
 
 #### UC-4
 
-Scenario: Open loops are visible per company
-Given open follow-up records exist for the selected company
-When the agent runs `erpnext ops open-loops --due <when>`
-Then the due and overdue open loops for that company are listed in machine-readable form.
+Scenario: Open loops are visible
+Given open follow-up records exist on the site
+When the agent runs `erpnext activity open-loops --due <when>`
+Then the due and overdue open loops are listed in machine-readable form.

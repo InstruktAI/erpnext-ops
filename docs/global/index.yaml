@@ -136,8 +136,6 @@ snippets:
   activation_trigger: null
   path: docs/erp/spec/cli-surface.md
   visibility: internal
-  delivered_by:
-  - erpnext-cli-initial
   source_project: erpnext-ops
 - id: erp/spec/company-layout
   description: Site and company identity and credential layout for operating per-tenant

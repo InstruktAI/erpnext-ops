@@ -1,7 +1,5 @@
 ---
 description: Agent-facing erpnext CLI command surface for operating per-tenant ERPNext sites.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # ERPNext CLI Surface — Spec
@@ -27,30 +25,28 @@ the CLI contract below, not raw transport mechanics.
 - `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
   at least one selector; the selection persists and credentials resolve from the company
   credential home at command time, fail-closed on unknown or ambiguous input.
-- `erpnext meta show <doctype> [--refresh]`
+- `erpnext meta show <doctype>`
 - `erpnext resolve party <query>`
 - `erpnext resolve item <query>`
 - `erpnext resolve document <doctype> <query>`
 - `erpnext doc list <doctype> [--filter <field=value>]... [--limit <n>]`
 - `erpnext doc get <doctype> <name>`
-- `erpnext doc create <doctype> --data <json|@file> [--source <text|@file>] [--follow-up <text>] [--due <when>] [--apply]`
-- `erpnext doc update <doctype> <name> --data <json|@file> [--source <text|@file>] [--follow-up <text>] [--due <when>] [--apply]`
+- `erpnext doc create <doctype> --data <json> [--source <token>] [--apply]`
+- `erpnext doc update <doctype> <name> --data <json> [--apply]`
 - `erpnext doc delete <doctype> <name> [--apply]`
-- `erpnext doc copy <doctype> <name> [--data <json|@file>] [--apply]`
+- `erpnext doc copy <doctype> <name> [--data <json>] [--apply]`
 - `erpnext workflow submit <doctype> <name> [--apply]`
 - `erpnext workflow cancel <doctype> <name> [--apply]`
-- `erpnext workflow amend <doctype> <name> --data <json|@file> [--apply]`
-- `erpnext workflow method <doctype> <name> <method> [--data <json|@file>] [--apply]`
-- `erpnext activity capture --summary <text> [--verbatim <text>] [--medium <value>] [--reference <doctype> <name>] [--follow-up <text>] [--due <date>]`
-- `erpnext activity list [--reference <doctype> <name>] [--since <when>] [--until <when>] [--summaries]`
+- `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
+- `erpnext workflow method <doctype> <name> <method> [--data <json>] [--apply]`
+- `erpnext activity capture --summary <text> [--verbatim <text>] [--medium <value>] --reference <doctype> <name> [--follow-up <text>] [--due <date>]`
+- `erpnext activity list --reference <doctype> <name> [--since <when>] [--until <when>]`
 - `erpnext activity open-loops [--reference <doctype> <name>] [--due <when>]`
-- `erpnext activity recall [--reference <doctype> <name>] [--since <when>] [--until <when>]`
 - `erpnext evidence attach --reference <doctype> <name> --file <path> [--summary <text>]`
 - `erpnext report run <report-name> [--filter <field=value>]...`
-- `erpnext import preview --source <name> [--since <when>]`
-- `erpnext import apply --source <name> --batch <batch-id>`
-- `erpnext ops doctor [--site <fqdn>]`
-- `erpnext ops open-loops [--company <company>] [--due <when>]`
+- `erpnext import preview --file <csv> --doctype <target>`
+- `erpnext import apply --batch <batch-id>`
+- `erpnext ops doctor`
 
 Preview output for mutating commands contains:
 
@@ -64,8 +60,9 @@ Preview output for mutating commands contains:
 ## Known caveats
 
 - The site is the tenant boundary; company selection scopes accounting inside the site.
-- Administrative commands require the explicit administrator context; routine work runs as
-  the site operator. An operator failure never falls back to administrator authority.
+- Routine work runs as the site operator; an operator failure never falls back to
+  administrator authority. Administrator context selection is refused in this release —
+  administrator bootstrap secrets live only in itsUP.
 - Mutating commands preview by default; `--apply` sends the native operation and reports
   ERPNext's result.
 - Create and update commands run basic preflight against live DocType metadata before
@@ -76,7 +73,12 @@ Preview output for mutating commands contains:
 - Activity commands are thin operations over native Frappe and ERPNext records such as
   `Communication`, `Comment`, `ToDo`, `Event`, `CRM Note`, and linked business documents.
 - Import commands use ERPNext's native data-import semantics with preview and explicit
-  apply, reporting honest per-row results.
+  apply, reporting honest per-row results. The vendor gates Data Import to privileged
+  roles; an operator context receives the site's typed permission failure.
+- `doc create --source <token>` is exactly idempotent: the document name derives
+  deterministically from site, doctype, and token; a retry replays the existing document,
+  divergent token reuse is a structured conflict, and such documents opt out of native
+  series naming.
 - `ops doctor` verifies the CLI's own operating ground: configured endpoint, authenticated
   identity, selected company, privilege mode, credential separation, and fail-closed
   configuration. It does not test ERPNext's permission implementation.

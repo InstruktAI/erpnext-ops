@@ -1,7 +1,5 @@
 ---
 description: Deterministic resolution of parties, items, and documents from business queries, with ambiguity as a structured result.
-delivered_by:
-  - erpnext-cli-initial
 ---
 
 # Reference Resolution — Spec
