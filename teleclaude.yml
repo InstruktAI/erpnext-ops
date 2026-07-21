@@ -1,0 +1,5 @@
+business:
+  publishes:
+    - slug: erp
+      trigger: Operating ERPNext tenant sites, business records, or order-to-invoice workflows through the erpnext CLI
+project_slug: erpnext-ops
