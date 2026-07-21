@@ -4,5 +4,6 @@ pub mod doc;
 pub mod evidence;
 pub mod meta;
 pub mod ops;
+pub mod report;
 pub mod resolve;
 pub mod workflow;

@@ -507,3 +507,29 @@ async fn evidence_attach_missing_file_fails_closed_before_any_request() {
     assert_eq!(exit, 2);
     assert_eq!(catch_all.hits(), 0);
 }
+
+#[tokio::test]
+async fn report_run_uses_the_native_runner_with_filters() {
+    let server = MockServer::start_async().await;
+    let runner = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.query_report.run")
+            .body_matches(Regex::new(r#""report_name":"Quotation Trends""#).expect("regex"))
+            .body_matches(Regex::new(r#""company":"Instrukt AI""#).expect("regex"));
+        then.status(200).json_body(json!({ "message": {
+            "columns": [ { "fieldname": "item" } ],
+            "result": [ { "item": "BIB-ONBOARDING" } ],
+        }}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::report::run(
+        &client,
+        "Quotation Trends",
+        &[("company".into(), "Instrukt AI".into())],
+    )
+    .await;
+
+    assert_eq!(exit, 0);
+    runner.assert();
+}

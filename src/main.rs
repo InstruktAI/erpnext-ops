@@ -52,6 +52,11 @@ enum Command {
         #[command(subcommand)]
         command: WorkflowCommand,
     },
+    /// Run native reports with filters
+    Report {
+        #[command(subcommand)]
+        command: ReportCommand,
+    },
     /// Operational diagnostics of the CLI's own ground
     Ops {
         #[command(subcommand)]
@@ -247,6 +252,17 @@ enum WorkflowCommand {
 }
 
 #[derive(Subcommand)]
+enum ReportCommand {
+    /// Run a report and return machine-readable columns and rows
+    Run {
+        report_name: String,
+        /// Report filter as field=value (repeatable)
+        #[arg(long = "filter", value_parser = parse_filter)]
+        filters: Vec<(String, String)>,
+    },
+}
+
+#[derive(Subcommand)]
 enum OpsCommand {
     /// Read-only checks: endpoint, identity, company, privilege separation
     Doctor,
@@ -433,6 +449,13 @@ async fn main() {
                 .await
             }
         },
+        Command::Report {
+            command:
+                ReportCommand::Run {
+                    report_name,
+                    filters,
+                },
+        } => commands::report::run(&client, &report_name, &filters).await,
         Command::Ops {
             command: OpsCommand::Doctor,
         } => commands::ops::doctor(&client).await,
