@@ -27,6 +27,11 @@ enum Command {
         #[command(subcommand)]
         command: MetaCommand,
     },
+    /// Deterministic resolution of parties, items, and documents
+    Resolve {
+        #[command(subcommand)]
+        command: ResolveCommand,
+    },
     /// Generic document operations through the Frappe v2 envelope
     Doc {
         #[command(subcommand)]
@@ -66,6 +71,16 @@ enum ContextCommand {
 enum MetaCommand {
     /// Show the live schema for a doctype
     Show { doctype: String },
+}
+
+#[derive(Subcommand)]
+enum ResolveCommand {
+    /// Resolve a customer or supplier by exact name or title
+    Party { query: String },
+    /// Resolve an item by exact code or item name
+    Item { query: String },
+    /// Resolve a document of a doctype by its exact name
+    Document { doctype: String, query: String },
 }
 
 #[derive(Subcommand)]
@@ -209,6 +224,13 @@ async fn main() {
         Command::Meta {
             command: MetaCommand::Show { doctype },
         } => commands::meta::show(&client, &doctype).await,
+        Command::Resolve { command } => match command {
+            ResolveCommand::Party { query } => commands::resolve::party(&client, &query).await,
+            ResolveCommand::Item { query } => commands::resolve::item(&client, &query).await,
+            ResolveCommand::Document { doctype, query } => {
+                commands::resolve::document(&client, &doctype, &query).await
+            }
+        },
         Command::Doc { command } => match command {
             DocCommand::List {
                 doctype,

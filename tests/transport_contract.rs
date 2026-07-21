@@ -133,3 +133,45 @@ async fn workflow_method_preview_sends_nothing_and_apply_hits_method_envelope() 
     assert_eq!(apply_exit, 0);
     method.assert();
 }
+
+#[tokio::test]
+async fn resolve_party_reports_cross_doctype_ambiguity_without_guessing() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Customer");
+        then.status(200)
+            .json_body(json!({ "data": [ { "name": "Acme", "customer_name": "Acme" } ] }));
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Supplier");
+        then.status(200)
+            .json_body(json!({ "data": [ { "name": "Acme", "supplier_name": "Acme" } ] }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::resolve::party(&client, "Acme").await;
+
+    assert_eq!(
+        exit, 0,
+        "an ambiguous resolution is a structured result, not an error"
+    );
+}
+
+#[tokio::test]
+async fn resolve_document_miss_is_structured_none() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Quotation/MISSING-1");
+        then.status(404)
+            .json_body(json!({ "message": "not found" }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::resolve::document(&client, "Quotation", "MISSING-1").await;
+
+    assert_eq!(
+        exit, 0,
+        "a miss is a structured resolution result, not a failure"
+    );
+}
