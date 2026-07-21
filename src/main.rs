@@ -52,6 +52,11 @@ enum Command {
         #[command(subcommand)]
         command: WorkflowCommand,
     },
+    /// Batch import through ERPNext's native Data Import machinery
+    Import {
+        #[command(subcommand)]
+        command: ImportCommand,
+    },
     /// Run native reports with filters
     Report {
         #[command(subcommand)]
@@ -252,6 +257,25 @@ enum WorkflowCommand {
 }
 
 #[derive(Subcommand)]
+enum ImportCommand {
+    /// Parse a CSV into an identified batch with the native template preview
+    Preview {
+        /// CSV file to import
+        #[arg(long)]
+        file: String,
+        /// Target doctype for the records
+        #[arg(long)]
+        doctype: String,
+    },
+    /// Start exactly the previewed batch
+    Apply {
+        /// Batch identifier returned by import preview
+        #[arg(long)]
+        batch: String,
+    },
+}
+
+#[derive(Subcommand)]
 enum ReportCommand {
     /// Run a report and return machine-readable columns and rows
     Run {
@@ -448,6 +472,12 @@ async fn main() {
                 )
                 .await
             }
+        },
+        Command::Import { command } => match command {
+            ImportCommand::Preview { file, doctype } => {
+                commands::import::preview(&client, &file, &doctype).await
+            }
+            ImportCommand::Apply { batch } => commands::import::apply(&client, &batch).await,
         },
         Command::Report {
             command:

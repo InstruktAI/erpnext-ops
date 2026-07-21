@@ -533,3 +533,79 @@ async fn report_run_uses_the_native_runner_with_filters() {
     assert_eq!(exit, 0);
     runner.assert();
 }
+
+#[tokio::test]
+async fn import_preview_builds_the_native_batch_chain() {
+    let server = MockServer::start_async().await;
+    let create = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/v2/document/Data%20Import")
+            .body_matches(Regex::new(r#""reference_doctype":"Customer""#).expect("regex"));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "IMP-0001" } }));
+    });
+    let upload = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/upload_file")
+            .body_contains("IMP-0001");
+        then.status(200)
+            .json_body(json!({ "message": { "file_url": "/private/files/batch.csv" } }));
+    });
+    let bind = server.mock(|when, then| {
+        when.method(PUT)
+            .path("/api/v2/document/Data%20Import/IMP-0001")
+            .body_matches(
+                Regex::new(r#""import_file":"/private/files/batch.csv""#).expect("regex"),
+            );
+        then.status(200)
+            .json_body(json!({ "data": { "name": "IMP-0001" } }));
+    });
+    let preview = server.mock(|when, then| {
+        when.method(POST)
+            .path(
+                "/api/method/frappe.core.doctype.data_import.data_import.get_preview_from_template",
+            )
+            .body_matches(Regex::new(r#""data_import":"IMP-0001""#).expect("regex"));
+        then.status(200)
+            .json_body(json!({ "message": { "columns": [], "data": [["Import Proof BV"]] } }));
+    });
+
+    let dir = std::env::temp_dir().join(format!("erpnext-import-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("dir");
+    let file = dir.join("batch.csv");
+    std::fs::write(&file, b"customer_name\nImport Proof BV\n").expect("write");
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit =
+        commands::import::preview(&client, file.to_str().expect("utf8 path"), "Customer").await;
+
+    assert_eq!(exit, 0);
+    create.assert();
+    upload.assert();
+    bind.assert();
+    preview.assert();
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[tokio::test]
+async fn import_apply_starts_exactly_the_named_batch() {
+    let server = MockServer::start_async().await;
+    let start = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.core.doctype.data_import.data_import.form_start_import")
+            .body_matches(Regex::new(r#""data_import":"IMP-0001""#).expect("regex"));
+        then.status(200).json_body(json!({ "message": true }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Data%20Import/IMP-0001");
+        then.status(200)
+            .json_body(json!({ "data": { "status": "Success" } }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::import::apply(&client, "IMP-0001").await;
+
+    assert_eq!(exit, 0);
+    start.assert();
+}
