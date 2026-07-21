@@ -26,3 +26,18 @@ pub fn fail(kind: &str, message: &str, exit: i32) -> i32 {
     );
     exit
 }
+
+/// Failure envelope that preserves partial results (e.g. writes that landed before
+/// a later step failed), so a caller never mistakes partial success for a no-op.
+pub fn fail_with_data<T: Serialize>(kind: &str, message: &str, data: T, exit: i32) -> i32 {
+    let envelope: Value = json!({
+        "ok": false,
+        "error": { "kind": kind, "message": message },
+        "data": data,
+    });
+    eprintln!(
+        "{}",
+        serde_json::to_string_pretty(&envelope).unwrap_or_else(|_| envelope.to_string())
+    );
+    exit
+}

@@ -1,11 +1,17 @@
 use serde_json::{json, Value};
 
 use crate::output;
-use crate::transport::{encode_segment, ApiError, Client};
+use crate::transport::Client;
 
-/// The activity trail is thin operations over native records: `Comment` for notes,
-/// `Communication` for medium-carrying messages, `ToDo` for open loops. Capture is a
-/// routine internal write and proceeds directly per the operating disciplines.
+/// Frappe's native communication mediums; validated client-side so a typo surfaces
+/// before any request.
+const MEDIUMS: [&str; 8] = [
+    "Email", "Chat", "Phone", "SMS", "Event", "Meeting", "Visit", "Other",
+];
+
+/// The activity trail rides Frappe's permission-aware timeline APIs — never generic
+/// CRUD on `Comment`/`Communication`, which would demand widened DocType permissions.
+/// Access is checked against the referenced business document by the site itself.
 pub struct Capture<'a> {
     pub summary: &'a str,
     pub verbatim: Option<&'a str>,
@@ -17,105 +23,172 @@ pub struct Capture<'a> {
 
 /// `erpnext activity capture` — record business input; optionally open a loop.
 pub async fn capture(client: &Client, capture: Capture<'_>) -> i32 {
-    let mut created: Vec<Value> = Vec::new();
+    let Some((ref_doctype, ref_name)) = capture.reference else {
+        return output::fail(
+            "reference-required",
+            "activity capture records against a business document; pass --reference <doctype> <name>",
+            output::EXIT_CONFIG,
+        );
+    };
+
+    if let Some(medium) = capture.medium {
+        if !MEDIUMS.contains(&medium) {
+            return output::fail(
+                "medium",
+                &format!(
+                    "medium '{medium}' is not a native value; use one of: {}",
+                    MEDIUMS.join(", ")
+                ),
+                output::EXIT_CONFIG,
+            );
+        }
+    }
 
     let content = match capture.verbatim {
         Some(verbatim) => format!("{}\n\n> {}", capture.summary, verbatim),
         None => capture.summary.to_owned(),
     };
 
-    let record = match capture.medium {
+    let mut created: Vec<Value> = Vec::new();
+
+    let outcome = match capture.medium {
         Some(medium) => {
-            let mut payload = json!({
-                "communication_type": "Communication",
-                "communication_medium": medium,
-                "subject": capture.summary,
+            // Permission-aware Communication creation; no email is sent.
+            let params = json!({
+                "doctype": ref_doctype,
+                "name": ref_name,
                 "content": content,
+                "subject": capture.summary,
                 "sent_or_received": "Received",
+                "send_email": 0,
+                "communication_medium": medium,
             });
-            if let Some((doctype, name)) = capture.reference {
-                payload["reference_doctype"] = json!(doctype);
-                payload["reference_name"] = json!(name);
-            }
-            ("Communication", payload)
+            client
+                .post(
+                    "/api/method/frappe.core.doctype.communication.email.make",
+                    &params,
+                )
+                .await
+                .map(|v| json!({ "kind": "Communication", "result": v.pointer("/message") }))
         }
         None => {
-            let mut payload = json!({
-                "comment_type": "Comment",
+            // Permission-aware Comment creation on the referenced document's timeline.
+            let params = json!({
+                "reference_doctype": ref_doctype,
+                "reference_name": ref_name,
                 "content": content,
+                "comment_email": "",
+                "comment_by": "",
             });
-            if let Some((doctype, name)) = capture.reference {
-                payload["reference_doctype"] = json!(doctype);
-                payload["reference_name"] = json!(name);
-            }
-            ("Comment", payload)
+            client
+                .post("/api/method/frappe.desk.form.utils.add_comment", &params)
+                .await
+                .map(|v| json!({ "kind": "Comment", "result": v.pointer("/message/name") }))
         }
     };
 
-    match client
-        .post(
-            &format!("/api/v2/document/{}", encode_segment(record.0)),
-            &record.1,
-        )
-        .await
-    {
-        Ok(v) => created.push(json!({ "doctype": record.0, "result": v.pointer("/data/name") })),
+    match outcome {
+        Ok(v) => created.push(v),
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 
     if let Some(follow_up) = capture.follow_up {
-        let mut payload = json!({
+        // Open loops ride the native assignment API: the ToDo is created internally
+        // after a permission check on the referenced document — no widened ToDo CRUD.
+        let assignee = match client.whoami().await {
+            Ok(user) => user,
+            Err(e) => {
+                return output::fail_with_data(
+                    e.kind(),
+                    &format!("follow-up not recorded (identity lookup failed): {e}"),
+                    json!({ "captured": created }),
+                    output::EXIT_API,
+                )
+            }
+        };
+        let mut args = json!({
+            "assign_to": [assignee],
+            "doctype": ref_doctype,
+            "name": ref_name,
             "description": follow_up,
-            "status": "Open",
         });
         if let Some(due) = capture.due {
-            payload["date"] = json!(due);
+            args["date"] = json!(due);
         }
-        if let Some((doctype, name)) = capture.reference {
-            payload["reference_type"] = json!(doctype);
-            payload["reference_name"] = json!(name);
-        }
-        match client.post("/api/v2/document/ToDo", &payload).await {
-            Ok(v) => created.push(json!({ "doctype": "ToDo", "result": v.pointer("/data/name") })),
-            Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+        match client
+            .post("/api/method/frappe.desk.form.assign_to.add", &args)
+            .await
+        {
+            Ok(_) => created.push(json!({ "kind": "ToDo", "result": "assigned" })),
+            Err(e) => {
+                return output::fail_with_data(
+                    e.kind(),
+                    &format!("comment recorded but follow-up failed: {e}"),
+                    json!({ "captured": created }),
+                    output::EXIT_API,
+                )
+            }
         }
     }
 
     output::ok(json!({ "captured": created }))
 }
 
-/// `erpnext activity list` — time-ordered native records for a reference and window.
+/// `erpnext activity list` — the referenced document's timeline, permission-checked
+/// by the site through the native docinfo loader.
 pub async fn list(
     client: &Client,
     reference: Option<(&str, &str)>,
     since: Option<&str>,
     until: Option<&str>,
 ) -> i32 {
-    let mut records: Vec<Value> = Vec::new();
+    let Some((ref_doctype, ref_name)) = reference else {
+        return output::fail(
+            "reference-required",
+            "activity list reads a business document's timeline; pass --reference <doctype> <name>",
+            output::EXIT_CONFIG,
+        );
+    };
 
-    for (doctype, ref_dt_field, ref_name_field, text_field) in [
-        ("Comment", "reference_doctype", "reference_name", "content"),
-        (
-            "Communication",
-            "reference_doctype",
-            "reference_name",
-            "content",
-        ),
-    ] {
-        match query(
-            client,
-            doctype,
-            ref_dt_field,
-            ref_name_field,
-            text_field,
-            reference,
-            since,
-            until,
-        )
+    let params = json!({ "doctype": ref_doctype, "name": ref_name });
+    let docinfo = match client
+        .post("/api/method/frappe.desk.form.load.get_docinfo", &params)
         .await
-        {
-            Ok(mut rows) => records.append(&mut rows),
-            Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    {
+        Ok(v) => v,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let mut records: Vec<Value> = Vec::new();
+    for (key, kind, text_field) in [
+        ("comments", "Comment", "content"),
+        ("communications", "Communication", "content"),
+        ("todos", "ToDo", "description"),
+    ] {
+        let rows = docinfo
+            .pointer(&format!("/docinfo/{key}"))
+            .or_else(|| docinfo.pointer(&format!("/message/docinfo/{key}")))
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        for row in rows {
+            let creation = row
+                .pointer("/creation")
+                .and_then(Value::as_str)
+                .unwrap_or("");
+            if since.map(|s| creation < s).unwrap_or(false) {
+                continue;
+            }
+            if until.map(|u| creation > u).unwrap_or(false) {
+                continue;
+            }
+            records.push(json!({
+                "kind": kind,
+                "name": row.pointer("/name"),
+                "creation": creation,
+                "text": row.pointer(&format!("/{text_field}")),
+                "owner": row.pointer("/owner"),
+            }));
         }
     }
 
@@ -125,7 +198,9 @@ pub async fn list(
         ka.cmp(kb)
     });
 
-    output::ok(json!({ "activity": records }))
+    output::ok(
+        json!({ "reference": { "doctype": ref_doctype, "name": ref_name }, "activity": records }),
+    )
 }
 
 /// `erpnext activity open-loops` — open `ToDo` records, optionally due-bounded.
@@ -147,9 +222,11 @@ pub async fn open_loops(
     let rendered = serde_json::to_string(&filters).unwrap_or_default();
     let path = format!(
         "/api/v2/document/{}?fields={}&filters={}",
-        encode_segment(doctype),
-        encode_segment(r#"["name","description","date","reference_type","reference_name"]"#),
-        encode_segment(&rendered),
+        crate::transport::encode_segment(doctype),
+        crate::transport::encode_segment(
+            r#"["name","description","date","reference_type","reference_name"]"#
+        ),
+        crate::transport::encode_segment(&rendered),
     );
     match client.get(&path).await {
         Ok(v) => {
@@ -158,51 +235,4 @@ pub async fn open_loops(
         }
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
-}
-
-#[allow(clippy::too_many_arguments)]
-async fn query(
-    client: &Client,
-    doctype: &str,
-    ref_dt_field: &str,
-    ref_name_field: &str,
-    text_field: &str,
-    reference: Option<(&str, &str)>,
-    since: Option<&str>,
-    until: Option<&str>,
-) -> Result<Vec<Value>, ApiError> {
-    let mut filters: Vec<Value> = Vec::new();
-    if let Some((ref_dt, ref_name)) = reference {
-        filters.push(json!([doctype, ref_dt_field, "=", ref_dt]));
-        filters.push(json!([doctype, ref_name_field, "=", ref_name]));
-    }
-    if let Some(since) = since {
-        filters.push(json!([doctype, "creation", ">=", since]));
-    }
-    if let Some(until) = until {
-        filters.push(json!([doctype, "creation", "<=", until]));
-    }
-
-    let rendered = serde_json::to_string(&filters).unwrap_or_default();
-    let path = format!(
-        "/api/v2/document/{}?fields={}&filters={}",
-        encode_segment(doctype),
-        encode_segment(&format!(r#"["name","creation","{text_field}"]"#)),
-        encode_segment(&rendered),
-    );
-    let listing = client.get(&path).await?;
-    let rows = listing
-        .pointer("/data")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-    Ok(rows
-        .into_iter()
-        .map(|mut row| {
-            if let Some(obj) = row.as_object_mut() {
-                obj.insert("doctype".into(), json!(doctype));
-            }
-            row
-        })
-        .collect())
 }

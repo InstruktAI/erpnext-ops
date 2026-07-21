@@ -351,3 +351,100 @@ async fn source_create_sends_the_derived_name_in_the_payload() {
     assert_eq!(exit, 0);
     create.assert();
 }
+
+#[tokio::test]
+async fn activity_capture_uses_permission_aware_timeline_apis() {
+    let server = MockServer::start_async().await;
+    let comment = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.form.utils.add_comment")
+            .body_matches(Regex::new(r#""reference_name":"SAL-QTN-2026-00001""#).expect("regex"));
+        then.status(200)
+            .json_body(json!({ "message": { "name": "cmt-1" } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user");
+        then.status(200)
+            .json_body(json!({ "message": "agent@instrukt.ai" }));
+    });
+    let assign = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.form.assign_to.add")
+            .body_matches(Regex::new(r#""assign_to":\["agent@instrukt.ai"\]"#).expect("regex"));
+        then.status(200).json_body(json!({ "message": [] }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::activity::capture(
+        &client,
+        commands::activity::Capture {
+            summary: "note",
+            verbatim: None,
+            medium: None,
+            reference: Some(("Quotation", "SAL-QTN-2026-00001")),
+            follow_up: Some("call them"),
+            due: Some("2026-07-28"),
+        },
+    )
+    .await;
+
+    assert_eq!(exit, 0);
+    comment.assert();
+    assign.assert();
+}
+
+#[tokio::test]
+async fn activity_capture_without_reference_is_a_structured_blocker_before_any_request() {
+    let server = MockServer::start_async().await;
+    let catch_all = server.mock(|when, then| {
+        when.path_matches(Regex::new(".*").expect("regex"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::activity::capture(
+        &client,
+        commands::activity::Capture {
+            summary: "note",
+            verbatim: None,
+            medium: None,
+            reference: None,
+            follow_up: None,
+            due: None,
+        },
+    )
+    .await;
+
+    assert_eq!(
+        exit, 2,
+        "missing reference is a config-class structured failure"
+    );
+    assert_eq!(catch_all.hits(), 0);
+}
+
+#[tokio::test]
+async fn activity_capture_rejects_non_native_medium_client_side() {
+    let server = MockServer::start_async().await;
+    let catch_all = server.mock(|when, then| {
+        when.path_matches(Regex::new(".*").expect("regex"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::activity::capture(
+        &client,
+        commands::activity::Capture {
+            summary: "note",
+            verbatim: None,
+            medium: Some("Carrier Pigeon"),
+            reference: Some(("Quotation", "Q-1")),
+            follow_up: None,
+            due: None,
+        },
+    )
+    .await;
+
+    assert_eq!(exit, 2);
+    assert_eq!(catch_all.hits(), 0);
+}

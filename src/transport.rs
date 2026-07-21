@@ -186,6 +186,7 @@ fn extract_message(body: &Value) -> String {
     body.pointer("/exception")
         .or_else(|| body.pointer("/message"))
         .or_else(|| body.pointer("/errors/0/message"))
+        .or_else(|| body.pointer("/errors/0/type"))
         .and_then(Value::as_str)
         .unwrap_or("no detail provided by site")
         .to_owned()
