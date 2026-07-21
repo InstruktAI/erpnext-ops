@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use erpnext::config::Context;
+use erpnext::config::{self, Paths, PrivilegeMode};
 use erpnext::transport::Client;
 use erpnext::{commands, output};
 
@@ -48,6 +48,18 @@ enum Command {
 enum ContextCommand {
     /// Show the active context, secret-safe
     Show,
+    /// Select the operating context by company scaffold or site FQDN
+    Use {
+        /// Site FQDN to operate (resolved to its company scaffold, fail-closed)
+        #[arg(long)]
+        site: Option<String>,
+        /// Company slug in the TeleClaude company registry
+        #[arg(long)]
+        company: Option<String>,
+        /// Privilege identity: operator (default) or admin
+        #[arg(long = "as", default_value = "operator")]
+        privilege: PrivilegeMode,
+    },
 }
 
 #[derive(Subcommand)]
@@ -152,109 +164,119 @@ fn parse_filter(raw: &str) -> Result<(String, String), String> {
         .ok_or_else(|| format!("filter must be field=value, got '{raw}'"))
 }
 
-fn client_or_exit(ctx: Context) -> Client {
-    match Client::new(ctx) {
+#[tokio::main]
+async fn main() {
+    let cli = Cli::parse();
+
+    let paths = match Paths::from_home() {
+        Ok(paths) => paths,
+        Err(e) => std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG)),
+    };
+
+    if let Command::Context { command } = &cli.command {
+        let exit = match command {
+            ContextCommand::Show => match config::resolve(&paths) {
+                Ok(ctx) => commands::context::show(&ctx),
+                Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),
+            },
+            ContextCommand::Use {
+                site,
+                company,
+                privilege,
+            } => match config::select(&paths, site.as_deref(), company.as_deref(), *privilege) {
+                Ok(ctx) => commands::context::show(&ctx),
+                Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),
+            },
+        };
+        std::process::exit(exit);
+    }
+
+    let ctx = match config::resolve(&paths) {
+        Ok(ctx) => ctx,
+        Err(e) => std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG)),
+    };
+    let client = match Client::new(ctx) {
         Ok(client) => client,
         Err(e) => std::process::exit(output::fail(
             "transport",
             &e.to_string(),
             output::EXIT_CONFIG,
         )),
-    }
-}
-
-#[tokio::main]
-async fn main() {
-    let cli = Cli::parse();
-
-    let ctx = match Context::from_env() {
-        Ok(ctx) => ctx,
-        Err(e) => std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG)),
     };
 
     let exit = match cli.command {
-        Command::Context {
-            command: ContextCommand::Show,
-        } => commands::context::show(&ctx),
+        Command::Context { .. } => unreachable!("handled above"),
         Command::Meta {
             command: MetaCommand::Show { doctype },
-        } => commands::meta::show(&client_or_exit(ctx), &doctype).await,
-        Command::Doc { command } => {
-            let client = client_or_exit(ctx);
-            match command {
-                DocCommand::List {
-                    doctype,
-                    filters,
-                    limit,
-                } => commands::doc::list(&client, &doctype, &filters, limit).await,
-                DocCommand::Get { doctype, name } => {
-                    commands::doc::get(&client, &doctype, &name).await
-                }
-                DocCommand::Create {
-                    doctype,
-                    data,
-                    apply,
-                } => commands::doc::create(&client, &doctype, &data, apply).await,
-                DocCommand::Update {
-                    doctype,
-                    name,
-                    data,
-                    apply,
-                } => commands::doc::update(&client, &doctype, &name, &data, apply).await,
-                DocCommand::Delete {
-                    doctype,
-                    name,
-                    apply,
-                } => commands::doc::delete(&client, &doctype, &name, apply).await,
-                DocCommand::Copy {
-                    doctype,
-                    name,
-                    data,
-                    apply,
-                } => commands::doc::copy(&client, &doctype, &name, data.as_deref(), apply).await,
-            }
-        }
-        Command::Workflow { command } => {
-            let client = client_or_exit(ctx);
-            match command {
-                WorkflowCommand::Submit {
-                    doctype,
-                    name,
-                    apply,
-                } => {
-                    commands::workflow::run_method(&client, &doctype, &name, "submit", None, apply)
-                        .await
-                }
-                WorkflowCommand::Cancel {
-                    doctype,
-                    name,
-                    apply,
-                } => {
-                    commands::workflow::run_method(&client, &doctype, &name, "cancel", None, apply)
-                        .await
-                }
-                WorkflowCommand::Method {
-                    doctype,
-                    name,
-                    method,
-                    data,
-                    apply,
-                } => {
-                    commands::workflow::run_method(
-                        &client,
-                        &doctype,
-                        &name,
-                        &method,
-                        data.as_deref(),
-                        apply,
-                    )
+        } => commands::meta::show(&client, &doctype).await,
+        Command::Doc { command } => match command {
+            DocCommand::List {
+                doctype,
+                filters,
+                limit,
+            } => commands::doc::list(&client, &doctype, &filters, limit).await,
+            DocCommand::Get { doctype, name } => commands::doc::get(&client, &doctype, &name).await,
+            DocCommand::Create {
+                doctype,
+                data,
+                apply,
+            } => commands::doc::create(&client, &doctype, &data, apply).await,
+            DocCommand::Update {
+                doctype,
+                name,
+                data,
+                apply,
+            } => commands::doc::update(&client, &doctype, &name, &data, apply).await,
+            DocCommand::Delete {
+                doctype,
+                name,
+                apply,
+            } => commands::doc::delete(&client, &doctype, &name, apply).await,
+            DocCommand::Copy {
+                doctype,
+                name,
+                data,
+                apply,
+            } => commands::doc::copy(&client, &doctype, &name, data.as_deref(), apply).await,
+        },
+        Command::Workflow { command } => match command {
+            WorkflowCommand::Submit {
+                doctype,
+                name,
+                apply,
+            } => {
+                commands::workflow::run_method(&client, &doctype, &name, "submit", None, apply)
                     .await
-                }
             }
-        }
+            WorkflowCommand::Cancel {
+                doctype,
+                name,
+                apply,
+            } => {
+                commands::workflow::run_method(&client, &doctype, &name, "cancel", None, apply)
+                    .await
+            }
+            WorkflowCommand::Method {
+                doctype,
+                name,
+                method,
+                data,
+                apply,
+            } => {
+                commands::workflow::run_method(
+                    &client,
+                    &doctype,
+                    &name,
+                    &method,
+                    data.as_deref(),
+                    apply,
+                )
+                .await
+            }
+        },
         Command::Ops {
             command: OpsCommand::Doctor,
-        } => commands::ops::doctor(&client_or_exit(ctx)).await,
+        } => commands::ops::doctor(&client).await,
     };
 
     std::process::exit(exit);

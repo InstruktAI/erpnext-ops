@@ -9,6 +9,7 @@ use erpnext::transport::{ApiError, Client};
 fn context_for(server: &MockServer) -> Context {
     Context {
         site_url: Url::parse(&server.base_url()).expect("mock server url"),
+        company_slug: "test-co".into(),
         company: None,
         privilege: PrivilegeMode::Operator,
         credentials: Credentials {

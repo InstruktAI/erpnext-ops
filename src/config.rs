@@ -1,10 +1,12 @@
 use std::fmt;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 use thiserror::Error;
 use url::Url;
 
 /// Privilege mode of the active identity. Operator failures never fall back to admin.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PrivilegeMode {
     Operator,
@@ -20,8 +22,22 @@ impl fmt::Display for PrivilegeMode {
     }
 }
 
+impl std::str::FromStr for PrivilegeMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "operator" => Ok(PrivilegeMode::Operator),
+            "admin" => Ok(PrivilegeMode::Admin),
+            other => Err(format!(
+                "privilege must be 'operator' or 'admin', got '{other}'"
+            )),
+        }
+    }
+}
+
 /// API credential pair. Debug/Display never reveal the secret material.
-#[derive(Clone)]
+#[derive(Clone, serde::Deserialize)]
 pub struct Credentials {
     pub api_key: String,
     pub api_secret: String,
@@ -40,78 +56,189 @@ impl fmt::Debug for Credentials {
 #[derive(Debug, Clone)]
 pub struct Context {
     pub site_url: Url,
+    pub company_slug: String,
     pub company: Option<String>,
     pub privilege: PrivilegeMode,
     pub credentials: Credentials,
 }
 
-#[derive(Debug, Error)]
-pub enum ConfigError {
-    #[error("missing configuration: {0} (set it in the environment or .env)")]
-    Missing(&'static str),
-    #[error("invalid site url in ERPNEXT_URL: {0}")]
-    InvalidUrl(String),
-    #[error("invalid .env file: {0} (quote values containing spaces)")]
-    EnvFile(String),
+/// The persisted selection: which company scaffold and privilege the agent chose.
+/// Credentials are never stored here — they resolve from the company credential
+/// home at command time.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Selection {
+    pub company_slug: String,
+    pub privilege: PrivilegeMode,
 }
 
-/// A missing .env is fine (explicit environment wins); a malformed one fails closed —
-/// a suppressed parse error would silently drop every variable after the bad line and
-/// misreport a later variable as missing.
-fn apply_env_file<T>(result: Result<T, dotenvy::Error>) -> Result<(), ConfigError> {
-    match result {
-        Ok(_) => Ok(()),
-        Err(dotenvy::Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(e) => Err(ConfigError::EnvFile(e.to_string())),
+/// The per-company credential home entry: `<registry>/<slug>/erpnext.json`.
+#[derive(serde::Deserialize)]
+struct CredentialFile {
+    site_url: String,
+    company: Option<String>,
+    operator: Credentials,
+}
+
+#[derive(Debug, Error)]
+pub enum ConfigError {
+    #[error("no operating context selected; run `erpnext context use --company <slug>` (or --site <fqdn>)")]
+    NoSelection,
+    #[error("selection file is invalid: {0}")]
+    InvalidSelection(String),
+    #[error("company '{0}' has no credential home entry ({1})")]
+    NoCredentialHome(String, String),
+    #[error("credential home entry for '{0}' is invalid: {1}")]
+    InvalidCredentialFile(String, String),
+    #[error("invalid site url in credential home for '{0}': {1}")]
+    InvalidUrl(String, String),
+    #[error("no company credential home matches site '{0}'")]
+    UnknownSite(String),
+    #[error("site '{0}' is served by multiple company scaffolds ({1}); select by --company")]
+    AmbiguousSite(String, String),
+    #[error("administrator context resolution is not implemented; administrator bootstrap secrets live in itsUP, never in the company credential home")]
+    AdminUnsupported,
+    #[error("cannot locate home directory")]
+    NoHome,
+    #[error("io failure at {0}: {1}")]
+    Io(String, String),
+}
+
+/// Filesystem roots the CLI operates on. Injectable so tests never touch real state.
+#[derive(Debug, Clone)]
+pub struct Paths {
+    /// Selection state: `~/.config/erpnext/context.json`.
+    pub selection_file: PathBuf,
+    /// Company registry root: `~/.teleclaude/companies`.
+    pub registry_root: PathBuf,
+}
+
+impl Paths {
+    pub fn from_home() -> Result<Self, ConfigError> {
+        let home = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .ok_or(ConfigError::NoHome)?;
+        Ok(Paths {
+            selection_file: home.join(".config").join("erpnext").join("context.json"),
+            registry_root: home.join(".teleclaude").join("companies"),
+        })
+    }
+}
+
+/// Persist a selection after validating it resolves to a credential home entry.
+pub fn select(
+    paths: &Paths,
+    site: Option<&str>,
+    company_slug: Option<&str>,
+    privilege: PrivilegeMode,
+) -> Result<Context, ConfigError> {
+    let slug = match (company_slug, site) {
+        (Some(slug), _) => slug.to_owned(),
+        (None, Some(site)) => find_slug_by_site(&paths.registry_root, site)?,
+        (None, None) => return Err(ConfigError::NoSelection),
+    };
+
+    let selection = Selection {
+        company_slug: slug,
+        privilege,
+    };
+    let ctx = resolve_selection(paths, &selection)?;
+
+    if let Some(parent) = paths.selection_file.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| ConfigError::Io(parent.display().to_string(), e.to_string()))?;
+    }
+    let rendered = serde_json::to_string_pretty(&selection)
+        .map_err(|e| ConfigError::InvalidSelection(e.to_string()))?;
+    fs::write(&paths.selection_file, rendered)
+        .map_err(|e| ConfigError::Io(paths.selection_file.display().to_string(), e.to_string()))?;
+
+    Ok(ctx)
+}
+
+/// Resolve the active context from the persisted selection and the credential home.
+pub fn resolve(paths: &Paths) -> Result<Context, ConfigError> {
+    let raw = fs::read_to_string(&paths.selection_file).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            ConfigError::NoSelection
+        } else {
+            ConfigError::Io(paths.selection_file.display().to_string(), e.to_string())
+        }
+    })?;
+    let selection: Selection =
+        serde_json::from_str(&raw).map_err(|e| ConfigError::InvalidSelection(e.to_string()))?;
+    resolve_selection(paths, &selection)
+}
+
+fn resolve_selection(paths: &Paths, selection: &Selection) -> Result<Context, ConfigError> {
+    if selection.privilege == PrivilegeMode::Admin {
+        return Err(ConfigError::AdminUnsupported);
+    }
+
+    let slug = &selection.company_slug;
+    let file = credential_file_path(&paths.registry_root, slug);
+    let raw = fs::read_to_string(&file)
+        .map_err(|_| ConfigError::NoCredentialHome(slug.clone(), file.display().to_string()))?;
+    let parsed: CredentialFile = serde_json::from_str(&raw)
+        .map_err(|e| ConfigError::InvalidCredentialFile(slug.clone(), e.to_string()))?;
+
+    let site_url = Url::parse(&parsed.site_url)
+        .map_err(|e| ConfigError::InvalidUrl(slug.clone(), format!("{}: {e}", parsed.site_url)))?;
+    if site_url.scheme() != "https" && site_url.host_str() != Some("localhost") {
+        return Err(ConfigError::InvalidUrl(
+            slug.clone(),
+            format!("{}: only https endpoints are accepted", parsed.site_url),
+        ));
+    }
+
+    Ok(Context {
+        site_url,
+        company_slug: slug.clone(),
+        company: parsed.company,
+        privilege: selection.privilege,
+        credentials: parsed.operator,
+    })
+}
+
+fn credential_file_path(registry_root: &Path, slug: &str) -> PathBuf {
+    registry_root.join(slug).join("erpnext.json")
+}
+
+/// Site-first selection: find the one company scaffold whose credential home serves
+/// the site. Ambiguity and misses are structured failures, never guesses.
+fn find_slug_by_site(registry_root: &Path, site: &str) -> Result<String, ConfigError> {
+    let entries = fs::read_dir(registry_root)
+        .map_err(|e| ConfigError::Io(registry_root.display().to_string(), e.to_string()))?;
+
+    let mut matches: Vec<String> = Vec::new();
+    for entry in entries.flatten() {
+        let slug = entry.file_name().to_string_lossy().into_owned();
+        let file = credential_file_path(registry_root, &slug);
+        let Ok(raw) = fs::read_to_string(&file) else {
+            continue;
+        };
+        let Ok(parsed) = serde_json::from_str::<CredentialFile>(&raw) else {
+            continue;
+        };
+        if Url::parse(&parsed.site_url)
+            .ok()
+            .and_then(|u| u.host_str().map(str::to_owned))
+            == Some(site.to_owned())
+        {
+            matches.push(slug);
+        }
+    }
+
+    match matches.len() {
+        0 => Err(ConfigError::UnknownSite(site.to_owned())),
+        1 => Ok(matches.remove(0)),
+        _ => Err(ConfigError::AmbiguousSite(
+            site.to_owned(),
+            matches.join(", "),
+        )),
     }
 }
 
 impl Context {
-    /// Resolve the operating context from the environment, fail-closed:
-    /// every required input must be present and unambiguous or resolution fails.
-    pub fn from_env() -> Result<Self, ConfigError> {
-        apply_env_file(dotenvy::dotenv())?;
-
-        let raw_url =
-            std::env::var("ERPNEXT_URL").map_err(|_| ConfigError::Missing("ERPNEXT_URL"))?;
-        let site_url =
-            Url::parse(&raw_url).map_err(|e| ConfigError::InvalidUrl(format!("{raw_url}: {e}")))?;
-        if site_url.scheme() != "https" && site_url.host_str() != Some("localhost") {
-            return Err(ConfigError::InvalidUrl(format!(
-                "{raw_url}: only https endpoints are accepted"
-            )));
-        }
-
-        let api_key = std::env::var("ERPNEXT_API_KEY")
-            .map_err(|_| ConfigError::Missing("ERPNEXT_API_KEY"))?;
-        let api_secret = std::env::var("ERPNEXT_API_SECRET")
-            .map_err(|_| ConfigError::Missing("ERPNEXT_API_SECRET"))?;
-
-        let company = std::env::var("ERPNEXT_COMPANY")
-            .ok()
-            .filter(|c| !c.trim().is_empty());
-
-        let privilege = match std::env::var("ERPNEXT_PRIVILEGE").ok().as_deref() {
-            None | Some("operator") => PrivilegeMode::Operator,
-            Some("admin") => PrivilegeMode::Admin,
-            Some(other) => {
-                return Err(ConfigError::InvalidUrl(format!(
-                    "ERPNEXT_PRIVILEGE must be 'operator' or 'admin', got '{other}'"
-                )))
-            }
-        };
-
-        Ok(Context {
-            site_url,
-            company,
-            privilege,
-            credentials: Credentials {
-                api_key,
-                api_secret,
-            },
-        })
-    }
-
     /// Site host name (the tenant identity).
     pub fn site(&self) -> &str {
         self.site_url.host_str().unwrap_or("<invalid>")
@@ -122,25 +249,75 @@ impl Context {
 mod tests {
     use super::*;
 
-    #[test]
-    fn malformed_env_file_fails_closed_instead_of_truncating() {
-        let dir = std::env::temp_dir().join(format!("erpnext-env-test-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).expect("temp dir");
-        let file = dir.join(".env");
-        std::fs::write(&file, "ERPNEXT_COMPANY=Instrukt AI\nERPNEXT_API_KEY=k\n").expect("write");
+    fn temp_paths(tag: &str) -> Paths {
+        let base = std::env::temp_dir().join(format!("erpnext-cfg-{tag}-{}", std::process::id()));
+        fs::create_dir_all(base.join("companies")).expect("temp registry");
+        Paths {
+            selection_file: base.join("config").join("context.json"),
+            registry_root: base.join("companies"),
+        }
+    }
 
-        let outcome = apply_env_file(dotenvy::from_path(&file));
-        let err = outcome.expect_err("unquoted value with spaces must surface a parse error");
-        assert!(matches!(err, ConfigError::EnvFile(_)));
-        assert!(err.to_string().contains("quote values containing spaces"));
-
-        std::fs::remove_dir_all(&dir).ok();
+    fn write_company(paths: &Paths, slug: &str, site: &str, company: &str) {
+        let dir = paths.registry_root.join(slug);
+        fs::create_dir_all(&dir).expect("company dir");
+        fs::write(
+            dir.join("erpnext.json"),
+            format!(
+                r#"{{"site_url":"https://{site}","company":"{company}","operator":{{"api_key":"k","api_secret":"s"}}}}"#
+            ),
+        )
+        .expect("credential file");
     }
 
     #[test]
-    fn missing_env_file_is_fine() {
-        let absent = std::path::Path::new("/nonexistent/erpnext-test/.env");
-        assert!(apply_env_file(dotenvy::from_path(absent)).is_ok());
+    fn select_by_company_persists_and_resolves() {
+        let paths = temp_paths("by-company");
+        write_company(&paths, "instrukt-ai", "one.erpnext.example", "Instrukt AI");
+
+        let ctx = select(&paths, None, Some("instrukt-ai"), PrivilegeMode::Operator)
+            .expect("selection resolves");
+        assert_eq!(ctx.site(), "one.erpnext.example");
+        assert_eq!(ctx.company.as_deref(), Some("Instrukt AI"));
+
+        let resolved = resolve(&paths).expect("persisted selection resolves");
+        assert_eq!(resolved.company_slug, "instrukt-ai");
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    #[test]
+    fn select_by_site_is_fail_closed_on_ambiguity() {
+        let paths = temp_paths("ambiguous");
+        write_company(&paths, "a", "shared.erpnext.example", "A");
+        write_company(&paths, "b", "shared.erpnext.example", "B");
+
+        let err = select(
+            &paths,
+            Some("shared.erpnext.example"),
+            None,
+            PrivilegeMode::Operator,
+        )
+        .expect_err("two scaffolds for one site must not auto-pick");
+        assert!(matches!(err, ConfigError::AmbiguousSite(..)));
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    #[test]
+    fn no_selection_is_a_structured_blocker() {
+        let paths = temp_paths("noselect");
+        let err = resolve(&paths).expect_err("missing selection must not guess");
+        assert!(matches!(err, ConfigError::NoSelection));
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    #[test]
+    fn admin_selection_is_refused_without_fallback() {
+        let paths = temp_paths("admin");
+        write_company(&paths, "x", "x.erpnext.example", "X");
+        let err = select(&paths, None, Some("x"), PrivilegeMode::Admin)
+            .expect_err("admin resolution is not silently granted");
+        assert!(matches!(err, ConfigError::AdminUnsupported));
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
     }
 
     #[test]
