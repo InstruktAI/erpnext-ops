@@ -28,8 +28,14 @@ async fn preview_sends_no_request_at_all() {
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit =
-        commands::doc::create(&client, "Customer", r#"{"customer_name":"Acme"}"#, false).await;
+    let exit = commands::doc::create(
+        &client,
+        "Customer",
+        r#"{"customer_name":"Acme"}"#,
+        None,
+        false,
+    )
+    .await;
 
     assert_eq!(exit, 0);
     assert_eq!(catch_all.hits(), 0, "preview must not touch the site");
@@ -55,8 +61,14 @@ async fn apply_sends_the_exact_native_request_with_auth() {
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit =
-        commands::doc::create(&client, "Customer", r#"{"customer_name":"Acme"}"#, true).await;
+    let exit = commands::doc::create(
+        &client,
+        "Customer",
+        r#"{"customer_name":"Acme"}"#,
+        None,
+        true,
+    )
+    .await;
 
     assert_eq!(exit, 0);
     meta.assert();
@@ -79,7 +91,7 @@ async fn preflight_blocks_invalid_payload_before_any_write() {
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(&client, "Customer", r#"{"bogus":1}"#, true).await;
+    let exit = commands::doc::create(&client, "Customer", r#"{"bogus":1}"#, None, true).await;
 
     assert_eq!(exit, 1);
     meta.assert();
@@ -226,4 +238,116 @@ async fn resolve_document_miss_is_structured_none() {
         .expect("query succeeds");
 
     assert_eq!(resolution, commands::resolve::Resolution::None);
+}
+
+/// The peer-specified crash-window proof: the first create reached ERPNext but its
+/// response was lost. The retry with the same source token resolves the existing
+/// document by its deterministic name and sends zero further create requests.
+#[tokio::test]
+async fn source_retry_after_lost_response_replays_without_second_create() {
+    let server = MockServer::start_async().await;
+
+    // The document already exists on the site (created by the "lost" first attempt).
+    let get_existing = server.mock(|when, then| {
+        when.method(GET).path_matches(
+            Regex::new("^/api/v2/document/Quotation/SRC-[0-9a-f]{20}$").expect("regex"),
+        );
+        then.status(200).json_body(json!({ "data": {
+            "name": "SRC-known", "party_name": "Acme Pilot BV", "quotation_to": "Customer",
+        }}));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Quotation");
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::doc::create(
+        &client,
+        "Quotation",
+        r#"{"party_name":"Acme Pilot BV","quotation_to":"Customer"}"#,
+        Some("quotation/acme-pilot/2026-07-onboarding"),
+        true,
+    )
+    .await;
+
+    assert_eq!(exit, 0, "a faithful replay succeeds");
+    get_existing.assert();
+    assert_eq!(create.hits(), 0, "the retry must send zero create requests");
+}
+
+/// Same token, different data: a structured idempotency conflict, never a write.
+#[tokio::test]
+async fn source_token_reuse_with_different_data_is_a_conflict() {
+    let server = MockServer::start_async().await;
+
+    server.mock(|when, then| {
+        when.method(GET).path_matches(
+            Regex::new("^/api/v2/document/Quotation/SRC-[0-9a-f]{20}$").expect("regex"),
+        );
+        then.status(200).json_body(json!({ "data": {
+            "name": "SRC-known", "party_name": "Someone Else BV",
+        }}));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Quotation");
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::doc::create(
+        &client,
+        "Quotation",
+        r#"{"party_name":"Acme Pilot BV"}"#,
+        Some("quotation/acme-pilot/2026-07-onboarding"),
+        true,
+    )
+    .await;
+
+    assert_eq!(exit, 1, "reused token with different data must fail");
+    assert_eq!(
+        create.hits(),
+        0,
+        "a conflict must never reach the site as a write"
+    );
+}
+
+/// Fresh token: the derived name travels inside the create payload atomically.
+#[tokio::test]
+async fn source_create_sends_the_derived_name_in_the_payload() {
+    let server = MockServer::start_async().await;
+
+    server.mock(|when, then| {
+        when.method(GET).path_matches(
+            Regex::new("^/api/v2/document/Quotation/SRC-[0-9a-f]{20}$").expect("regex"),
+        );
+        then.status(404)
+            .json_body(json!({ "message": "not found" }));
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Quotation/meta");
+        then.status(200).json_body(json!({ "data": { "fields": [
+            { "fieldname": "party_name", "reqd": 0 },
+        ]}}));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/v2/document/Quotation")
+            .body_matches(Regex::new(r#""name":"SRC-[0-9a-f]{20}""#).expect("regex"));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "SRC-new" } }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::doc::create(
+        &client,
+        "Quotation",
+        r#"{"party_name":"Acme Pilot BV"}"#,
+        Some("quotation/acme-pilot/fresh"),
+        true,
+    )
+    .await;
+
+    assert_eq!(exit, 0);
+    create.assert();
 }

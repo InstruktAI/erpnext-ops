@@ -38,12 +38,24 @@ pub async fn get(client: &Client, doctype: &str, name: &str) -> i32 {
     }
 }
 
-/// `erpnext doc create <doctype> --data <json> [--apply]`
+/// `erpnext doc create <doctype> --data <json> [--source <token>] [--apply]`
 ///
 /// Preview by default: shows the exact native operation that would be sent, without
 /// sending it. `--apply` runs basic live-metadata preflight, sends the native request,
 /// and reports the site's result.
-pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> i32 {
+///
+/// With `--source <token>` the create is exactly idempotent: the document name is
+/// derived deterministically from site + doctype + token and sent atomically in the
+/// payload, so a retry after a lost response finds the existing document instead of
+/// creating a second one. An idempotency-named document opts out of native series
+/// naming — use it where replay safety outweighs series numbers.
+pub async fn create(
+    client: &Client,
+    doctype: &str,
+    data: &str,
+    source: Option<&str>,
+    apply: bool,
+) -> i32 {
     let payload: Value = match serde_json::from_str(data) {
         Ok(v) => v,
         Err(e) => {
@@ -61,6 +73,14 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
             output::EXIT_CONFIG,
         );
     };
+    let mut payload_map = payload_map.clone();
+
+    let derived_name =
+        source.map(|token| derive_source_name(client.context().site(), doctype, token));
+    if let Some(name) = &derived_name {
+        payload_map.insert("name".into(), Value::String(name.clone()));
+    }
+    let payload = Value::Object(payload_map.clone());
 
     let path = format!("/api/v2/document/{}", encode_segment(doctype));
 
@@ -73,9 +93,32 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
                 "privilege": client.context().privilege,
             },
             "operation": { "method": "POST", "path": path, "payload": payload },
+            "idempotency": derived_name.as_ref().map(|n| json!({ "source_derived_name": n })),
             "preflight": "runs against live DocType metadata on apply",
             "apply_command": format!("erpnext doc create {doctype} --data '<same payload>' --apply"),
         }));
+    }
+
+    // Idempotent replay: the deterministic name is looked up before any write.
+    if let Some(name) = &derived_name {
+        match replay_check(client, doctype, name, &payload_map).await {
+            ReplayCheck::Missing => {}
+            ReplayCheck::Replayed(existing) => {
+                return output::ok(json!({ "replayed": true, "data": existing }))
+            }
+            ReplayCheck::Conflict(diff) => {
+                return output::fail(
+                    "idempotency-conflict",
+                    &format!(
+                        "document '{name}' exists from the same source token but differs: {diff}"
+                    ),
+                    output::EXIT_API,
+                )
+            }
+            ReplayCheck::Failed(e) => {
+                return output::fail(e.kind(), &e.to_string(), output::EXIT_API)
+            }
+        }
     }
 
     // Basic preflight against live metadata: unknown fields and missing mandatory fields.
@@ -89,13 +132,120 @@ pub async fn create(client: &Client, doctype: &str, data: &str, apply: bool) -> 
             )
         }
     };
-    if let Some(findings) = preflight(&meta, payload_map) {
+    if let Some(findings) = preflight(&meta, &payload_map) {
         return output::fail("preflight", &findings, output::EXIT_API);
     }
 
     match client.post(&path, &payload).await {
         Ok(v) => output::ok(v),
-        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+        Err(e) => {
+            // A concurrent create with the same derived name loses the primary-key race;
+            // resolve it as a replay instead of surfacing the duplicate error.
+            if let Some(name) = &derived_name {
+                if matches!(e, crate::transport::ApiError::Rejected { .. }) {
+                    match replay_check(client, doctype, name, &payload_map).await {
+                        ReplayCheck::Replayed(existing) => {
+                            return output::ok(json!({ "replayed": true, "data": existing }))
+                        }
+                        ReplayCheck::Conflict(diff) => {
+                            return output::fail(
+                                "idempotency-conflict",
+                                &format!(
+                                    "document '{name}' exists from the same source token but differs: {diff}"
+                                ),
+                                output::EXIT_API,
+                            )
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            output::fail(e.kind(), &e.to_string(), output::EXIT_API)
+        }
+    }
+}
+
+/// Deterministic, length-bounded document name for a source token.
+fn derive_source_name(site: &str, doctype: &str, token: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(site.as_bytes());
+    hasher.update(b"|");
+    hasher.update(doctype.as_bytes());
+    hasher.update(b"|");
+    hasher.update(token.as_bytes());
+    let digest = hasher.finalize();
+    let hex: String = digest.iter().take(10).map(|b| format!("{b:02x}")).collect();
+    format!("SRC-{hex}")
+}
+
+enum ReplayCheck {
+    Missing,
+    Replayed(Value),
+    Conflict(String),
+    Failed(crate::transport::ApiError),
+}
+
+/// Fetch the deterministic name and compare the requested fields against the
+/// existing document. Equal fields mean the earlier create succeeded and this is
+/// a replay; different fields mean the same token was reused for different data.
+async fn replay_check(
+    client: &Client,
+    doctype: &str,
+    name: &str,
+    requested: &Map<String, Value>,
+) -> ReplayCheck {
+    let path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+    let existing = match client.get(&path).await {
+        Ok(doc) => doc.pointer("/data").cloned().unwrap_or(Value::Null),
+        Err(crate::transport::ApiError::NotFound { .. }) => return ReplayCheck::Missing,
+        Err(e) => return ReplayCheck::Failed(e),
+    };
+
+    let mut diffs: Vec<String> = Vec::new();
+    for (key, requested_value) in requested {
+        if key == "doctype" || key == "name" {
+            continue;
+        }
+        let existing_value = existing.pointer(&format!("/{key}")).unwrap_or(&Value::Null);
+        if !json_loosely_equal(requested_value, existing_value) {
+            diffs.push(format!("field '{key}'"));
+        }
+    }
+
+    if diffs.is_empty() {
+        ReplayCheck::Replayed(existing)
+    } else {
+        ReplayCheck::Conflict(diffs.join(", "))
+    }
+}
+
+/// ERPNext coerces scalar types (numbers arrive back as floats or strings); compare
+/// loosely enough to recognize a faithful replay without accepting real differences.
+fn json_loosely_equal(a: &Value, b: &Value) -> bool {
+    if a == b {
+        return true;
+    }
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => x
+            .as_f64()
+            .zip(y.as_f64())
+            .map(|(x, y)| (x - y).abs() < 1e-9)
+            .unwrap_or(false),
+        (Value::String(s), Value::Number(n)) | (Value::Number(n), Value::String(s)) => s
+            .parse::<f64>()
+            .ok()
+            .zip(n.as_f64())
+            .map(|(x, y)| (x - y).abs() < 1e-9)
+            .unwrap_or(false),
+        (Value::Array(xs), Value::Array(ys)) => {
+            xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| json_loosely_equal(x, y))
+        }
+        _ => false,
     }
 }
 

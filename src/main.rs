@@ -132,6 +132,10 @@ enum DocCommand {
         /// JSON object payload
         #[arg(long)]
         data: String,
+        /// Source token for exact idempotency: the document name derives from it, so
+        /// a retry finds the existing document instead of creating a second one
+        #[arg(long)]
+        source: Option<String>,
         /// Send the native operation instead of previewing it
         #[arg(long)]
         apply: bool,
@@ -241,8 +245,9 @@ async fn main() {
             DocCommand::Create {
                 doctype,
                 data,
+                source,
                 apply,
-            } => commands::doc::create(&client, &doctype, &data, apply).await,
+            } => commands::doc::create(&client, &doctype, &data, source.as_deref(), apply).await,
             DocCommand::Update {
                 doctype,
                 name,
