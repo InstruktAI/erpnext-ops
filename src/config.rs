@@ -51,14 +51,26 @@ pub enum ConfigError {
     Missing(&'static str),
     #[error("invalid site url in ERPNEXT_URL: {0}")]
     InvalidUrl(String),
+    #[error("invalid .env file: {0} (quote values containing spaces)")]
+    EnvFile(String),
+}
+
+/// A missing .env is fine (explicit environment wins); a malformed one fails closed —
+/// a suppressed parse error would silently drop every variable after the bad line and
+/// misreport a later variable as missing.
+fn apply_env_file<T>(result: Result<T, dotenvy::Error>) -> Result<(), ConfigError> {
+    match result {
+        Ok(_) => Ok(()),
+        Err(dotenvy::Error::Io(e)) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(ConfigError::EnvFile(e.to_string())),
+    }
 }
 
 impl Context {
     /// Resolve the operating context from the environment, fail-closed:
     /// every required input must be present and unambiguous or resolution fails.
     pub fn from_env() -> Result<Self, ConfigError> {
-        // A missing .env is fine; explicit environment variables take precedence anyway.
-        let _ = dotenvy::dotenv();
+        apply_env_file(dotenvy::dotenv())?;
 
         let raw_url =
             std::env::var("ERPNEXT_URL").map_err(|_| ConfigError::Missing("ERPNEXT_URL"))?;
@@ -109,6 +121,27 @@ impl Context {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn malformed_env_file_fails_closed_instead_of_truncating() {
+        let dir = std::env::temp_dir().join(format!("erpnext-env-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("temp dir");
+        let file = dir.join(".env");
+        std::fs::write(&file, "ERPNEXT_COMPANY=Instrukt AI\nERPNEXT_API_KEY=k\n").expect("write");
+
+        let outcome = apply_env_file(dotenvy::from_path(&file));
+        let err = outcome.expect_err("unquoted value with spaces must surface a parse error");
+        assert!(matches!(err, ConfigError::EnvFile(_)));
+        assert!(err.to_string().contains("quote values containing spaces"));
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn missing_env_file_is_fine() {
+        let absent = std::path::Path::new("/nonexistent/erpnext-test/.env");
+        assert!(apply_env_file(dotenvy::from_path(absent)).is_ok());
+    }
 
     #[test]
     fn credentials_debug_never_reveals_secrets() {
