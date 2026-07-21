@@ -27,6 +27,11 @@ enum Command {
         #[command(subcommand)]
         command: MetaCommand,
     },
+    /// Business activity trail over native records
+    Activity {
+        #[command(subcommand)]
+        command: ActivityCommand,
+    },
     /// Deterministic resolution of parties, items, and documents
     Resolve {
         #[command(subcommand)]
@@ -71,6 +76,55 @@ enum ContextCommand {
 enum MetaCommand {
     /// Show the live schema for a doctype
     Show { doctype: String },
+}
+
+#[derive(Subcommand)]
+enum ActivityCommand {
+    /// Record business input; optionally open a follow-up loop
+    Capture {
+        /// Faithful summary of the input
+        #[arg(long)]
+        summary: String,
+        /// Verbatim source text worth preserving
+        #[arg(long)]
+        verbatim: Option<String>,
+        /// Communication medium (phone, email, chat...); recorded as a Communication
+        #[arg(long)]
+        medium: Option<String>,
+        /// Linked business document: DOCTYPE NAME
+        #[arg(long, num_args = 2, value_names = ["DOCTYPE", "NAME"])]
+        reference: Option<Vec<String>>,
+        /// Unresolved commitment to carry as an open loop
+        #[arg(long = "follow-up")]
+        follow_up: Option<String>,
+        /// Due date for the follow-up (YYYY-MM-DD)
+        #[arg(long)]
+        due: Option<String>,
+    },
+    /// Time-ordered activity for a reference and window
+    List {
+        /// Linked business document: DOCTYPE NAME
+        #[arg(long, num_args = 2, value_names = ["DOCTYPE", "NAME"])]
+        reference: Option<Vec<String>>,
+        #[arg(long)]
+        since: Option<String>,
+        #[arg(long)]
+        until: Option<String>,
+    },
+    /// Open follow-up loops, optionally due-bounded
+    OpenLoops {
+        /// Linked business document: DOCTYPE NAME
+        #[arg(long, num_args = 2, value_names = ["DOCTYPE", "NAME"])]
+        reference: Option<Vec<String>>,
+        #[arg(long)]
+        due: Option<String>,
+    },
+}
+
+fn reference_pair(reference: &Option<Vec<String>>) -> Option<(&str, &str)> {
+    reference
+        .as_ref()
+        .and_then(|r| Some((r.first()?.as_str(), r.get(1)?.as_str())))
 }
 
 #[derive(Subcommand)]
@@ -228,6 +282,46 @@ async fn main() {
         Command::Meta {
             command: MetaCommand::Show { doctype },
         } => commands::meta::show(&client, &doctype).await,
+        Command::Activity { command } => match command {
+            ActivityCommand::Capture {
+                summary,
+                verbatim,
+                medium,
+                reference,
+                follow_up,
+                due,
+            } => {
+                commands::activity::capture(
+                    &client,
+                    commands::activity::Capture {
+                        summary: &summary,
+                        verbatim: verbatim.as_deref(),
+                        medium: medium.as_deref(),
+                        reference: reference_pair(&reference),
+                        follow_up: follow_up.as_deref(),
+                        due: due.as_deref(),
+                    },
+                )
+                .await
+            }
+            ActivityCommand::List {
+                reference,
+                since,
+                until,
+            } => {
+                commands::activity::list(
+                    &client,
+                    reference_pair(&reference),
+                    since.as_deref(),
+                    until.as_deref(),
+                )
+                .await
+            }
+            ActivityCommand::OpenLoops { reference, due } => {
+                commands::activity::open_loops(&client, reference_pair(&reference), due.as_deref())
+                    .await
+            }
+        },
         Command::Resolve { command } => match command {
             ResolveCommand::Party { query } => commands::resolve::party(&client, &query).await,
             ResolveCommand::Item { query } => commands::resolve::item(&client, &query).await,
