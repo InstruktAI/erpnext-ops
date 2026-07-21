@@ -45,7 +45,7 @@ And on success the document's docstatus is cancelled.
 
 Scenario: Amend a cancelled document
 Given a cancelled document
-When the agent previews and applies `erpnext workflow amend <doctype> <name> --data <payload>`
+When the agent previews and applies `erpnext workflow amend <doctype> <name> --data <json>`
 Then a new amended draft linked to the cancelled document is created with the payload applied.
 
 #### UC-5

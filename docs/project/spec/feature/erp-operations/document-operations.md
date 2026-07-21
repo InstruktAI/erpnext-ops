@@ -45,7 +45,7 @@ Then the full document is returned in machine-readable form.
 
 Scenario: Create previews by default and sends nothing
 Given a valid payload for a doctype
-When the agent runs `erpnext doc create <doctype> --data <payload>` without `--apply`
+When the agent runs `erpnext doc create <doctype> --data <json>` without `--apply`
 Then no mutating request is sent to the site
 And the output is a preview containing the context, the exact native request that would be
 sent, preflight findings, and the exact apply command.
