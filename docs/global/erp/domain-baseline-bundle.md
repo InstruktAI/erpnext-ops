@@ -359,8 +359,8 @@ None.
 
 ## Activatable Procedures — load via `telec docs get <id>` before acting
 
-- `erp/procedure/company-onboarding` — Use when a business, legal company, or operating entity must become an operable tenant with its own ERPNext site.
-- `erp/procedure/custom-order-to-fulfillment` — Use when a business sells custom or batch-produced goods that must be tracked from order intake through production, delivery, invoice, and customer follow-up.
-- `erp/procedure/offer-to-installation` — Use when a business needs to turn a lead, site discussion, or accepted proposal into tracked ERP work through installation and payment.
-- `erp/procedure/person-onboarding` — Use when a human user needs ERPNext login access, roles, and permissions on a company's site.
-- `erp/procedure/project-work-to-invoice` — Use when a service, production, tour, or custom project business needs to track work, obligations, billing, and payment without stock-centric assumptions.
+- `erp/procedure/company-onboarding` — Onboard a company onto its own ERPNext site — ensure the site exists, then establish the company and its operator identity. — Use when a business, legal company, or operating entity must become an operable tenant with its own ERPNext site.
+- `erp/procedure/custom-order-to-fulfillment` — Playbook for custom product businesses moving from configured customer order to production batch, delivery, invoice, and follow-up. — Use when a business sells custom or batch-produced goods that must be tracked from order intake through production, delivery, invoice, and customer follow-up.
+- `erp/procedure/offer-to-installation` — Playbook for a business moving from lead and proposal to procurement, installation, invoice, payment, and follow-up. — Use when a business needs to turn a lead, site discussion, or accepted proposal into tracked ERP work through installation and payment.
+- `erp/procedure/person-onboarding` — Onboard a person onto a company's ERPNext site with permission-scoped access. — Use when a human user needs ERPNext login access, roles, and permissions on a company's site.
+- `erp/procedure/project-work-to-invoice` — Playbook for service or project businesses moving from proposal and tasks to completed work, invoice, payment, and unresolved follow-up. — Use when a service, production, tour, or custom project business needs to track work, obligations, billing, and payment without stock-centric assumptions.
