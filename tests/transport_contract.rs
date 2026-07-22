@@ -1,5 +1,5 @@
 use httpmock::prelude::*;
-use serde_json::json;
+use serde_json::{json, Value};
 use url::Url;
 
 use erpnext::commands;
@@ -775,5 +775,65 @@ fn preview_restates_the_action_in_business_language() {
     assert!(
         convert.contains("second document"),
         "converting warns about double conversion: {convert}"
+    );
+}
+
+/// One read of a business document answers both what happened and what is still owed.
+/// The site names those differently from the CLI: follow-ups arrive as assignments,
+/// a communication names its actor as the sender, and an open assignment carries no
+/// timestamp — so a bounded read must not drop it.
+#[test]
+fn timeline_folds_contacts_and_open_follow_ups_into_one_trail() {
+    use erpnext::commands::activity::timeline;
+
+    let docinfo = json!({ "docinfo": {
+        "comments": [],
+        "communications": [ {
+            "name": "COMM-1",
+            "content": "Called about the solar install quote.",
+            "sender": "agent@instrukt.ai",
+            "creation": "2026-07-22 23:13:29",
+        } ],
+        "assignments": [ {
+            "name": "TODO-1",
+            "description": "Book the site survey",
+            "owner": "agent@instrukt.ai",
+            "status": "Open",
+        } ],
+    }});
+
+    let all = timeline(&docinfo, None, None);
+    assert_eq!(all.len(), 2, "contact and follow-up both appear: {all:?}");
+
+    let follow_up = all
+        .iter()
+        .find(|r| r.pointer("/kind").and_then(Value::as_str) == Some("Follow-up"))
+        .expect("the assignment is folded in as a follow-up");
+    assert_eq!(
+        follow_up.pointer("/status").and_then(Value::as_str),
+        Some("Open"),
+        "an outstanding commitment reads as open"
+    );
+
+    let contact = all
+        .iter()
+        .find(|r| r.pointer("/kind").and_then(Value::as_str) == Some("Communication"))
+        .expect("the communication is folded in");
+    assert_eq!(
+        contact.pointer("/actor").and_then(Value::as_str),
+        Some("agent@instrukt.ai"),
+        "a communication names its actor from the sender"
+    );
+
+    // A window that excludes the contact must still surface the untimestamped commitment.
+    let bounded = timeline(&docinfo, Some("2027-01-01"), None);
+    assert_eq!(
+        bounded.len(),
+        1,
+        "the open follow-up survives a bounded read: {bounded:?}"
+    );
+    assert_eq!(
+        bounded[0].pointer("/kind").and_then(Value::as_str),
+        Some("Follow-up")
     );
 }

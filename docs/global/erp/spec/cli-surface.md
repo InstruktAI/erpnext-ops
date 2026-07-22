@@ -103,6 +103,13 @@ non-zero exit.
   decision boundary remains.
 - Activity commands are thin operations over native Frappe and ERPNext records such as
   `Communication`, `Comment`, `ToDo`, `Event`, `CRM Note`, and linked business documents.
+- `activity list` folds a document's native timeline into one ordered trail carrying both
+  what happened and what is still owed: contacts, comments, and outstanding follow-ups,
+  each naming its actor and, where the record has one, its status. The site groups these
+  by its own vocabulary — a follow-up arrives as an assignment and a contact names its
+  actor as the sender. A record the site leaves untimestamped survives a `--since` or
+  `--until` bound, because a bounded read that drops outstanding work defeats the reason
+  for reading it.
 - Import commands use ERPNext's native data-import semantics with preview and explicit
   apply, reporting honest per-row results. The vendor gates Data Import to privileged
   roles; an operator context receives the site's typed permission failure.

@@ -159,11 +159,25 @@ pub async fn list(
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     };
 
+    let records = timeline(&docinfo, since, until);
+
+    output::ok(
+        json!({ "reference": { "doctype": ref_doctype, "name": ref_name }, "activity": records }),
+    )
+}
+
+/// Fold a document's native timeline into one ordered trail.
+///
+/// The site groups the timeline by kind: follow-ups arrive as assignments, and a
+/// communication names its actor as the sender rather than the record's owner.
+pub fn timeline(docinfo: &Value, since: Option<&str>, until: Option<&str>) -> Vec<Value> {
     let mut records: Vec<Value> = Vec::new();
+    // The site groups a document's timeline by kind. Follow-ups reach it as assignments,
+    // and a communication names its actor as the sender rather than the record's owner.
     for (key, kind, text_field) in [
         ("comments", "Comment", "content"),
         ("communications", "Communication", "content"),
-        ("todos", "ToDo", "description"),
+        ("assignments", "Follow-up", "description"),
     ] {
         let rows = docinfo
             .pointer(&format!("/docinfo/{key}"))
@@ -174,20 +188,31 @@ pub async fn list(
         for row in rows {
             let creation = row
                 .pointer("/creation")
+                .or_else(|| row.pointer("/communication_date"))
                 .and_then(Value::as_str)
                 .unwrap_or("");
-            if since.map(|s| creation < s).unwrap_or(false) {
-                continue;
-            }
-            if until.map(|u| creation > u).unwrap_or(false) {
-                continue;
+            // A record the site timestamps can be placed in a window. One it does not —
+            // an open assignment — is kept, because a bounded read that drops the
+            // outstanding work defeats the reason for reading it.
+            if !creation.is_empty() {
+                if since.map(|s| creation < s).unwrap_or(false) {
+                    continue;
+                }
+                if until.map(|u| creation > u).unwrap_or(false) {
+                    continue;
+                }
             }
             records.push(json!({
                 "kind": kind,
                 "name": row.pointer("/name"),
                 "creation": creation,
                 "text": row.pointer(&format!("/{text_field}")),
-                "owner": row.pointer("/owner"),
+                "actor": row
+                    .pointer("/owner")
+                    .or_else(|| row.pointer("/sender"))
+                    .cloned()
+                    .unwrap_or(Value::Null),
+                "status": row.pointer("/status").cloned().unwrap_or(Value::Null),
             }));
         }
     }
@@ -198,9 +223,7 @@ pub async fn list(
         ka.cmp(kb)
     });
 
-    output::ok(
-        json!({ "reference": { "doctype": ref_doctype, "name": ref_name }, "activity": records }),
-    )
+    records
 }
 
 /// `erpnext activity open-loops` — open `ToDo` records, optionally due-bounded.
