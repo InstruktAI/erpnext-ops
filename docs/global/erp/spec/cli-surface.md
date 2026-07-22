@@ -60,6 +60,12 @@ Preview output for mutating commands contains:
   conflict ERPNext reports without mutating.
 - `apply_command` — the exact command form that applies the preview.
 
+Every command answers with the same envelope: `ok` reporting whether the command
+succeeded, and `data` carrying the result. Commands that hand back a site response carry
+its payload under `data` rather than the vendor's own wrapper, so a result sits at one
+depth whichever command produced it. Failures carry `kind` and `message` on stderr with a
+non-zero exit.
+
 ## Known caveats
 
 - The site is the tenant boundary; company selection scopes accounting inside the site.

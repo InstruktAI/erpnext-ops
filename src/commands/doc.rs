@@ -20,7 +20,7 @@ pub async fn list(client: &Client, doctype: &str, filters: &[(String, String)], 
         path.push_str(&format!("&filters={}", encode_segment(&rendered)));
     }
     match client.get(&path).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
@@ -33,7 +33,7 @@ pub async fn get(client: &Client, doctype: &str, name: &str) -> i32 {
         encode_segment(name)
     );
     match client.get(&path).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
@@ -137,7 +137,7 @@ pub async fn create(
     }
 
     match client.post(&path, &payload).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => {
             // A concurrent create with the same derived name loses the primary-key race;
             // resolve it as a replay instead of surfacing the duplicate error.
@@ -417,7 +417,7 @@ pub async fn update(client: &Client, doctype: &str, name: &str, data: &str, appl
     }
 
     match client.put(&path, &payload).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
@@ -435,7 +435,7 @@ pub async fn delete(client: &Client, doctype: &str, name: &str, apply: bool) -> 
     }
 
     match client.delete(&path).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
@@ -499,7 +499,7 @@ pub async fn copy(
     }
 
     match client.post(&path, &payload).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }

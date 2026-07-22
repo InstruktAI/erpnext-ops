@@ -17,6 +17,25 @@ pub fn ok<T: Serialize>(data: T) -> i32 {
     EXIT_OK
 }
 
+/// Print a site response as the success envelope, carrying the site's payload rather
+/// than its wrapper. Frappe answers with its own `{"data": ...}` envelope; emitting it
+/// whole would nest the payload one level deeper than every command that builds its own
+/// result, so callers would have to know which shape each command returns. A response
+/// that carries no such wrapper — a method call answering with `message` — is emitted as
+/// it stands.
+pub fn ok_payload(response: Value) -> i32 {
+    ok(site_payload(response))
+}
+
+/// Take the payload out of a site response, leaving a response that carries no `data`
+/// wrapper as it stands.
+pub fn site_payload(mut response: Value) -> Value {
+    match response.get_mut("data") {
+        Some(payload) => payload.take(),
+        None => response,
+    }
+}
+
 /// Print the machine-readable failure envelope to stderr and return the exit code.
 pub fn fail(kind: &str, message: &str, exit: i32) -> i32 {
     let envelope: Value = json!({ "ok": false, "error": { "kind": kind, "message": message } });

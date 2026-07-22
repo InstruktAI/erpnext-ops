@@ -143,7 +143,7 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
     }
 
     match client.post(&create_path, &payload).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
@@ -200,7 +200,7 @@ pub async fn run_method(
     }
 
     match client.post(&path, &payload).await {
-        Ok(v) => output::ok(v),
+        Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }

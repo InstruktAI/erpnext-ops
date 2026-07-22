@@ -690,3 +690,23 @@ fn an_explicit_company_resolves_without_the_persisted_selection() {
 
     fs::remove_dir_all(&base).ok();
 }
+
+/// Commands that hand a site response straight to the caller emit the site's payload,
+/// not its envelope, so every command's `data` carries the result at one depth.
+#[test]
+fn site_responses_are_emitted_without_the_vendor_envelope() {
+    let document = json!({ "name": "ACC-SINV-2026-00001", "status": "Paid" });
+
+    let unwrapped = erpnext::output::site_payload(json!({ "data": document.clone() }));
+    assert_eq!(
+        unwrapped, document,
+        "the site's data wrapper is removed before the CLI envelope is applied"
+    );
+
+    let method_answer = json!({ "message": "queued" });
+    assert_eq!(
+        erpnext::output::site_payload(method_answer.clone()),
+        method_answer,
+        "a response carrying no data wrapper is emitted as it stands"
+    );
+}
