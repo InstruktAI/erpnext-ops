@@ -105,6 +105,16 @@ snippets:
   path: docs/erp/procedure/custom-order-to-fulfillment.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/customer-invoice-and-payment
+  description: Post a taxed or tax-exempt customer invoice, prove its ledger effect,
+    and settle it through a linked payment.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/customer-invoice-and-payment.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/offer-to-installation
   description: Playbook for a business moving from lead and proposal to procurement,
     installation, invoice, payment, and follow-up.
