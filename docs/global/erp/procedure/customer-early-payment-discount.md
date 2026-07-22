@@ -22,6 +22,8 @@ receivable, and invoice schedule in agreement.
 - The company context is active in `erpnext`.
 - The submitted Sales Invoice carries the accepted Payment Terms Template and a stored payment
   schedule with the discount type, amount, validity basis, discount date, and outstanding amount.
+- The Payment Terms Template allocates payment by payment term, so ERPNext preserves the payment-
+  term reference and updates the corresponding payment-schedule row during settlement.
 - Receipt is true, and its actual receipt date, net amount, currency, bank or cash account, and
   external reference are established from source evidence.
 - The company has a designated customer-discount expense account and cost center. When tax loss
@@ -48,6 +50,10 @@ discount eligibility while building the target; changing the Payment Entry date 
 too late. Do not use the bulk outstanding-invoice path, which does not apply the invoice's early-
 payment discount.
 
+Set the target Payment Entry `posting_date` to that same actual receipt date. `reference_date`
+governs the mapper's eligibility decision; `posting_date` governs when the receipt and discount
+reach the ledger. Neither may default to the date on which the agent records the transaction.
+
 Preserve the mapper-produced invoice and payment-term reference. Supply the configured discount
 expense account and cost center on the mapper-produced deduction when ERPNext leaves the account
 unresolved.
@@ -61,6 +67,7 @@ Read the draft Payment Entry and require:
 - the difference between gross allocation and net receipt equals the eligible discount;
 - the deduction reaches the configured discount account and cost center;
 - the reference names the invoice and its payment term; and
+- the posting date equals the actual receipt date; and
 - difference and unallocated amounts are both zero.
 
 For a receipt after the discount date, require the mapper to return the full outstanding amount
@@ -86,13 +93,14 @@ and tax loss to agree with the configured accounts and the invoice's tax composi
 - One submitted Payment Entry linked to the discounted invoice and payment term.
 - A paid invoice and payment schedule whose net receipt plus discount equals gross settlement.
 - Explicit, balanced bank, customer-discount, receivable, and optional tax-loss ledger effects.
-- Evidence that the actual receipt date satisfied the contractual discount window.
+- Evidence that the actual receipt date satisfied the contractual discount window and became the
+  payment's ledger posting date.
 
 ## Recovery
 
 - If the mapped draft applies a discount for an ineligible date, stop before submission and remap
-  with the receipt date as a native mapper argument; do not repair the stale result with target
-  overrides.
+  with the receipt date as a native mapper argument and target posting date; do not repair the
+  stale result by changing only the mapped document after eligibility was computed.
 - If the discount account is absent, configure it before recording the receipt. Never borrow a
   bank-fee, write-off, or unrelated expense account merely to make the entry balance.
 - If the submitted Payment Entry is wrong and nothing downstream consumed it, cancel it and
