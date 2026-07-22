@@ -156,7 +156,7 @@ async fn workflow_method_uses_the_native_document_controller_put() {
     let server = MockServer::start_async().await;
     let method = server.mock(|when, then| {
         when.method(PUT)
-            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002/method/add_timesheet_data")
+            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002/method/add_timesheet_data/")
             .json_body(json!({}));
         then.status(200)
             .json_body(json!({ "data": { "name": "ACC-SINV-2026-00002" } }));

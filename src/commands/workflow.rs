@@ -189,7 +189,7 @@ pub async fn run_method(
     };
 
     let path = format!(
-        "/api/v2/document/{}/{}/method/{}",
+        "/api/v2/document/{}/{}/method/{}/",
         encode_segment(doctype),
         encode_segment(name),
         encode_segment(method)
