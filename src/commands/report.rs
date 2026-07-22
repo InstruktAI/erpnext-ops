@@ -8,6 +8,18 @@ const REPORT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
 /// `erpnext report run <report-name> [--filter k=v]...` — run a native report through
 /// Frappe's permission-aware report runner and return machine-readable columns/rows.
 pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)]) -> i32 {
+    run_with_failure_emitter(client, report_name, filters, output::fail).await
+}
+
+pub async fn run_with_failure_emitter<F>(
+    client: &Client,
+    report_name: &str,
+    filters: &[(String, String)],
+    mut emit_failure: F,
+) -> i32
+where
+    F: FnMut(&str, &str, i32) -> i32,
+{
     let mut filter_map = Map::new();
     for (key, value) in filters {
         filter_map.insert(key.clone(), Value::String(value.clone()));
@@ -21,12 +33,12 @@ pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)
 
     let response = match fetch(client, &params, REPORT_TIMEOUT).await {
         Ok(v) => v,
-        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+        Err(e) => return emit_failure(e.kind(), &e.to_string(), output::EXIT_API),
     };
 
     let (columns, rows) = match report_payload(&response) {
         Ok(payload) => payload,
-        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+        Err(e) => return emit_failure(e.kind(), &e.to_string(), output::EXIT_API),
     };
 
     output::ok(json!({

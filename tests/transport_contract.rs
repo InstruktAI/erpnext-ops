@@ -2,6 +2,7 @@ use httpmock::prelude::*;
 use serde_json::{json, Value};
 use std::fs;
 use std::process::{Command, Output, Stdio};
+use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
@@ -891,8 +892,21 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
         },
     };
     let client = Client::new(context).expect("client");
-    let run =
-        tokio::spawn(async move { commands::report::run(&client, "Profit and Loss", &[]).await });
+    let captured_failure = Arc::new(Mutex::new(None));
+    let failure_for_run = Arc::clone(&captured_failure);
+    let run = tokio::spawn(async move {
+        commands::report::run_with_failure_emitter(
+            &client,
+            "Profit and Loss",
+            &[],
+            |kind, message, exit| {
+                *failure_for_run.lock().expect("failure capture") =
+                    Some(erpnext::output::failure_envelope(kind, message));
+                exit
+            },
+        )
+        .await
+    });
 
     let mut accepted = false;
     for _ in 0..1_024 {
@@ -926,6 +940,13 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
         .expect("report task remains available");
 
     assert_eq!(exit, 1);
+    let failure = captured_failure
+        .lock()
+        .expect("failure capture")
+        .clone()
+        .expect("timeout emits a structured failure");
+    assert_eq!(failure.get("ok"), Some(&json!(false)));
+    assert_eq!(failure.pointer("/error/kind"), Some(&json!("transport")));
     peer.abort();
     peer.await.expect_err("stalled peer is cancelled");
 }
