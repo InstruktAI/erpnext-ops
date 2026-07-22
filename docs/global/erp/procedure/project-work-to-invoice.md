@@ -24,6 +24,9 @@ payment, and follow-up without forcing a stock-oriented workflow.
 
 ## Steps
 
+For every mutation below, inspect the CLI preview first and apply only after the proposed
+business effect, references, and amounts are correct.
+
 ### 1. Capture the work intent
 
 Record the human source input, customer context, scope, deadline, price assumptions, and
@@ -32,9 +35,10 @@ uncertainty with `erpnext activity capture`.
 ### 2. Resolve the business object
 
 Resolve the Customer and any existing Project, Quotation, or Sales Order before creating
-anything. Create the Project with the customer and delivery dates, then create its Task records
-with their expected dates. Use source tokens for series-named records so a repeated create
-returns the existing record.
+anything. Reuse the resolved Project when one represents the same work; otherwise create it
+with the customer and delivery dates. Create only the missing Task records with their expected
+dates. Use source tokens for series-named records so a repeated create returns the existing
+record.
 
 ### 3. Bind the commercial promise to the project
 
