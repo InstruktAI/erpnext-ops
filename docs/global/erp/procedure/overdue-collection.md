@@ -1,7 +1,17 @@
 ---
+id: erp/procedure/overdue-collection
+type: procedure
+domain: erp
+scope: global
 description: Detect overdue customer debt, progress it through native dunning and follow-up, and close the loop only when the receivable is actually settled.
 ---
 # Overdue Collection — Procedure
+
+## Required reads
+
+- @~/.teleclaude/docs/erp/concept/business-activity-trail.md
+- @~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
+- @~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
 
 ## Goal
 
@@ -58,10 +68,16 @@ pay remains a commitment; it never becomes a Payment Entry until receipt is true
 
 ### 5. Settle from the real receipt
 
-When money arrives, compose `customer-receipt-allocation` against the overdue Sales Invoice.
+When money arrives against a Dunning with no interest or fee, compose
+`customer-receipt-allocation` against the overdue Sales Invoice. When the Dunning carries
+interest or a fee, create the Payment Entry through ERPNext's native Dunning payment flow so the
+receipt includes the full Dunning amount and its configured income treatment.
+
 Read the Payment Entry, invoice, Dunning, receivables report, and ledger state back. Require the
-allocated receipt to reduce the invoice outstanding exactly and require ERPNext to mark the
-Dunning resolved only when its overdue payment rows no longer remain outstanding.
+allocated receipt to reduce the invoice outstanding exactly. For a charged Dunning, also require
+the bank receipt, invoice allocation, interest or fee row, income account, and Dunning grand total
+to agree. Require ERPNext to mark the Dunning resolved only when its overdue payment rows and any
+charged amount are fully settled.
 
 Close the collection follow-up with the receipt or other accepted resolution that honoured it.
 Manual Dunning status alone is not evidence that cash arrived or debt disappeared.
