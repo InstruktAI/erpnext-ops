@@ -152,6 +152,7 @@ async fn workflow_submit_drives_docstatus_and_verifies_the_stored_state() {
 }
 
 #[tokio::test]
+// spec: project/spec/feature/erp-operations/document-lifecycle UC-7
 async fn workflow_method_persists_the_native_controller_result() {
     let server = MockServer::start_async().await;
     let method = server.mock(|when, then| {
@@ -167,7 +168,11 @@ async fn workflow_method_persists_the_native_controller_result() {
     let save = server.mock(|when, then| {
         when.method(PUT)
             .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002")
-            .body_contains(r#""time_sheet":"TS-0001""#);
+            .json_body(json!({
+                "doctype": "Sales Invoice",
+                "name": "ACC-SINV-2026-00002",
+                "timesheets": [{ "time_sheet": "TS-0001" }]
+            }));
         then.status(200).json_body(json!({ "data": {
             "doctype": "Sales Invoice",
             "name": "ACC-SINV-2026-00002",

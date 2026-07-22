@@ -72,4 +72,7 @@ Scenario: Doctype-specific workflow methods follow the preview contract
 Given a doctype exposing a native workflow method
 When the agent runs `erpnext workflow method <doctype> <name> <method>`
 Then the method call previews the native request by default and sends it only with explicit
-`--apply`.
+`--apply`
+And when the method returns the changed document, apply verifies its doctype and name, saves
+that returned document, and reports the stored result
+And a returned different document or a failed save is never reported as success.
