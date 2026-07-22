@@ -142,6 +142,14 @@ non-zero exit.
   names, so the site builds the target document; the created document is read back and a
   result that references no source fails. Mapping the same source twice creates a second
   document — resolve before mapping.
+- Billing part of an order adjusts the quantities on the rows the mapper produced; it never
+  replaces the item list. Each mapped row carries the identifier of the order row it bills,
+  and that per-row link is what the site uses to track how much of the order remains. A
+  replacement list drops it, and the resulting invoice still posts, still charges the
+  customer, and still counts toward the project — while the order reads as entirely
+  unbilled and offers the same work for billing again. The order's per-row billed and
+  delivered quantities are therefore the state a resumed or repeated run reads before
+  acting.
 - `--source` suits documents ERPNext names from a series; a master with a natural key, such
   as an item code, carries its own identity and needs none.
 - `doc create --source <token>` is exactly idempotent: the document name derives
