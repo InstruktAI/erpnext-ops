@@ -167,6 +167,16 @@ snippets:
   path: docs/erp/procedure/offer-to-installation.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/overdue-collection
+  description: Detect overdue customer debt, progress it through native dunning and
+    follow-up, and close the loop only when the receivable is actually settled.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/overdue-collection.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/person-onboarding
   description: Onboard a person onto a company's ERPNext site with permission-scoped
     access.

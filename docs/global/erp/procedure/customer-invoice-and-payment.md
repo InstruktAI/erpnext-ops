@@ -76,6 +76,9 @@ Read the invoice and payment back. A fully paid invoice must report zero outstan
 paid status. Its receivable debit and the payment's receivable credit must net to zero, while
 the payment posts the received amount to the intended bank or cash account.
 
+When the due date passes while a balance remains, compose `overdue-collection`. Never create a
+Payment Entry merely to close a Dunning or make the invoice appear settled.
+
 ## Outputs
 
 - A submitted invoice whose tax totals and balanced ledger effect agree.
@@ -109,4 +112,5 @@ from the last command an agent remembers running.
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
 - ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
+- ~/.teleclaude/docs/erp/procedure/overdue-collection.md
 - ~/.teleclaude/docs/erp/procedure/project-work-to-invoice.md
