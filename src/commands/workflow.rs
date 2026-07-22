@@ -189,7 +189,7 @@ pub async fn run_method(
     };
 
     let path = format!(
-        "/api/v2/document/{}/{}/method/{}/",
+        "/api/v2/document/{}/{}/method/{}",
         encode_segment(doctype),
         encode_segment(name),
         encode_segment(method)
@@ -207,12 +207,12 @@ pub async fn run_method(
                 "company": client.context().company,
                 "privilege": client.context().privilege,
             },
-            "operation": { "method": "POST", "path": path, "payload": payload },
+            "operation": { "method": "PUT", "path": path, "payload": payload },
             "apply_command": "re-run the same command with --apply",
         }));
     }
 
-    match client.post(&path, &payload).await {
+    match client.put(&path, &payload).await {
         Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }

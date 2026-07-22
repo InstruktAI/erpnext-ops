@@ -151,6 +151,32 @@ async fn workflow_submit_drives_docstatus_and_verifies_the_stored_state() {
     read_back.assert();
 }
 
+#[tokio::test]
+async fn workflow_method_uses_the_native_document_controller_put() {
+    let server = MockServer::start_async().await;
+    let method = server.mock(|when, then| {
+        when.method(PUT)
+            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002/method/add_timesheet_data")
+            .json_body(json!({}));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-SINV-2026-00002" } }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::workflow::run_method(
+        &client,
+        "Sales Invoice",
+        "ACC-SINV-2026-00002",
+        "add_timesheet_data",
+        None,
+        true,
+    )
+    .await;
+
+    assert_eq!(exit, 0);
+    method.assert();
+}
+
 /// The site answers a declined lifecycle request with the document body and an
 /// unchanged docstatus. Reporting that as success is the defect this pins.
 #[tokio::test]
