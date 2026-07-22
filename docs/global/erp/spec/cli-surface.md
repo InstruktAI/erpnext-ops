@@ -142,6 +142,13 @@ non-zero exit.
   names, so the site builds the target document; the created document is read back and a
   result that references no source fails. Mapping the same source twice creates a second
   document — resolve before mapping.
+- Cancelling a submitted document undoes what it did to everything that counted it, as
+  long as nothing downstream has consumed the effect. A cancelled partial invoice returns
+  the order's per-row billed quantities and its billed percentage to nothing, returns the
+  project's billed total to nothing, and clears the customer's balance — leaving the work
+  billable again with no residue. Undo is therefore a real operating move rather than a
+  repair of last resort, and the state to check afterwards is the source document's own
+  per-row quantities.
 - Billing part of an order adjusts the quantities on the rows the mapper produced; it never
   replaces the item list. Each mapped row carries the identifier of the order row it bills,
   and that per-row link is what the site uses to track how much of the order remains. A
