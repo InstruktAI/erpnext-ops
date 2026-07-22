@@ -41,25 +41,9 @@ async fn fetch(
     params: &Value,
     timeout: std::time::Duration,
 ) -> Result<Value, ApiError> {
-    #[cfg(test)]
-    if let Some(result) = TEST_FETCH_RESULT.with(|result| result.borrow_mut().take()) {
-        TEST_FETCH_TIMEOUT.set(Some(timeout));
-        return result;
-    }
-
     client
         .post_with_timeout("/api/method/frappe.desk.query_report.run", params, timeout)
         .await
-}
-
-#[cfg(test)]
-thread_local! {
-    static TEST_FETCH_RESULT: std::cell::RefCell<Option<Result<Value, ApiError>>> = const {
-        std::cell::RefCell::new(None)
-    };
-    static TEST_FETCH_TIMEOUT: std::cell::Cell<Option<std::time::Duration>> = const {
-        std::cell::Cell::new(None)
-    };
 }
 
 fn report_payload(response: &Value) -> Result<(Value, Value), ApiError> {
@@ -85,6 +69,8 @@ fn report_payload(response: &Value) -> Result<(Value, Value), ApiError> {
 mod tests {
     use super::*;
     use crate::config::{Context, Credentials, PrivilegeMode};
+    use httpmock::Method::POST;
+    use httpmock::MockServer;
     use url::Url;
 
     fn context(site_url: &str) -> Context {
@@ -104,22 +90,42 @@ mod tests {
     #[tokio::test(flavor = "current_thread")]
     // spec: project/spec/feature/erp-operations/reporting UC-3
     async fn public_report_run_uses_a_distinct_finite_bound() {
-        let client = Client::new(context("https://erpnext.example")).expect("client");
-        TEST_FETCH_RESULT.set(Some(Ok(json!({ "message": {
-            "columns": [],
-            "result": [],
-        }}))));
+        let server = MockServer::start_async().await;
+        let report = server
+            .mock_async(|when, then| {
+                when.method(POST)
+                    .path("/api/method/frappe.desk.query_report.run");
+                then.status(200)
+                    .delay(std::time::Duration::from_millis(25))
+                    .json_body(json!({ "message": {
+                        "columns": [],
+                        "result": [],
+                    }}));
+            })
+            .await;
+        let client = Client::with_request_timeout(
+            context(&server.base_url()),
+            std::time::Duration::from_millis(1),
+        )
+        .expect("client");
 
         let completed = run(&client, "Profit and Loss", &[]).await;
 
         assert_eq!(completed, output::EXIT_OK);
-        assert_eq!(TEST_FETCH_TIMEOUT.get(), Some(REPORT_TIMEOUT));
+        report.assert_async().await;
+    }
 
-        TEST_FETCH_RESULT.set(Some(Err(ApiError::Transport("report timed out".into()))));
+    #[tokio::test(flavor = "current_thread")]
+    // spec: project/spec/feature/erp-operations/reporting UC-3
+    async fn public_report_run_surfaces_transport_failure() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("available local port");
+        let site_url = format!("http://{}", listener.local_addr().expect("local address"));
+        drop(listener);
+        let client = Client::new(context(&site_url)).expect("client");
+
         let stalled = run(&client, "Profit and Loss", &[]).await;
 
         assert_eq!(stalled, output::EXIT_API);
-        assert_eq!(TEST_FETCH_TIMEOUT.get(), Some(REPORT_TIMEOUT));
     }
 
     #[test]
