@@ -736,7 +736,7 @@ fn preview_restates_the_action_in_business_language() {
         "names whose books: {create}"
     );
     assert!(
-        create.contains("--apply"),
+        create.contains("say approve"),
         "states how to approve: {create}"
     );
 

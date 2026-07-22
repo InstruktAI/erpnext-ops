@@ -123,7 +123,7 @@ pub fn describe(action: &Action, company: Option<&str>) -> String {
         out.push(' ');
         out.push_str(&c);
     }
-    out.push_str(" If that is what you want, re-run the same command with --apply.");
+    out.push_str(" If this is correct, say approve.");
     out
 }
 
