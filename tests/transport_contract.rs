@@ -869,14 +869,15 @@ async fn report_run_uses_its_distinct_request_bound() {
 #[tokio::test(start_paused = true)]
 // spec: project/spec/feature/erp-operations/reporting UC-3
 async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
-    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("local listener");
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("local listener");
     let address = listener.local_addr().expect("listener address");
-    let (accepted_tx, accepted_rx) = std::sync::mpsc::channel();
-    let (release_tx, release_rx) = std::sync::mpsc::channel();
-    let peer = std::thread::spawn(move || {
-        let (_stream, _) = listener.accept().expect("accept report request");
+    let (accepted_tx, mut accepted_rx) = tokio::sync::oneshot::channel();
+    let peer = tokio::spawn(async move {
+        let (_stream, _) = listener.accept().await.expect("accept report request");
         accepted_tx.send(()).expect("signal accepted request");
-        let _ = release_rx.recv();
+        std::future::pending::<()>().await;
     });
     let context = Context {
         site_url: Url::parse(&format!("http://{address}")).expect("peer url"),
@@ -893,15 +894,34 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
     let run =
         tokio::spawn(async move { commands::report::run(&client, "Profit and Loss", &[]).await });
 
-    while accepted_rx.try_recv().is_err() {
-        tokio::task::yield_now().await;
+    let mut accepted = false;
+    for _ in 0..1_024 {
+        match accepted_rx.try_recv() {
+            Ok(()) => {
+                accepted = true;
+                break;
+            }
+            Err(tokio::sync::oneshot::error::TryRecvError::Empty) => {
+                tokio::task::yield_now().await;
+            }
+            Err(tokio::sync::oneshot::error::TryRecvError::Closed) => {
+                panic!("acceptance signal closed before the report request arrived");
+            }
+        }
     }
+    assert!(
+        accepted,
+        "report request is accepted within bounded polling"
+    );
     tokio::time::advance(std::time::Duration::from_secs(121)).await;
-    let exit = run.await.expect("report task completes");
+    let exit = tokio::time::timeout(std::time::Duration::from_secs(1), run)
+        .await
+        .expect("report task completes before the controlled deadline")
+        .expect("report task remains available");
 
     assert_eq!(exit, 1);
-    let _ = release_tx.send(());
-    peer.join().expect("stalled peer exits");
+    peer.abort();
+    peer.await.expect_err("stalled peer is cancelled");
 }
 
 #[test]
@@ -930,6 +950,7 @@ fn malformed_report_response_is_a_structured_shape_failure() {
 
 #[cfg(unix)]
 #[test]
+/// Wiring smoke: exercise the compiled CLI through a real OS pipe whose reader has closed.
 fn cli_exits_cleanly_when_its_output_consumer_has_closed() {
     use std::os::fd::OwnedFd;
     use std::os::unix::net::UnixStream;
