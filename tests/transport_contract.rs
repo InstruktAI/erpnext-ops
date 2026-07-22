@@ -841,6 +841,28 @@ async fn report_run_uses_the_native_runner_with_filters() {
     runner.assert();
 }
 
+#[test]
+fn malformed_report_response_is_a_structured_shape_failure() {
+    let server = MockServer::start();
+    let runner = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.query_report.run");
+        then.status(200)
+            .json_body(json!({ "message": { "columns": [] } }));
+    });
+
+    let output = run_cli_against(&server, &["report", "run", "Malformed Report"]);
+    let failure = json_output(&output.stderr);
+
+    assert!(!output.status.success());
+    assert!(
+        output.stdout.is_empty(),
+        "a malformed report has no success payload"
+    );
+    assert_eq!(failure.pointer("/error/kind"), Some(&json!("shape")));
+    runner.assert();
+}
+
 #[tokio::test]
 async fn import_preview_builds_the_native_batch_chain() {
     let server = MockServer::start_async().await;

@@ -19,24 +19,15 @@ pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)
         "ignore_prepared_report": 1,
     });
 
-    let request = match build_request(client, &params) {
-        Ok(request) => request,
-        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
-    };
-    let response = match client.execute(request).await {
+    let response = match fetch(client, &params, REPORT_TIMEOUT).await {
         Ok(v) => v,
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     };
 
-    let message = response.pointer("/message").cloned().unwrap_or(Value::Null);
-    let columns = message
-        .pointer("/columns")
-        .cloned()
-        .unwrap_or_else(|| json!([]));
-    let rows = message
-        .pointer("/result")
-        .cloned()
-        .unwrap_or_else(|| json!([]));
+    let (columns, rows) = match report_payload(&response) {
+        Ok(payload) => payload,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
 
     output::ok(json!({
         "report": report_name,
@@ -45,23 +36,45 @@ pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)
     }))
 }
 
-fn build_request(client: &Client, params: &Value) -> Result<reqwest::Request, ApiError> {
-    client.build_post_with_timeout(
-        "/api/method/frappe.desk.query_report.run",
-        params,
-        REPORT_TIMEOUT,
-    )
+async fn fetch(
+    client: &Client,
+    params: &Value,
+    timeout: std::time::Duration,
+) -> Result<Value, ApiError> {
+    client
+        .post_with_timeout("/api/method/frappe.desk.query_report.run", params, timeout)
+        .await
+}
+
+fn report_payload(response: &Value) -> Result<(Value, Value), ApiError> {
+    let message = response
+        .get("message")
+        .and_then(Value::as_object)
+        .ok_or_else(|| ApiError::Shape("report response has no object 'message'".into()))?;
+    let columns = message
+        .get("columns")
+        .filter(|value| value.is_array())
+        .cloned()
+        .ok_or_else(|| ApiError::Shape("report response has no array 'message.columns'".into()))?;
+    let rows = message
+        .get("result")
+        .filter(|value| value.is_array())
+        .cloned()
+        .ok_or_else(|| ApiError::Shape("report response has no array 'message.result'".into()))?;
+
+    Ok((columns, rows))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::config::{Context, Credentials, PrivilegeMode};
+    use httpmock::prelude::*;
     use url::Url;
 
-    fn context() -> Context {
+    fn context(site_url: &str) -> Context {
         Context {
-            site_url: Url::parse("https://erpnext.example").expect("url"),
+            site_url: Url::parse(site_url).expect("url"),
             company_slug: "test-co".into(),
             company: Some("Test Company".into()),
             privilege: PrivilegeMode::Operator,
@@ -73,14 +86,56 @@ mod tests {
         }
     }
 
-    #[test]
+    #[tokio::test]
     // spec: project/spec/feature/erp-operations/reporting UC-3
-    fn report_request_has_the_exact_finite_long_running_bound() {
-        let client = Client::new(context()).expect("client");
-        let request = build_request(&client, &json!({ "report_name": "Profit and Loss" }))
-            .expect("report request");
+    async fn report_bound_overrides_the_ordinary_request_bound() {
+        let server = MockServer::start_async().await;
+        let runner = server.mock(|when, then| {
+            when.method(POST)
+                .path("/api/method/frappe.desk.query_report.run");
+            then.status(200).json_body(json!({ "message": {
+                "columns": [],
+                "result": [],
+            }}));
+        });
+        let client =
+            Client::with_request_timeout(context(&server.base_url()), std::time::Duration::ZERO)
+                .expect("client");
 
-        assert_eq!(request.timeout(), Some(&REPORT_TIMEOUT));
-        assert_eq!(REPORT_TIMEOUT, std::time::Duration::from_secs(120));
+        let response = fetch(
+            &client,
+            &json!({ "report_name": "Profit and Loss" }),
+            REPORT_TIMEOUT,
+        )
+        .await
+        .expect("report-specific timeout overrides the immediate ordinary bound");
+
+        runner.assert();
+        assert!(report_payload(&response).is_ok());
+    }
+
+    #[tokio::test]
+    // spec: project/spec/feature/erp-operations/reporting UC-3
+    async fn finite_report_bound_surfaces_as_transport_failure() {
+        let server = MockServer::start_async().await;
+        let client = Client::new(context(&server.base_url())).expect("client");
+
+        let error = fetch(
+            &client,
+            &json!({ "report_name": "Profit and Loss" }),
+            std::time::Duration::ZERO,
+        )
+        .await
+        .expect_err("an exhausted report bound must fail");
+
+        assert!(matches!(error, ApiError::Transport(_)));
+    }
+
+    #[test]
+    fn malformed_report_payload_is_a_shape_failure() {
+        let error = report_payload(&json!({ "message": { "columns": [] } }))
+            .expect_err("missing rows must never become an empty successful report");
+
+        assert!(matches!(error, ApiError::Shape(_)));
     }
 }

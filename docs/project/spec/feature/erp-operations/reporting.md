@@ -25,8 +25,8 @@ And the results respect the identity's permission scope.
 
 #### UC-2
 
-Scenario: Unknown report or missing permission is a structured failure
-Given a report name that does not exist or is not permitted for the active identity
+Scenario: Rejected or malformed report result is a structured failure
+Given a report that does not exist, is not permitted, or returns no valid column and row arrays
 When the agent runs it
 Then the command fails with a structured failure naming the cause
 And no partial or guessed result is returned.
