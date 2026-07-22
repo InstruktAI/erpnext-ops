@@ -27,7 +27,7 @@ release:
 	@$(MAKE) --no-print-directory sign BIN=target/release/erpnext
 
 sign:
-	@n=$$(security find-identity -v -p codesigning 2>/dev/null | grep -c "$(SIGN_IDENTITY)" || true); \
+	@n=$$(security find-certificate -a -c "$(SIGN_IDENTITY)" 2>/dev/null | grep -c "^keychain:" || true); \
 	if [ "$$n" -eq 0 ]; then \
 		echo "no signing identity '$(SIGN_IDENTITY)' in the keychain; $(BIN) keeps its ad-hoc signature"; \
 	elif [ "$$n" -gt 1 ]; then \
