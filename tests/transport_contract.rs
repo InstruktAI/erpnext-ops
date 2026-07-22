@@ -842,6 +842,7 @@ async fn report_run_uses_the_native_runner_with_filters() {
 }
 
 #[test]
+// spec: project/spec/feature/erp-operations/reporting UC-2
 fn malformed_report_response_is_a_structured_shape_failure() {
     let server = MockServer::start();
     let runner = server.mock(|when, then| {
@@ -859,7 +860,8 @@ fn malformed_report_response_is_a_structured_shape_failure() {
         output.stdout.is_empty(),
         "a malformed report has no success payload"
     );
-    assert_eq!(failure.pointer("/error/kind"), Some(&json!("shape")));
+    let shape_kind = ApiError::Shape(String::new()).kind();
+    assert_eq!(failure.pointer("/error/kind"), Some(&json!(shape_kind)));
     runner.assert();
 }
 

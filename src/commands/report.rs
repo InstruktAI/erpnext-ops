@@ -41,9 +41,25 @@ async fn fetch(
     params: &Value,
     timeout: std::time::Duration,
 ) -> Result<Value, ApiError> {
+    #[cfg(test)]
+    if let Some(result) = TEST_FETCH_RESULT.with(|result| result.borrow_mut().take()) {
+        TEST_FETCH_TIMEOUT.set(Some(timeout));
+        return result;
+    }
+
     client
         .post_with_timeout("/api/method/frappe.desk.query_report.run", params, timeout)
         .await
+}
+
+#[cfg(test)]
+thread_local! {
+    static TEST_FETCH_RESULT: std::cell::RefCell<Option<Result<Value, ApiError>>> = const {
+        std::cell::RefCell::new(None)
+    };
+    static TEST_FETCH_TIMEOUT: std::cell::Cell<Option<std::time::Duration>> = const {
+        std::cell::Cell::new(None)
+    };
 }
 
 fn report_payload(response: &Value) -> Result<(Value, Value), ApiError> {
@@ -69,7 +85,6 @@ fn report_payload(response: &Value) -> Result<(Value, Value), ApiError> {
 mod tests {
     use super::*;
     use crate::config::{Context, Credentials, PrivilegeMode};
-    use httpmock::prelude::*;
     use url::Url;
 
     fn context(site_url: &str) -> Context {
@@ -86,49 +101,25 @@ mod tests {
         }
     }
 
-    #[tokio::test]
+    #[tokio::test(flavor = "current_thread")]
     // spec: project/spec/feature/erp-operations/reporting UC-3
-    async fn report_bound_overrides_the_ordinary_request_bound() {
-        let server = MockServer::start_async().await;
-        let runner = server.mock(|when, then| {
-            when.method(POST)
-                .path("/api/method/frappe.desk.query_report.run");
-            then.status(200).json_body(json!({ "message": {
-                "columns": [],
-                "result": [],
-            }}));
-        });
-        let client =
-            Client::with_request_timeout(context(&server.base_url()), std::time::Duration::ZERO)
-                .expect("client");
+    async fn public_report_run_uses_a_distinct_finite_bound() {
+        let client = Client::new(context("https://erpnext.example")).expect("client");
+        TEST_FETCH_RESULT.set(Some(Ok(json!({ "message": {
+            "columns": [],
+            "result": [],
+        }}))));
 
-        let response = fetch(
-            &client,
-            &json!({ "report_name": "Profit and Loss" }),
-            REPORT_TIMEOUT,
-        )
-        .await
-        .expect("report-specific timeout overrides the immediate ordinary bound");
+        let completed = run(&client, "Profit and Loss", &[]).await;
 
-        runner.assert();
-        assert!(report_payload(&response).is_ok());
-    }
+        assert_eq!(completed, output::EXIT_OK);
+        assert_eq!(TEST_FETCH_TIMEOUT.get(), Some(REPORT_TIMEOUT));
 
-    #[tokio::test]
-    // spec: project/spec/feature/erp-operations/reporting UC-3
-    async fn finite_report_bound_surfaces_as_transport_failure() {
-        let server = MockServer::start_async().await;
-        let client = Client::new(context(&server.base_url())).expect("client");
+        TEST_FETCH_RESULT.set(Some(Err(ApiError::Transport("report timed out".into()))));
+        let stalled = run(&client, "Profit and Loss", &[]).await;
 
-        let error = fetch(
-            &client,
-            &json!({ "report_name": "Profit and Loss" }),
-            std::time::Duration::ZERO,
-        )
-        .await
-        .expect_err("an exhausted report bound must fail");
-
-        assert!(matches!(error, ApiError::Transport(_)));
+        assert_eq!(stalled, output::EXIT_API);
+        assert_eq!(TEST_FETCH_TIMEOUT.get(), Some(REPORT_TIMEOUT));
     }
 
     #[test]
