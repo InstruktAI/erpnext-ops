@@ -68,17 +68,22 @@ as an open loop. Before allocating it to another invoice, resolve both documents
 native reconciliation path so both outstanding amounts prove the allocation.
 
 If money has actually been returned, resolve an existing Payment Entry linked to the credit note
-or carrying the same external refund reference. Map the credit note through ERPNext's native
-payment-entry mapper. Require payment type `Pay`, the intended bank or cash account as the paid-
-from account, receivables as the paid-to account, the credit note reference, and its negative
-allocation. Apply and submit only after the refund is true.
+or carrying the same external refund reference. Use the running site's native refund path. When
+its payment-entry mapper produces a direct credit-note allocation, require payment type `Pay`,
+the intended bank or cash account as the paid-from account, receivables as the paid-to account,
+the credit-note reference, and its negative allocation. When it instead produces an unallocated
+refund, submit that Payment Entry and use native Payment Reconciliation against the original
+Sales Invoice as directed by the site's reconciliation flow. Apply and submit only after the
+refund is true; never manufacture outstanding amounts or allocation rows to force either shape.
 
 ### 5. Prove settlement
 
 Read the credit note and Payment Entry back. A fully refunded credit note reports zero
-outstanding. Its receivables credit and the refund's receivables debit net to zero, while the
-refund credits the intended bank or cash account. Confirm the original invoice remains submitted
-and settled; the correction is a linked successor, not a rewrite of the original.
+active outstanding after the native allocation or reconciliation completes. Its receivables
+credit and the refund's receivables debit net to zero, while the refund credits the intended bank
+or cash account. Require active receivables to contain neither an unallocated refund nor a
+remaining customer credit. Confirm the original invoice remains submitted and settled; the
+correction is a linked successor, not a rewrite of the original.
 
 ## Outputs
 
@@ -113,3 +118,4 @@ not inferred from remembered commands or a cancelled document's historical field
 
 - https://docs.frappe.io/erpnext/credit-note
 - https://docs.frappe.io/erpnext/sales-return
+- https://docs.frappe.io/erpnext/allocating-credit-note-and-payment

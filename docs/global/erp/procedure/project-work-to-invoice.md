@@ -59,9 +59,9 @@ submitted work.
 
 Bill only when the accepted proposal, milestone, completed work, or other agreed trigger is
 true. Convert the Sales Order through ERPNext's native invoice mapper. For a partial or
-milestone invoice, adjust quantities on the rows produced by the mapper; never replace the
-item table with newly constructed rows, because doing so discards the per-row Sales Order links
-that update billed state. Before submission, run the invoice's `add_timesheet_data` controller
+milestone invoice, adjust quantities on the rows produced by the mapper. Preserve every row's
+Sales Order link and never replace the item table with newly constructed rows. Before
+submission, run the invoice's `add_timesheet_data` controller
 method so the submitted Timesheet is linked to the invoice and the returned document is
 persisted. Read the draft back and require its Project, Sales Order, Timesheet, and per-row
 source links before submitting it. After submission, require the Sales Order's billed
