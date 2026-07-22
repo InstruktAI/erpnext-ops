@@ -48,8 +48,8 @@ work on that site.
 - Credential fields: site base URL, operator API key, operator API secret.
 <!-- change:erpnext-agent-admin-context -->
 - Credential fields: site base URL, company name, operator API key and secret, and optional
-  agent-admin API key and secret. Selecting a privilege whose credentials are absent fails
-  closed; credentials never fall back across identities.
+  agent-admin user, API key, and secret. Selecting a privilege whose credentials are absent
+  fails closed; credentials never fall back across identities.
 <!-- /planned-change:erpnext-agent-admin-context -->
 
 ## Known caveats
