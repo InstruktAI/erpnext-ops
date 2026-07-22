@@ -211,6 +211,17 @@ enum DocCommand {
         #[arg(long)]
         apply: bool,
     },
+    /// Convert a document along an ERPNext chain via its native mapper
+    Map {
+        doctype: String,
+        name: String,
+        /// Native mapper method, e.g. erpnext.selling.doctype.quotation.quotation.make_sales_order
+        #[arg(long)]
+        via: String,
+        /// Send the native operation instead of previewing it
+        #[arg(long)]
+        apply: bool,
+    },
     /// Create a document (preview by default; --apply sends it)
     Create {
         doctype: String,
@@ -424,6 +435,12 @@ async fn main() {
                 limit,
             } => commands::doc::list(&client, &doctype, &filters, limit).await,
             DocCommand::Get { doctype, name } => commands::doc::get(&client, &doctype, &name).await,
+            DocCommand::Map {
+                doctype,
+                name,
+                via,
+                apply,
+            } => commands::doc::map(&client, &doctype, &name, &via, apply).await,
             DocCommand::Create {
                 doctype,
                 data,

@@ -249,6 +249,87 @@ fn json_loosely_equal(a: &Value, b: &Value) -> bool {
     }
 }
 
+/// `erpnext doc map <doctype> <name> --via <native.mapper> [--apply]`
+///
+/// ERPNext converts documents along its own chains — quotation to sales order, sales
+/// order to invoice — through mapper methods that copy items, taxes and terms and link
+/// the result back to its source. The mapper is named by the caller, so no ERP chain
+/// knowledge lives here: the site builds the target document and this sends it.
+pub async fn map(client: &Client, doctype: &str, name: &str, via: &str, apply: bool) -> i32 {
+    let mapped = match client
+        .post(
+            &format!("/api/method/{via}"),
+            &json!({ "source_name": name }),
+        )
+        .await
+    {
+        Ok(v) => v.pointer("/message").cloned().unwrap_or(Value::Null),
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let Some(target_doctype) = mapped
+        .pointer("/doctype")
+        .and_then(Value::as_str)
+        .map(str::to_owned)
+    else {
+        return output::fail(
+            "shape",
+            &format!("'{via}' returned no target document for '{name}'"),
+            output::EXIT_API,
+        );
+    };
+
+    let path = format!("/api/v2/document/{}", encode_segment(&target_doctype));
+
+    if !apply {
+        return output::ok(json!({
+            "preview": true,
+            "context": {
+                "site": client.context().site(),
+                "company": client.context().company,
+                "privilege": client.context().privilege,
+            },
+            "source": { "doctype": doctype, "name": name },
+            "target_doctype": target_doctype,
+            "operation": { "method": "POST", "path": path, "payload": mapped },
+            "verification": "the created document is read back and must reference its source",
+            "apply_command": "re-run the same command with --apply",
+        }));
+    }
+
+    let created = match client.post(&path, &mapped).await {
+        Ok(v) => v,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let created_name = created
+        .pointer("/data/name")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
+
+    // A converted document that lost its link to the source is a broken chain, not a
+    // success: the source would stay open and bill twice.
+    let linked = created
+        .pointer("/data")
+        .map(|d| d.to_string().contains(name))
+        .unwrap_or(false);
+    if !linked {
+        return output::fail_with_data(
+            "linkage-missing",
+            &format!("'{created_name}' was created but references no source '{name}'"),
+            json!({ "created": created_name, "target_doctype": target_doctype }),
+            output::EXIT_API,
+        );
+    }
+
+    output::ok(json!({
+        "source": { "doctype": doctype, "name": name },
+        "created": { "doctype": target_doctype, "name": created_name },
+        "linked_to_source": true,
+    }))
+}
+
 /// `erpnext doc update <doctype> <name> --data <json> [--apply]`
 ///
 /// Preview by default. On apply, unknown payload fields are rejected against live
