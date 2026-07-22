@@ -56,7 +56,14 @@ Review the site's system settings — time zone, date and number formats, sessio
 password policy — against the company's operating reality. The setup wizard seeds them from
 its country and currency answers; this step confirms them rather than assuming them.
 
-### 5. Create the operator user
+### 5. Set the company's posting defaults
+
+Set the company's default income account, and confirm its expense and receivable defaults.
+The setup wizard seeds a chart of accounts without binding revenue to it, so every invoice
+fails until an income account exists. Re-running the step against a configured company
+changes nothing.
+
+### 6. Create the operator user
 
 Create an ERPNext user for the site's operator agent. ERPNext roles are additive, not
 hierarchical: a Manager role does not imply its User role. Grant the User role for each
@@ -64,12 +71,12 @@ business surface the operator works (e.g. `Sales User` alongside `Sales Manager`
 dedicated `Item Manager` role for item master maintenance. The operator must not carry
 administrator authority. Re-granting an existing role is a no-op; the step is repeatable.
 
-### 6. Mint the operator API credentials
+### 7. Mint the operator API credentials
 
 Generate the operator user's API key and secret. Treat the secret as one-time sensitive
 output. Re-generation is rotation: update the credential home in the same pass.
 
-### 7. Store the operator credentials
+### 8. Store the operator credentials
 
 Record the site base URL, company name, operator API key, and operator API secret in the
 company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
@@ -77,7 +84,7 @@ readable only by its owner. Writing it is idempotent — the entry is the single
 CLI resolves at command time. Do not copy administrator credentials there — administrator
 bootstrap secrets live only in itsUP.
 
-### 8. Verify the operator identity
+### 9. Verify the operator identity
 
 Authenticate with the operator credentials, confirm the logged-in user is the operator,
 confirm access to the intended company data, and confirm the identity lacks administrator
@@ -91,7 +98,10 @@ complete when every one of its steps is satisfied or deliberately skipped.
 ## Outputs
 
 - The company's site exists and answers at its FQDN.
-- The outgoing email account is configured and system settings are reviewed.
+- The outgoing email account is configured, posting defaults are set, and system settings
+  are reviewed.
+- The company is operable end to end: a quotation converts to an order, an invoice posts,
+  and a payment records without further configuration.
 - ERPNext `Company` record inside the site.
 - Site operator user with API credentials stored in the company credential home.
 - Verified operator identity.

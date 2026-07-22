@@ -84,10 +84,16 @@ Preview output for mutating commands contains:
   document back; a site that answers the request while leaving `docstatus` unchanged is
   reported as a failed transition, never as success. `workflow amend` builds the new draft
   carrying `amended_from` and applies only to a cancelled document.
+- `doc map` passes the source under every argument name the native mappers use, because the
+  selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the
+  site binds what its signature declares. Fields the mapper leaves empty — a delivery date,
+  a payment reference — are supplied with `--data`, and the mapper is never second-guessed.
 - `doc map` converts a document along an ERPNext chain through the native mapper the caller
   names, so the site builds the target document; the created document is read back and a
   result that references no source fails. Mapping the same source twice creates a second
   document — resolve before mapping.
+- `--source` suits documents ERPNext names from a series; a master with a natural key, such
+  as an item code, carries its own identity and needs none.
 - `doc create --source <token>` is exactly idempotent: the document name derives
   deterministically from site, doctype, and token; a retry replays the existing document,
   divergent token reuse is a structured conflict, and such documents opt out of native

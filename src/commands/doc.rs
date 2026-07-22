@@ -255,7 +255,35 @@ fn json_loosely_equal(a: &Value, b: &Value) -> bool {
 /// order to invoice — through mapper methods that copy items, taxes and terms and link
 /// the result back to its source. The mapper is named by the caller, so no ERP chain
 /// knowledge lives here: the site builds the target document and this sends it.
-pub async fn map(client: &Client, doctype: &str, name: &str, via: &str, apply: bool) -> i32 {
+pub async fn map(
+    client: &Client,
+    doctype: &str,
+    name: &str,
+    via: &str,
+    data: Option<&str>,
+    apply: bool,
+) -> i32 {
+    let overrides: Map<String, Value> = match data {
+        None => Map::new(),
+        Some(raw) => match serde_json::from_str::<Value>(raw) {
+            Ok(Value::Object(m)) => m,
+            Ok(_) => {
+                return output::fail(
+                    "payload",
+                    "--data must be a JSON object",
+                    output::EXIT_CONFIG,
+                )
+            }
+            Err(e) => {
+                return output::fail(
+                    "payload",
+                    &format!("--data is not valid JSON: {e}"),
+                    output::EXIT_CONFIG,
+                )
+            }
+        },
+    };
+
     let mapped = match client
         .post(
             &format!("/api/method/{via}"),
@@ -265,6 +293,14 @@ pub async fn map(client: &Client, doctype: &str, name: &str, via: &str, apply: b
     {
         Ok(v) => v.pointer("/message").cloned().unwrap_or(Value::Null),
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let mapped = {
+        let mut m = mapped.as_object().cloned().unwrap_or_default();
+        for (k, v) in overrides {
+            m.insert(k, v);
+        }
+        Value::Object(m)
     };
 
     let Some(target_doctype) = mapped

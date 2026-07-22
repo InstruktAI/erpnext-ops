@@ -224,6 +224,9 @@ enum DocCommand {
         /// Native mapper method, e.g. erpnext.selling.doctype.quotation.quotation.make_sales_order
         #[arg(long)]
         via: String,
+        /// JSON object of fields the mapper does not fill
+        #[arg(long)]
+        data: Option<String>,
         /// Send the native operation instead of previewing it
         #[arg(long)]
         apply: bool,
@@ -450,8 +453,9 @@ async fn main() {
                 doctype,
                 name,
                 via,
+                data,
                 apply,
-            } => commands::doc::map(&client, &doctype, &name, &via, apply).await,
+            } => commands::doc::map(&client, &doctype, &name, &via, data.as_deref(), apply).await,
             DocCommand::Create {
                 doctype,
                 data,
