@@ -1,11 +1,13 @@
 ---
-id: erp/procedure/customer-invoice-and-payment
-type: procedure
-domain: erp
-scope: global
 description: Post a taxed or tax-exempt customer invoice, prove its ledger effect, and settle it through a linked payment.
 ---
 # Customer Invoice And Payment — Procedure
+
+## Required reads
+
+@~/.teleclaude/docs/erp/policy/operating-disciplines.md
+@~/.teleclaude/docs/erp/principle/business-input-traceability.md
+@~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 
 ## Goal
 
