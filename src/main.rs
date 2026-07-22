@@ -11,6 +11,12 @@ use erpnext::{commands, output};
 #[derive(Parser)]
 #[command(name = "erpnext", version, about)]
 struct Cli {
+    /// Operate this company for this invocation, ignoring the persisted selection
+    #[arg(long, global = true)]
+    company: Option<String>,
+    /// Operate this site for this invocation, ignoring the persisted selection
+    #[arg(long, global = true)]
+    site: Option<String>,
     #[command(subcommand)]
     command: Command,
 }
@@ -346,7 +352,12 @@ async fn main() {
         std::process::exit(exit);
     }
 
-    let ctx = match config::resolve(&paths) {
+    let resolved = if cli.company.is_some() || cli.site.is_some() {
+        config::resolve_override(&paths, cli.site.as_deref(), cli.company.as_deref())
+    } else {
+        config::resolve(&paths)
+    };
+    let ctx = match resolved {
         Ok(ctx) => ctx,
         Err(e) => std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG)),
     };

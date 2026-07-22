@@ -21,6 +21,8 @@ the CLI contract below, not raw transport mechanics.
 
 ## Canonical fields
 
+- Every command accepts `--company <company-slug>` or `--site <fqdn>` to operate that
+  context for one invocation without changing the persisted selection.
 - `erpnext context show`
 - `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
   at least one selector; the selection persists and credentials resolve from the company

@@ -655,3 +655,38 @@ async fn import_apply_starts_exactly_the_named_batch() {
     assert_eq!(exit, 0);
     start.assert();
 }
+
+/// Two agents share one home directory, so a persisted selection is shared state. An
+/// explicit company makes a single invocation self-contained.
+#[test]
+fn an_explicit_company_resolves_without_the_persisted_selection() {
+    use erpnext::config::{resolve_override, ConfigError, Paths, PrivilegeMode};
+    use std::fs;
+
+    let base = std::env::temp_dir().join(format!("erpnext-override-{}", std::process::id()));
+    let registry = base.join("companies");
+    fs::create_dir_all(registry.join("other-co")).expect("registry");
+    fs::write(
+        registry.join("other-co").join("erpnext.json"),
+        r#"{"site_url":"https://other.erpnext.example","company":"Other","operator":{"api_key":"k","api_secret":"s"}}"#,
+    )
+    .expect("credential file");
+    let paths = Paths {
+        selection_file: base.join("config").join("context.json"),
+        registry_root: registry,
+    };
+
+    let ctx = resolve_override(&paths, None, Some("other-co")).expect("explicit company resolves");
+    assert_eq!(ctx.company_slug, "other-co");
+    assert_eq!(ctx.site(), "other.erpnext.example");
+    assert_eq!(ctx.privilege, PrivilegeMode::Operator);
+    assert!(
+        !paths.selection_file.exists(),
+        "an override must not write the shared selection"
+    );
+
+    let err = resolve_override(&paths, None, None).expect_err("no selector is a blocker");
+    assert!(matches!(err, ConfigError::NoSelection));
+
+    fs::remove_dir_all(&base).ok();
+}

@@ -155,6 +155,31 @@ pub fn select(
     Ok(ctx)
 }
 
+/// Resolve a context for one invocation without touching the persisted selection.
+/// An explicit company or site makes a command self-contained, so concurrent callers
+/// sharing a home directory never depend on each other's stored choice.
+pub fn resolve_override(
+    paths: &Paths,
+    site: Option<&str>,
+    company_slug: Option<&str>,
+) -> Result<Context, ConfigError> {
+    let slug = match (company_slug, site) {
+        (Some(slug), _) => slug.to_owned(),
+        (None, Some(site)) => find_slug_by_site(&paths.registry_root, site)?,
+        (None, None) => return Err(ConfigError::NoSelection),
+    };
+    let privilege = resolve(paths)
+        .map(|ctx| ctx.privilege)
+        .unwrap_or(PrivilegeMode::Operator);
+    resolve_selection(
+        paths,
+        &Selection {
+            company_slug: slug,
+            privilege,
+        },
+    )
+}
+
 /// Resolve the active context from the persisted selection and the credential home.
 pub fn resolve(paths: &Paths) -> Result<Context, ConfigError> {
     let raw = fs::read_to_string(&paths.selection_file).map_err(|e| {
