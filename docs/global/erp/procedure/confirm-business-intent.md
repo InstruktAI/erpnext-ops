@@ -1,5 +1,5 @@
 ---
-description: Reframe a consequential human business instruction once, obtain plain-language approval, and apply only the approved intent.
+description: Reframe unresolved human business intent once, obtain plain-language approval, and apply only the approved outcome.
 activation_trigger: Use when a human instruction would create, submit, cancel, delete, send, or materially change business state and a wrong interpretation would matter.
 ---
 # Confirm Business Intent — Procedure
@@ -12,12 +12,15 @@ activation_trigger: Use when a human instruction would create, submit, cancel, d
 
 ## Goal
 
-The person confirms the business outcome the agent understood before consequential ERP state
-changes, without being asked to interpret ERPNext fields, commands, or document mechanics.
+The person resolves a genuine business decision boundary before the agent applies the affected
+ERP state, without being asked to interpret ERPNext fields, commands, or document mechanics.
 
 ## Preconditions
 
-- A human instruction has been translated into a concrete business outcome.
+- Evidence, company configuration, party preferences, templates, ERPNext state, and standard
+  ERP practice do not determine the full business outcome.
+- A human instruction has been translated into the concrete outcome the agent believes was
+  intended.
 - The affected company, parties, amounts, quantities, dates, and commitments are known well
   enough to preview, or the remaining uncertainty is named.
 
@@ -25,9 +28,13 @@ changes, without being asked to interpret ERPNext fields, commands, or document 
 
 ### 1. Choose one business approval boundary
 
-Group the ERP operations that realize one outcome. Ask for approval of the outcome once, not
-once per document or field. Routine consequences determined by the approved outcome remain
-autonomous.
+First resolve the instruction through available evidence, configuration, preferences,
+templates, ERPNext state, and standard ERP practice. If those determine the correct action,
+review the clean preview and proceed autonomously; do not manufacture an approval boundary.
+
+When human judgment remains necessary, group the ERP operations that realize one outcome. Ask
+for approval of the outcome once, not once per document or field. Routine consequences
+determined by the approved outcome remain autonomous.
 
 ### 2. Reframe the understood outcome
 
@@ -70,9 +77,10 @@ the linked activity trail.
 ## Discipline
 
 The failure mode is faithfully executing the wrong interpretation of a human instruction.
-Confirmation happens at the business-outcome boundary, not at every mechanical step, so it
-catches semantic mistakes without turning autonomous operation into approval fatigue. The
-person approves meaning; the agent owns ERPNext mechanics.
+Confirmation happens only at an unresolved business-outcome boundary, not because work is
+important or at every mechanical step. It catches semantic mistakes without turning
+determinate operation into approval fatigue. The person supplies missing judgment; the agent
+owns ERPNext mechanics.
 
 ## See Also
 

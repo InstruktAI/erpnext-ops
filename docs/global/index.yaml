@@ -83,8 +83,8 @@ snippets:
   visibility: internal
   source_project: erpnext-ops
 - id: erp/procedure/confirm-business-intent
-  description: Reframe a consequential human business instruction once, obtain plain-language
-    approval, and apply only the approved intent.
+  description: Reframe unresolved human business intent once, obtain plain-language
+    approval, and apply only the approved outcome.
   type: procedure
   scope: global
   domain: erp
