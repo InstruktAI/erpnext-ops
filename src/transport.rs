@@ -150,14 +150,33 @@ impl Client {
         body: &Value,
         timeout: std::time::Duration,
     ) -> Result<Value, ApiError> {
-        let resp = self
+        let request = self
             .http
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
             .timeout(timeout)
-            .send()
-            .await?;
+            .build()?;
+        self.execute(request).await
+    }
+
+    pub(crate) fn build_post_with_timeout(
+        &self,
+        path: &str,
+        body: &Value,
+        timeout: std::time::Duration,
+    ) -> Result<reqwest::Request, ApiError> {
+        Ok(self
+            .http
+            .post(self.url(path))
+            .header("Authorization", self.auth_header())
+            .json(body)
+            .timeout(timeout)
+            .build()?)
+    }
+
+    pub(crate) async fn execute(&self, request: reqwest::Request) -> Result<Value, ApiError> {
+        let resp = self.http.execute(request).await?;
         Self::read_json(resp).await
     }
 
