@@ -58,10 +58,15 @@ submitted work.
 ### 5. Bill the agreed trigger
 
 Bill only when the accepted proposal, milestone, completed work, or other agreed trigger is
-true. Convert the Sales Order through ERPNext's native invoice mapper. Before submission, run
-the invoice's `add_timesheet_data` controller method so the submitted Timesheet is linked to
-the invoice and the returned document is persisted. Read the draft back and require its
-Project, Sales Order, and Timesheet links before submitting it.
+true. Convert the Sales Order through ERPNext's native invoice mapper. For a partial or
+milestone invoice, adjust quantities on the rows produced by the mapper; never replace the
+item table with newly constructed rows, because doing so discards the per-row Sales Order links
+that update billed state. Before submission, run the invoice's `add_timesheet_data` controller
+method so the submitted Timesheet is linked to the invoice and the returned document is
+persisted. Read the draft back and require its Project, Sales Order, Timesheet, and per-row
+source links before submitting it. After submission, require the Sales Order's billed
+percentage and each row's billed amount to reflect exactly what the invoice consumed; a posted
+invoice with unchanged source-row billing state is a duplicate-billing blocker.
 
 ### 6. Close work and payment
 
