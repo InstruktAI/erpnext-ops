@@ -3,6 +3,8 @@ use serde_json::{json, Map, Value};
 use crate::output;
 use crate::transport::Client;
 
+const REPORT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(120);
+
 /// `erpnext report run <report-name> [--filter k=v]...` — run a native report through
 /// Frappe's permission-aware report runner and return machine-readable columns/rows.
 pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)]) -> i32 {
@@ -18,7 +20,11 @@ pub async fn run(client: &Client, report_name: &str, filters: &[(String, String)
     });
 
     let response = match client
-        .post("/api/method/frappe.desk.query_report.run", &params)
+        .post_with_timeout(
+            "/api/method/frappe.desk.query_report.run",
+            &params,
+            REPORT_TIMEOUT,
+        )
         .await
     {
         Ok(v) => v,

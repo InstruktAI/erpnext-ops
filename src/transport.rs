@@ -74,9 +74,16 @@ const REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
 
 impl Client {
     pub fn new(ctx: Context) -> Result<Self, ApiError> {
+        Self::with_request_timeout(ctx, REQUEST_TIMEOUT)
+    }
+
+    pub fn with_request_timeout(
+        ctx: Context,
+        request_timeout: std::time::Duration,
+    ) -> Result<Self, ApiError> {
         let http = reqwest::Client::builder()
             .connect_timeout(CONNECT_TIMEOUT)
-            .timeout(REQUEST_TIMEOUT)
+            .timeout(request_timeout)
             .build()?;
         Ok(Client { http, ctx })
     }
@@ -132,6 +139,23 @@ impl Client {
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
+            .send()
+            .await?;
+        Self::read_json(resp).await
+    }
+
+    pub async fn post_with_timeout(
+        &self,
+        path: &str,
+        body: &Value,
+        timeout: std::time::Duration,
+    ) -> Result<Value, ApiError> {
+        let resp = self
+            .http
+            .post(self.url(path))
+            .header("Authorization", self.auth_header())
+            .json(body)
+            .timeout(timeout)
             .send()
             .await?;
         Self::read_json(resp).await

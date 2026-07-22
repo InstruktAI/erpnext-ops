@@ -30,3 +30,11 @@ Given a report name that does not exist or is not permitted for the active ident
 When the agent runs it
 Then the command fails with a structured failure naming the cause
 And no partial or guessed result is returned.
+
+#### UC-3
+
+Scenario: A substantive native report gets a bounded extended execution window
+Given a permitted report whose native calculation needs longer than the ordinary request bound
+When the agent runs the report
+Then the report receives a report-specific bounded execution window and can complete
+And a stalled report still fails with a structured transport error rather than hanging forever.

@@ -783,6 +783,30 @@ async fn report_run_uses_the_native_runner_with_filters() {
 }
 
 #[tokio::test]
+// spec: project/spec/feature/erp-operations/reporting UC-3
+async fn report_run_overrides_the_short_ordinary_request_bound() {
+    let server = MockServer::start_async().await;
+    let report = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.query_report.run");
+        then.delay(std::time::Duration::from_millis(50))
+            .status(200)
+            .json_body(json!({ "message": { "columns": [], "result": [] } }));
+    });
+
+    let client =
+        Client::with_request_timeout(context_for(&server), std::time::Duration::from_millis(5))
+            .expect("client");
+    let exit = commands::report::run(&client, "Profit and Loss Statement", &[]).await;
+
+    assert_eq!(
+        exit, 0,
+        "the report-specific bound overrides the ordinary one"
+    );
+    report.assert();
+}
+
+#[tokio::test]
 async fn import_preview_builds_the_native_batch_chain() {
     let server = MockServer::start_async().await;
     let create = server.mock(|when, then| {
