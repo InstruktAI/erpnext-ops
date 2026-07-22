@@ -136,6 +136,19 @@ snippets:
   path: docs/erp/procedure/customer-credit-and-refund.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/customer-early-payment-discount
+  description: Settle a customer invoice under an agreed early-payment discount, using
+    the receipt date to prove eligibility and preserving the discount as an explicit
+    ledger effect.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/customer-early-payment-discount.md
+  visibility: internal
+  delivered_by:
+  - erpnext-mapper-arguments
+  source_project: erpnext-ops
 - id: erp/procedure/customer-invoice-and-payment
   description: Post a taxed or tax-exempt customer invoice, prove its ledger effect,
     and settle it through a linked payment.
@@ -145,6 +158,8 @@ snippets:
   activation_trigger: null
   path: docs/erp/procedure/customer-invoice-and-payment.md
   visibility: internal
+  superseded_by:
+  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/procedure/customer-payment-difference
   description: Settle a customer invoice when the bank receives less than the allocated
@@ -155,6 +170,8 @@ snippets:
   activation_trigger: null
   path: docs/erp/procedure/customer-payment-difference.md
   visibility: internal
+  superseded_by:
+  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/procedure/customer-receipt-allocation
   description: Allocate a received customer payment across invoices, preserve any

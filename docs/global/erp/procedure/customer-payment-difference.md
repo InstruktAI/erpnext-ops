@@ -30,6 +30,11 @@ Do not label a shortfall as a fee, discount, write-off, withholding, or exchange
 merely to make the Payment Entry balance. Each treatment has different accounting and tax
 meaning.
 
+<!-- planned:erpnext-mapper-arguments -->
+A discount already granted by the invoice's stored payment schedule composes
+`customer-early-payment-discount`; it is not an ad hoc payment difference.
+<!-- /planned:erpnext-mapper-arguments -->
+
 ### 2. Preserve the native invoice reference
 
 Create the draft through ERPNext's native Payment Entry mapper for the Sales Invoice. Preserve
@@ -97,5 +102,8 @@ erase an unexplained short payment or manufacture customer credit to satisfy the
 
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
+<!-- planned:erpnext-mapper-arguments -->
+- ~/.teleclaude/docs/erp/procedure/customer-early-payment-discount.md
+<!-- /planned:erpnext-mapper-arguments -->
 - ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
 - ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
