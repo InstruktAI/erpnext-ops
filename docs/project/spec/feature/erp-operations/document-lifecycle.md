@@ -60,7 +60,7 @@ And the failure points to the cancel-and-amend path instead of editing in place.
 #### UC-6
 
 Scenario: A transition the site silently declines is reported as failure
-Given a document the site will not move to the requested state
+Given a document the site declines to move to the requested state
 When the agent applies a submit or a cancel and the site answers without changing
 `docstatus`
 Then the command fails, naming the state the document remains in

@@ -82,9 +82,8 @@ Preview output for mutating commands contains:
   carrying `amended_from` and applies only to a cancelled document.
 - `doc map` converts a document along an ERPNext chain through the native mapper the caller
   names, so the site builds the target document; the created document is read back and a
-  result that references no source fails, because an unlinked conversion leaves the source
-  open and bills twice. Mapping the same source twice creates a second document — resolve
-  before mapping.
+  result that references no source fails. Mapping the same source twice creates a second
+  document — resolve before mapping.
 - `doc create --source <token>` is exactly idempotent: the document name derives
   deterministically from site, doctype, and token; a retry replays the existing document,
   divergent token reuse is a structured conflict, and such documents opt out of native
