@@ -92,6 +92,8 @@ snippets:
     become an operable tenant with its own ERPNext site.
   path: docs/erp/procedure/company-onboarding.md
   visibility: internal
+  superseded_by:
+  - erpnext-agent-admin-context
   source_project: erpnext-ops
 - id: erp/procedure/confirm-business-intent
   description: Reframe unresolved human business intent once, obtain plain-language
