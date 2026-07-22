@@ -146,6 +146,16 @@ snippets:
   path: docs/erp/procedure/customer-invoice-and-payment.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/customer-payment-difference
+  description: Settle a customer invoice when the bank receives less than the allocated
+    debt because of an approved fee or loss, without creating hidden credit.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/customer-payment-difference.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/customer-receipt-allocation
   description: Allocate a received customer payment across invoices, preserve any
     excess as credit, and prove partial or complete settlement from native state.

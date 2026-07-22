@@ -46,6 +46,9 @@ Before submission, require:
   deductions or exchange adjustments; and
 - the customer, accounts, currency, posting date, and external reference match the receipt.
 
+Compose `customer-payment-difference` when an approved bank fee or loss makes the actual bank
+receipt smaller than the invoice allocation. An unexplained short payment remains outstanding.
+
 ### 4. Submit and prove the result
 
 Submit the Payment Entry and read the stored entry, every referenced invoice, and the native
@@ -98,5 +101,6 @@ rest.
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
+- ~/.teleclaude/docs/erp/procedure/customer-payment-difference.md
 - ~/.teleclaude/docs/erp/procedure/customer-advance-to-invoice.md
 - ~/.teleclaude/docs/erp/procedure/customer-credit-and-refund.md
