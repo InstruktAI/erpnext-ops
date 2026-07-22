@@ -61,12 +61,18 @@ machine-readable form.
 
 #### UC-6
 
-Scenario: Preflight rejects an invalid payload without sending
-Given a payload containing an unknown field, a missing mandatory field, or an invalid link
-target
+Scenario: Preflight rejects a field the site cannot interpret
+Given a payload containing a field the doctype does not define
 When the agent runs a create or update with `--apply`
-Then the command fails with a structured validation failure naming the offending input
+Then the command fails with a structured validation failure naming the offending field
 And no mutating request is sent to the site.
+
+#### UC-6b
+
+Scenario: Values the site derives are left to the site
+Given a payload omitting mandatory fields ERPNext fills during validation
+When the agent applies the create
+Then the request is sent and the site's own validation decides the outcome.
 
 #### UC-7
 

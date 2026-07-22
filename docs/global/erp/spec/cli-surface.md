@@ -68,8 +68,10 @@ Preview output for mutating commands contains:
   administrator bootstrap secrets live only in itsUP.
 - Mutating commands preview by default; `--apply` sends the native operation and reports
   ERPNext's result.
-- Create and update commands run basic preflight against live DocType metadata before
-  sending; ERPNext remains the authority on validation, permissions, and transactions.
+- Create and update commands check payload fields against live DocType metadata before
+  sending and refuse a field the doctype does not define. Mandatory values ERPNext derives
+  during validation are left to it: ERPNext remains the authority on validation,
+  permissions, and transactions.
 - Externally visible or irreversible actions proceed autonomously when they are determined by
   evidence, configuration, templates, and standard ERP practice. They surface only when a real
   decision boundary remains.

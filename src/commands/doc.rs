@@ -503,7 +503,10 @@ fn unknown_fields(meta: &Value, payload: &Map<String, Value>) -> Option<String> 
     }
 }
 
-/// Returns a human-readable findings string when the payload violates the live schema.
+/// Local preflight is deliberately narrow: it blocks what the site cannot interpret, and
+/// leaves what the site derives to the site. Mandatory fields are not checked here because
+/// ERPNext fills many of them during validation — naming series, conversion rates, price
+/// list currency — and rejecting those locally blocks creates the site would accept.
 fn preflight(meta: &Value, payload: &Map<String, Value>) -> Option<String> {
     let fields = meta
         .pointer("/data/fields")
@@ -514,28 +517,15 @@ fn preflight(meta: &Value, payload: &Map<String, Value>) -> Option<String> {
         .iter()
         .filter_map(|f| f.pointer("/fieldname").and_then(Value::as_str))
         .collect();
-    let mut findings: Vec<String> = Vec::new();
 
-    for key in payload.keys() {
-        if key == "doctype" || key == "name" {
-            continue;
-        }
-        if !known.contains(&key.as_str()) {
-            findings.push(format!("unknown field '{key}'"));
-        }
-    }
-
-    for f in fields {
-        let mandatory = f.pointer("/reqd").and_then(Value::as_i64).unwrap_or(0) == 1;
-        let has_default = f.pointer("/default").map(|d| !d.is_null()).unwrap_or(false);
-        if mandatory && !has_default {
-            if let Some(fieldname) = f.pointer("/fieldname").and_then(Value::as_str) {
-                if !payload.contains_key(fieldname) {
-                    findings.push(format!("missing mandatory field '{fieldname}'"));
-                }
-            }
-        }
-    }
+    let findings: Vec<String> = payload
+        .keys()
+        .filter(|k| {
+            let k = k.as_str();
+            k != "doctype" && k != "name" && !known.contains(&k)
+        })
+        .map(|k| format!("unknown field '{k}'"))
+        .collect();
 
     if findings.is_empty() {
         None
@@ -563,13 +553,12 @@ mod tests {
         assert!(findings.unwrap().contains("unknown field 'bogus'"));
     }
 
+    /// ERPNext derives many mandatory values during validation, so a locally missing
+    /// mandatory field is the site's judgement to make, not the CLI's.
     #[test]
-    fn preflight_rejects_missing_mandatory_without_default() {
+    fn preflight_leaves_missing_mandatory_to_the_site() {
         let payload = json!({ "territory": "All Territories" });
-        let findings = preflight(&meta_fixture(), payload.as_object().unwrap());
-        assert!(findings
-            .unwrap()
-            .contains("missing mandatory field 'customer_name'"));
+        assert!(preflight(&meta_fixture(), payload.as_object().unwrap()).is_none());
     }
 
     #[test]
