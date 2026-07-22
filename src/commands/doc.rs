@@ -287,7 +287,9 @@ pub async fn map(
     let mapped = match client
         .post(
             &format!("/api/method/{via}"),
-            &json!({ "source_name": name }),
+            // Selling-chain mappers name the source `source_name`; accounts-chain mappers
+            // name it `dt` and `dn`. The site binds what its signature declares.
+            &json!({ "source_name": name, "dt": doctype, "dn": name }),
         )
         .await
     {
