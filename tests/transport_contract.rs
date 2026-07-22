@@ -272,6 +272,11 @@ async fn resolve_item_returns_the_single_reference() {
 #[tokio::test]
 async fn resolve_document_miss_is_structured_none() {
     let server = MockServer::start_async().await;
+    let meta = server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Quotation/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "title_field": null } }));
+    });
     server.mock(|when, then| {
         when.method(GET)
             .path("/api/v2/document/Quotation/MISSING-1");
@@ -284,6 +289,7 @@ async fn resolve_document_miss_is_structured_none() {
         .await
         .expect("query succeeds");
 
+    meta.assert();
     assert_eq!(resolution, commands::resolve::Resolution::None);
 }
 
