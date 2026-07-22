@@ -1,5 +1,8 @@
 use httpmock::prelude::*;
 use serde_json::{json, Value};
+use std::fs;
+use std::process::{Command, Output};
+use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
 use erpnext::commands;
@@ -18,6 +21,46 @@ fn context_for(server: &MockServer) -> Context {
             api_secret: "test-secret".into(),
         },
     }
+}
+
+fn run_cli_against(server: &MockServer, args: &[&str]) -> Output {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    let home = std::env::temp_dir().join(format!(
+        "erpnext-cli-contract-{}-{unique}",
+        std::process::id()
+    ));
+    let company_home = home.join(".teleclaude/companies/test-co");
+    fs::create_dir_all(&company_home).expect("test credential home");
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    fs::write(
+        company_home.join("erpnext.json"),
+        serde_json::to_vec(&json!({
+            "site_url": site_url,
+            "company": "Test Company",
+            "operator": {
+                "api_key": "test-key",
+                "api_secret": "test-secret"
+            }
+        }))
+        .expect("credential json"),
+    )
+    .expect("write credentials");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_erpnext"))
+        .env("HOME", &home)
+        .args(["--company", "test-co"])
+        .args(args)
+        .output()
+        .expect("run erpnext CLI");
+    fs::remove_dir_all(home).expect("remove test home");
+    output
+}
+
+fn json_output(bytes: &[u8]) -> Value {
+    serde_json::from_slice(bytes).expect("machine-readable JSON envelope")
 }
 
 #[tokio::test]
@@ -184,20 +227,24 @@ async fn workflow_method_persists_the_native_controller_result() {
         } }));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let stored = commands::workflow::apply_method(
-        &client,
-        "Sales Invoice",
-        "ACC-SINV-2026-00002",
-        "add_timesheet_data",
-        &json!({}),
-    )
-    .await
-    .expect("controller document is saved");
-
-    assert_eq!(stored.pointer("/stored_only"), Some(&json!(true)));
+    let output = run_cli_against(
+        &server,
+        &[
+            "workflow",
+            "method",
+            "Sales Invoice",
+            "ACC-SINV-2026-00002",
+            "add_timesheet_data",
+            "--apply",
+        ],
+    );
+    assert!(output.status.success(), "{output:?}");
+    assert!(output.stderr.is_empty(), "success writes no error envelope");
+    let envelope = json_output(&output.stdout);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(true)));
+    assert_eq!(envelope.pointer("/data/stored_only"), Some(&json!(true)));
     assert_eq!(
-        stored.pointer("/controller_only"),
+        envelope.pointer("/data/controller_only"),
         None,
         "the command reports the stored PUT result, not the controller response"
     );
@@ -222,20 +269,29 @@ async fn workflow_method_rejects_a_different_returned_document_without_saving() 
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let result = commands::workflow::apply_method(
-        &client,
-        "Sales Invoice",
-        "INV-1",
-        "add_timesheet_data",
-        &json!({}),
-    )
-    .await;
-
-    assert!(matches!(
-        result,
-        Err(commands::workflow::MethodApplyError::Shape(_))
-    ));
+    let output = run_cli_against(
+        &server,
+        &[
+            "workflow",
+            "method",
+            "Sales Invoice",
+            "INV-1",
+            "add_timesheet_data",
+            "--apply",
+        ],
+    );
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        output.stdout.is_empty(),
+        "failure writes no success envelope"
+    );
+    let envelope = json_output(&output.stderr);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(false)));
+    assert_eq!(envelope.pointer("/error/kind"), Some(&json!("shape")));
+    assert!(envelope
+        .pointer("/error/message")
+        .and_then(Value::as_str)
+        .is_some_and(|message| message.contains("INV-OTHER") && message.contains("INV-1")));
     assert_eq!(save.hits(), 0, "a mismatched document is never saved");
 }
 
@@ -260,26 +316,29 @@ async fn workflow_method_preserves_the_controller_result_when_save_fails() {
             .json_body(json!({ "message": "save rejected" }));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let result = commands::workflow::apply_method(
-        &client,
-        "Sales Invoice",
-        "INV-1",
-        "add_timesheet_data",
-        &json!({}),
-    )
-    .await;
-
-    match result {
-        Err(commands::workflow::MethodApplyError::Save {
-            method_result: observed,
-            ..
-        }) => assert_eq!(
-            observed, method_result,
-            "partial success remains observable for recovery"
-        ),
-        other => panic!("expected save failure, got {other:?}"),
-    }
+    let output = run_cli_against(
+        &server,
+        &[
+            "workflow",
+            "method",
+            "Sales Invoice",
+            "INV-1",
+            "add_timesheet_data",
+            "--apply",
+        ],
+    );
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        output.stdout.is_empty(),
+        "failure writes no success envelope"
+    );
+    let envelope = json_output(&output.stderr);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(false)));
+    assert_eq!(
+        envelope.pointer("/data/method_result"),
+        Some(&method_result),
+        "partial success remains observable for recovery"
+    );
 }
 
 /// The site answers a declined lifecycle request with the document body and an
