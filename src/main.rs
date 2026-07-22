@@ -140,6 +140,14 @@ enum ActivityCommand {
         #[arg(long)]
         due: Option<String>,
     },
+    /// Close an open follow-up loop once the commitment is honoured
+    CloseLoop {
+        /// The follow-up record's name
+        name: String,
+        /// What honoured it, recorded on the business document's trail
+        #[arg(long)]
+        note: Option<String>,
+    },
 }
 
 fn reference_pair(reference: &Option<Vec<String>>) -> Option<(&str, &str)> {
@@ -380,24 +388,6 @@ async fn main() {
             output::EXIT_CONFIG,
         )),
     };
-    let diagnostics_owns_identity_check = matches!(
-        &cli.command,
-        Command::Ops {
-            command: OpsCommand::Doctor
-        }
-    );
-    if client.context().privilege == PrivilegeMode::Admin && !diagnostics_owns_identity_check {
-        let authenticated_user = match client.whoami().await {
-            Ok(user) => user,
-            Err(e) => std::process::exit(output::fail(e.kind(), &e.to_string(), output::EXIT_API)),
-        };
-        if let Err(e) =
-            config::validate_authenticated_identity(client.context(), &authenticated_user)
-        {
-            std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG));
-        }
-    }
-
     let exit = match cli.command {
         Command::Context { .. } => unreachable!("handled above"),
         Command::Meta {
@@ -441,6 +431,9 @@ async fn main() {
             ActivityCommand::OpenLoops { reference, due } => {
                 commands::activity::open_loops(&client, reference_pair(&reference), due.as_deref())
                     .await
+            }
+            ActivityCommand::CloseLoop { name, note } => {
+                commands::activity::close_loop(&client, &name, note.as_deref()).await
             }
         },
         Command::Evidence { command } => match command {

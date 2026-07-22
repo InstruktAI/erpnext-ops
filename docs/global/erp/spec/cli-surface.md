@@ -52,6 +52,7 @@ the CLI contract below, not raw transport mechanics.
 - `erpnext activity capture --summary <text> [--verbatim <text>] [--medium <value>] --reference <doctype> <name> [--follow-up <text>] [--due <date>]`
 - `erpnext activity list --reference <doctype> <name> [--since <when>] [--until <when>]`
 - `erpnext activity open-loops [--reference <doctype> <name>] [--due <when>]`
+- `erpnext activity close-loop <name> [--note <text>]`
 - `erpnext evidence attach --reference <doctype> <name> --file <path> [--summary <text>]`
 - `erpnext report run <report-name> [--filter <field=value>]...`
 - `erpnext import preview --file <csv> --doctype <target>`
@@ -62,8 +63,8 @@ Preview output for mutating commands contains:
 
 - `summary` — the action restated in business language for the person who asked for it:
   the record by the name they know it by, the money where the payload carries it, whose
-  books it lands in, the consequence that outlives the action, and the words that approve
-  it. Submitting names that the figures reach the books and the document can afterwards
+  books it lands in, and the consequence that outlives the action. Submitting names that
+  the figures reach the books and the document can afterwards
   only be cancelled; deleting distinguishes itself from cancelling; converting names that
   a second conversion creates a second document.
 - `context` — site, company, identity, and privilege mode.
@@ -106,10 +107,19 @@ non-zero exit.
 - `activity list` folds a document's native timeline into one ordered trail carrying both
   what happened and what is still owed: contacts, comments, and outstanding follow-ups,
   each naming its actor and, where the record has one, its status. The site groups these
-  by its own vocabulary — a follow-up arrives as an assignment and a contact names its
-  actor as the sender. A record the site leaves untimestamped survives a `--since` or
+  by its own vocabulary — a follow-up arrives among the assignments and a contact names
+  its actor as the sender. A record the site leaves untimestamped survives a `--since` or
   `--until` bound, because a bounded read that drops outstanding work defeats the reason
   for reading it.
+- A follow-up is stored as a `ToDo` carrying its own reference to the business document,
+  so one party holds as many open commitments as the business owes it. The native
+  assignment API binds one open assignment per user per document and answers a refused
+  second one with success; a commitment layer built on it would keep the first and lose
+  every later one without a trace.
+- `activity close-loop` honours an open commitment and reads the stored status back: a
+  site that accepts the request while leaving the loop open is reported as a failure,
+  never as success. A `--note` records what honoured it on the business document's trail,
+  where the next reader of that party's history finds it.
 - Import commands use ERPNext's native data-import semantics with preview and explicit
   apply, reporting honest per-row results. The vendor gates Data Import to privileged
   roles; an operator context receives the site's typed permission failure.

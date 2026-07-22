@@ -1,7 +1,7 @@
 use serde_json::{json, Value};
 
 use crate::output;
-use crate::transport::Client;
+use crate::transport::{encode_segment, Client};
 
 /// Frappe's native communication mediums; validated client-side so a typo surfaces
 /// before any request.
@@ -93,9 +93,12 @@ pub async fn capture(client: &Client, capture: Capture<'_>) -> i32 {
     }
 
     if let Some(follow_up) = capture.follow_up {
-        // Open loops ride the native assignment API: the ToDo is created internally
-        // after a permission check on the referenced document — no widened ToDo CRUD.
-        let assignee = match client.whoami().await {
+        // A follow-up is a `ToDo` carrying its own reference to the business document.
+        // The assignment API refuses a second assignment of one user to one document and
+        // reports that refusal as success, which caps a party at a single open commitment
+        // and loses every later one silently. A business owes several at once, so the
+        // record is created directly and read back.
+        let owner = match client.whoami().await {
             Ok(user) => user,
             Err(e) => {
                 return output::fail_with_data(
@@ -106,24 +109,39 @@ pub async fn capture(client: &Client, capture: Capture<'_>) -> i32 {
                 )
             }
         };
-        let mut args = json!({
-            "assign_to": [assignee],
-            "doctype": ref_doctype,
-            "name": ref_name,
+        let mut payload = json!({
             "description": follow_up,
+            "reference_type": ref_doctype,
+            "reference_name": ref_name,
+            "allocated_to": owner,
+            "status": "Open",
         });
         if let Some(due) = capture.due {
-            args["date"] = json!(due);
+            payload["date"] = json!(due);
         }
-        match client
-            .post("/api/method/frappe.desk.form.assign_to.add", &args)
-            .await
-        {
-            Ok(_) => created.push(json!({ "kind": "ToDo", "result": "assigned" })),
+        match client.post("/api/v2/document/ToDo", &payload).await {
+            Ok(v) => {
+                let name = v
+                    .pointer("/data/name")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned);
+                match name {
+                    Some(name) => created.push(json!({ "kind": "ToDo", "name": name })),
+                    None => {
+                        return output::fail_with_data(
+                            "follow-up-unrecorded",
+                            "the site accepted the follow-up without naming a record; the \
+                             commitment is not stored",
+                            json!({ "captured": created }),
+                            output::EXIT_API,
+                        )
+                    }
+                }
+            }
             Err(e) => {
                 return output::fail_with_data(
                     e.kind(),
-                    &format!("comment recorded but follow-up failed: {e}"),
+                    &format!("contact recorded but follow-up failed: {e}"),
                     json!({ "captured": created }),
                     output::EXIT_API,
                 )
@@ -258,4 +276,93 @@ pub async fn open_loops(
         }
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
+}
+
+/// `erpnext activity close-loop <name> [--note <text>]` — honour an open commitment.
+///
+/// An open loop that can never close turns the outstanding view into noise, so closing is
+/// part of the same atom as opening. The stored status is read back: a site that accepts
+/// the change while leaving the loop open is reported as a failure, never as success.
+pub async fn close_loop(client: &Client, name: &str, note: Option<&str>) -> i32 {
+    let path = format!("/api/v2/document/ToDo/{}", encode_segment(name));
+
+    let before = match client.get(&path).await {
+        Ok(v) => v,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+    let reference = (
+        before
+            .pointer("/data/reference_type")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        before
+            .pointer("/data/reference_name")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+    );
+
+    if let Err(e) = client.put(&path, &json!({ "status": "Closed" })).await {
+        return output::fail(e.kind(), &e.to_string(), output::EXIT_API);
+    }
+
+    let stored = match client.get(&path).await {
+        Ok(v) => v
+            .pointer("/data/status")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("close sent but the resulting state could not be read: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
+    if stored != "Closed" {
+        return output::fail(
+            "loop-still-open",
+            &format!(
+                "site accepted the request but follow-up '{name}' is still {stored}; the \
+                 commitment is not closed"
+            ),
+            output::EXIT_API,
+        );
+    }
+
+    // What honoured the commitment belongs on the business document's trail, where the
+    // next person reading that party's history will find it.
+    let mut recorded_note = Value::Null;
+    if let (Some(text), false) = (note, reference.0.is_empty()) {
+        let params = json!({
+            "reference_doctype": reference.0,
+            "reference_name": reference.1,
+            "content": text,
+            "comment_email": "",
+            "comment_by": "",
+        });
+        match client
+            .post("/api/method/frappe.desk.form.utils.add_comment", &params)
+            .await
+        {
+            Ok(v) => recorded_note = v.pointer("/message/name").cloned().unwrap_or(Value::Null),
+            Err(e) => {
+                return output::fail_with_data(
+                    e.kind(),
+                    &format!("loop closed but the note was not recorded: {e}"),
+                    json!({ "closed": name }),
+                    output::EXIT_API,
+                )
+            }
+        }
+    }
+
+    output::ok(json!({
+        "closed": name,
+        "status": stored,
+        "reference": { "doctype": reference.0, "name": reference.1 },
+        "note": recorded_note,
+    }))
 }

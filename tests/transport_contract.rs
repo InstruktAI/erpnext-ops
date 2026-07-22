@@ -415,10 +415,19 @@ async fn activity_capture_uses_permission_aware_timeline_apis() {
         then.status(200)
             .json_body(json!({ "message": "agent@instrukt.ai" }));
     });
+    // A follow-up is stored as its own referencing record. The assignment API allows one
+    // open assignment per user per document and answers a refused second one with success,
+    // which would cap a party at a single commitment and lose the rest without a trace.
+    let follow_up = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/v2/document/ToDo")
+            .body_matches(Regex::new(r#""reference_name":"SAL-QTN-2026-00001""#).expect("regex"));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "TODO-1", "status": "Open" } }));
+    });
     let assign = server.mock(|when, then| {
         when.method(POST)
-            .path("/api/method/frappe.desk.form.assign_to.add")
-            .body_matches(Regex::new(r#""assign_to":\["agent@instrukt.ai"\]"#).expect("regex"));
+            .path("/api/method/frappe.desk.form.assign_to.add");
         then.status(200).json_body(json!({ "message": [] }));
     });
 
@@ -438,7 +447,12 @@ async fn activity_capture_uses_permission_aware_timeline_apis() {
 
     assert_eq!(exit, 0);
     comment.assert();
-    assign.assert();
+    follow_up.assert();
+    assert_eq!(
+        assign.hits(),
+        0,
+        "the capped assignment API is never the store for a commitment"
+    );
 }
 
 #[tokio::test]
@@ -736,8 +750,8 @@ fn preview_restates_the_action_in_business_language() {
         "names whose books: {create}"
     );
     assert!(
-        create.contains("say approve"),
-        "states how to approve: {create}"
+        !create.contains("approve"),
+        "routine previews do not manufacture an approval boundary: {create}"
     );
 
     let submit = describe(
@@ -835,5 +849,44 @@ fn timeline_folds_contacts_and_open_follow_ups_into_one_trail() {
     assert_eq!(
         bounded[0].pointer("/kind").and_then(Value::as_str),
         Some("Follow-up")
+    );
+}
+
+/// Closing a commitment is only closed once the site says so. A site that accepts the
+/// change while leaving the loop open is a silent decline, and reporting it as success
+/// drops the very commitment the outstanding view exists to keep.
+#[tokio::test]
+async fn closing_a_loop_fails_when_the_stored_status_never_changes() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/ToDo/TODO-1");
+        then.status(200).json_body(json!({ "data": {
+            "name": "TODO-1",
+            "status": "Open",
+            "reference_type": "Customer",
+            "reference_name": "CUST-1",
+        }}));
+    });
+    let put = server.mock(|when, then| {
+        when.method(PUT).path("/api/v2/document/ToDo/TODO-1");
+        then.status(200)
+            .json_body(json!({ "data": { "status": "Open" } }));
+    });
+    let note = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.form.utils.add_comment");
+        then.status(200)
+            .json_body(json!({ "message": { "name": "C-1" } }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::activity::close_loop(&client, "TODO-1", Some("done")).await;
+
+    assert_eq!(exit, 1, "an unchanged status is never reported as closed");
+    put.assert();
+    assert_eq!(
+        note.hits(),
+        0,
+        "no note is recorded for a commitment that did not close"
     );
 }
