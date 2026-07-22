@@ -247,8 +247,8 @@ exist where business meaning, integrity, continuity, or decision boundaries are 
 The catalog has two useful procedure shapes:
 
 - **Atoms.** Small reusable procedures for cross-cutting business concerns, such as capturing
-  business input, preserving follow-up, recording received goods, or posting a customer
-  payment.
+  business input, confirming a consequential human instruction, preserving follow-up,
+  recording received goods, or posting a customer payment.
 - **Playbooks.** Larger procedures for common business outcomes, composed from atoms and
   CLI operations, such as solar offer-to-installation, custom order-to-fulfillment, or project
   work-to-invoice.
@@ -270,6 +270,7 @@ preview/apply loop.
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
+- ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 
 ---
@@ -360,6 +361,7 @@ None.
 ## Activatable Procedures — load via `telec docs get <id>` before acting
 
 - `erp/procedure/company-onboarding` — Onboard a company onto its own ERPNext site — ensure the site exists, then establish the company and its operator identity. — Use when a business, legal company, or operating entity must become an operable tenant with its own ERPNext site.
+- `erp/procedure/confirm-business-intent` — Reframe a consequential human business instruction once, obtain plain-language approval, and apply only the approved intent. — Use when a human instruction would create, submit, cancel, delete, send, or materially change business state and a wrong interpretation would matter.
 - `erp/procedure/custom-order-to-fulfillment` — Playbook for custom product businesses moving from configured customer order to production batch, delivery, invoice, and follow-up. — Use when a business sells custom or batch-produced goods that must be tracked from order intake through production, delivery, invoice, and customer follow-up.
 - `erp/procedure/offer-to-installation` — Playbook for a business moving from lead and proposal to procurement, installation, invoice, payment, and follow-up. — Use when a business needs to turn a lead, site discussion, or accepted proposal into tracked ERP work through installation and payment.
 - `erp/procedure/person-onboarding` — Onboard a person onto a company's ERPNext site with permission-scoped access. — Use when a human user needs ERPNext login access, roles, and permissions on a company's site.

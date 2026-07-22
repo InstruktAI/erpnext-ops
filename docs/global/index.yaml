@@ -82,6 +82,17 @@ snippets:
   path: docs/erp/procedure/company-onboarding.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/confirm-business-intent
+  description: Reframe a consequential human business instruction once, obtain plain-language
+    approval, and apply only the approved intent.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a human instruction would create, submit, cancel, delete,
+    send, or materially change business state and a wrong interpretation would matter.
+  path: docs/erp/procedure/confirm-business-intent.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/custom-order-to-fulfillment
   description: Playbook for custom product businesses moving from configured customer
     order to production batch, delivery, invoice, and follow-up.

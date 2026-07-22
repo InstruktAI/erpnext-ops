@@ -13,8 +13,8 @@ exist where business meaning, integrity, continuity, or decision boundaries are 
 The catalog has two useful procedure shapes:
 
 - **Atoms.** Small reusable procedures for cross-cutting business concerns, such as capturing
-  business input, preserving follow-up, recording received goods, or posting a customer
-  payment.
+  business input, confirming a consequential human instruction, preserving follow-up,
+  recording received goods, or posting a customer payment.
 - **Playbooks.** Larger procedures for common business outcomes, composed from atoms and
   CLI operations, such as solar offer-to-installation, custom order-to-fulfillment, or project
   work-to-invoice.
@@ -36,4 +36,5 @@ preview/apply loop.
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
+- ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
