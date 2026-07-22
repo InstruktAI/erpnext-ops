@@ -9,8 +9,14 @@ format:
 lint:
 	cargo clippy --all-targets -- -D warnings
 
+# Cargo rebuilds the binary target while building the test binaries, which replaces the
+# stable signature with a content-derived ad-hoc one. The identity is restored here
+# because the loss surfaces later as an opaque transport failure rather than as a
+# signing error.
 test:
-	cargo test
+	@cargo test; status=$$?; \
+	[ -f target/debug/erpnext ] && $(MAKE) --no-print-directory sign BIN=target/debug/erpnext >/dev/null || true; \
+	exit $$status
 
 # A stable self-signed identity gives the binary a constant code identity across
 # rebuilds, so firewall and security rules survive recompilation. Without it the
