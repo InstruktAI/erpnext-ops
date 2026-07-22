@@ -1,0 +1,6 @@
+snippets_root: ~/Workspace/InstruktAI/erpnext-ops/docs/third-party
+snippets:
+- id: third-party/erpnext/native-document-mappers
+  description: ERPNext native document-mapper request conventions for the CLI adapter.
+  scope: project
+  path: erpnext/native-document-mappers.md
