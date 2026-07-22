@@ -116,6 +116,16 @@ snippets:
   path: docs/erp/procedure/custom-order-to-fulfillment.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/customer-credit-and-refund
+  description: Correct a submitted customer invoice through a source-linked credit
+    note, then preserve or refund the resulting customer credit with ledger proof.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/customer-credit-and-refund.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/customer-invoice-and-payment
   description: Post a taxed or tax-exempt customer invoice, prove its ledger effect,
     and settle it through a linked payment.
