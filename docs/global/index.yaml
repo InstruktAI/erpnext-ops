@@ -71,6 +71,17 @@ snippets:
   path: docs/erp/principle/determinate-autonomy.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/close-accounting-period
+  description: Reconcile a financial period, transfer its profit or loss, lock completed
+    transaction types, and prove both the close and any reversal from native ledger
+    state.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/close-accounting-period.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/company-onboarding
   description: "Onboard a company onto its own ERPNext site \u2014 ensure the site\
     \ exists, then establish the company and its operator identity."
