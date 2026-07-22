@@ -156,6 +156,11 @@ non-zero exit.
   deterministically from site, doctype, and token; a retry replays the existing document,
   divergent token reuse is a structured conflict, and such documents opt out of native
   series naming.
+- `report run` returns the report's own columns and rows as the site produces them. A
+  native report names its data rows by field and may close with a totals row positioned by
+  column order rather than named, so a reader keys on the column list rather than assuming
+  every row carries the same shape. The report is ERPNext's; the CLI neither reshapes its
+  rows nor recomputes its figures.
 - `ops doctor` verifies the CLI's own operating ground: configured endpoint, authenticated
   identity, selected company, privilege mode, credential separation, and fail-closed
   configuration. It does not test ERPNext's permission implementation.
