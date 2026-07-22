@@ -17,6 +17,7 @@ credential layout by `erp/spec/company-layout`.
 
 ### Acceptance scenarios
 
+<!-- planned-change:erpnext-agent-admin-context -->
 #### UC-1
 
 Scenario: Show the active operating context
@@ -24,6 +25,15 @@ Given a configured site context is selected
 When the agent runs `erpnext context show`
 Then the output names the site, the selected company, the identity, and the privilege mode
 And no API key, secret, or other credential material appears in the output.
+<!-- change:erpnext-agent-admin-context -->
+#### UC-1
+
+Scenario: Show the active operating context
+Given a configured site context is selected
+When the agent runs `erpnext context show`
+Then the output names the site, the selected company, the identity, and the privilege mode
+And no API key, secret, or other credential material appears in the output.
+<!-- /planned-change:erpnext-agent-admin-context -->
 
 #### UC-2
 
