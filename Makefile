@@ -27,9 +27,15 @@ release:
 	@$(MAKE) --no-print-directory sign BIN=target/release/erpnext
 
 sign:
-	@if security find-identity -v -p codesigning 2>/dev/null | grep -q "$(SIGN_IDENTITY)"; then \
-		codesign --force --options runtime --identifier "$(SIGN_ID)" --sign "$(SIGN_IDENTITY)" "$(BIN)" && \
-		echo "signed $(BIN) as '$(SIGN_ID)' with '$(SIGN_IDENTITY)'"; \
-	else \
+	@n=$$(security find-identity -v -p codesigning 2>/dev/null | grep -c "$(SIGN_IDENTITY)" || true); \
+	if [ "$$n" -eq 0 ]; then \
 		echo "no signing identity '$(SIGN_IDENTITY)' in the keychain; $(BIN) keeps its ad-hoc signature"; \
+	elif [ "$$n" -gt 1 ]; then \
+		echo "multiple keychain identities match '$(SIGN_IDENTITY)'; refusing to sign ambiguously"; \
+		exit 1; \
+	else \
+		codesign --force --options runtime --timestamp=none \
+			--identifier "$(SIGN_ID)" --sign "$(SIGN_IDENTITY)" "$(BIN)" && \
+		codesign --verify --strict "$(BIN)" && \
+		echo "signed $(BIN) as '$(SIGN_ID)' with '$(SIGN_IDENTITY)'"; \
 	fi
