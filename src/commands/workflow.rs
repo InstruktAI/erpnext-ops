@@ -1,14 +1,155 @@
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 
 use crate::output;
 use crate::transport::{encode_segment, Client};
 
-/// `erpnext workflow submit|cancel <doctype> <name> [--apply]` and
-/// `erpnext workflow method <doctype> <name> <method> [--data <json>] [--apply]`.
+/// Docstatus values ERPNext gives documents: draft, submitted, cancelled.
+const DRAFT: i64 = 0;
+const SUBMITTED: i64 = 1;
+const CANCELLED: i64 = 2;
+
+/// `erpnext workflow submit <doctype> <name> [--apply]`
+pub async fn submit(client: &Client, doctype: &str, name: &str, apply: bool) -> i32 {
+    transition(client, doctype, name, SUBMITTED, apply).await
+}
+
+/// `erpnext workflow cancel <doctype> <name> [--apply]`
+pub async fn cancel(client: &Client, doctype: &str, name: &str, apply: bool) -> i32 {
+    transition(client, doctype, name, CANCELLED, apply).await
+}
+
+/// Drive a document's docstatus through the native document envelope, then read the
+/// document back. The site answers a lifecycle request with the document body and an
+/// unchanged docstatus when it declines the transition, so success is only claimed
+/// once the stored docstatus proves it.
+async fn transition(client: &Client, doctype: &str, name: &str, target: i64, apply: bool) -> i32 {
+    let path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+    let payload = json!({ "docstatus": target });
+
+    if !apply {
+        return output::ok(preview_envelope(client, "PUT", &path, &payload, target));
+    }
+
+    if let Err(e) = client.put(&path, &payload).await {
+        return output::fail(e.kind(), &e.to_string(), output::EXIT_API);
+    }
+
+    match client.get(&path).await {
+        Ok(doc) => {
+            let reached = doc
+                .pointer("/data/docstatus")
+                .and_then(Value::as_i64)
+                .unwrap_or(DRAFT);
+            if reached == target {
+                output::ok(json!({
+                    "reference": { "doctype": doctype, "name": name },
+                    "docstatus": reached,
+                    "state": describe(reached),
+                }))
+            } else {
+                output::fail(
+                    "lifecycle-unchanged",
+                    &format!(
+                        "site accepted the request but '{name}' remains {} (docstatus {reached}); \
+                         the transition to {} did not take effect",
+                        describe(reached),
+                        describe(target)
+                    ),
+                    output::EXIT_API,
+                )
+            }
+        }
+        Err(e) => output::fail(
+            e.kind(),
+            &format!("transition sent but the resulting state could not be read: {e}"),
+            output::EXIT_API,
+        ),
+    }
+}
+
+/// `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
 ///
-/// All run a whitelisted controller method on the document through the native
-/// `method/{method}` envelope: preview shows the exact native request; `--apply`
-/// sends it and reports the site's result — the site owns docstatus semantics.
+/// ERPNext amends a cancelled document by creating a new draft that carries
+/// `amended_from`; the cancelled document itself never changes.
+pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply: bool) -> i32 {
+    let overrides: Map<String, Value> = match serde_json::from_str::<Value>(data) {
+        Ok(Value::Object(m)) => m,
+        Ok(_) => {
+            return output::fail(
+                "payload",
+                "--data must be a JSON object",
+                output::EXIT_CONFIG,
+            )
+        }
+        Err(e) => {
+            return output::fail(
+                "payload",
+                &format!("--data is not valid JSON: {e}"),
+                output::EXIT_CONFIG,
+            )
+        }
+    };
+
+    let source_path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+    let source = match client.get(&source_path).await {
+        Ok(v) => v.pointer("/data").cloned().unwrap_or(Value::Null),
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let cancelled = source
+        .pointer("/docstatus")
+        .and_then(Value::as_i64)
+        .unwrap_or(DRAFT);
+    if cancelled != CANCELLED {
+        return output::fail(
+            "lifecycle-conflict",
+            &format!(
+                "'{name}' is {} (docstatus {cancelled}); ERPNext amends only cancelled documents",
+                describe(cancelled)
+            ),
+            output::EXIT_API,
+        );
+    }
+
+    let mut payload = source.as_object().cloned().unwrap_or_default();
+    payload.remove("name");
+    payload.remove("creation");
+    payload.remove("modified");
+    payload.insert("docstatus".into(), json!(DRAFT));
+    payload.insert("amended_from".into(), json!(name));
+    for (key, value) in overrides {
+        payload.insert(key, value);
+    }
+    let payload = Value::Object(payload);
+
+    let create_path = format!("/api/v2/document/{}", encode_segment(doctype));
+
+    if !apply {
+        return output::ok(preview_envelope(
+            client,
+            "POST",
+            &create_path,
+            &payload,
+            DRAFT,
+        ));
+    }
+
+    match client.post(&create_path, &payload).await {
+        Ok(v) => output::ok(v),
+        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+/// `erpnext workflow method <doctype> <name> <method> [--data <json>] [--apply]` — run a
+/// whitelisted controller method through the native method envelope.
 pub async fn run_method(
     client: &Client,
     doctype: &str,
@@ -61,5 +202,34 @@ pub async fn run_method(
     match client.post(&path, &payload).await {
         Ok(v) => output::ok(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+fn preview_envelope(
+    client: &Client,
+    method: &str,
+    path: &str,
+    payload: &Value,
+    target: i64,
+) -> Value {
+    json!({
+        "preview": true,
+        "context": {
+            "site": client.context().site(),
+            "company": client.context().company,
+            "privilege": client.context().privilege,
+        },
+        "operation": { "method": method, "path": path, "payload": payload },
+        "intended_state": describe(target),
+        "verification": "the stored docstatus is read back on apply; an unchanged docstatus fails",
+        "apply_command": "re-run the same command with --apply",
+    })
+}
+
+fn describe(docstatus: i64) -> &'static str {
+    match docstatus {
+        SUBMITTED => "submitted",
+        CANCELLED => "cancelled",
+        _ => "draft",
     }
 }

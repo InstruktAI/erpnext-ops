@@ -122,28 +122,74 @@ async fn rejected_credentials_surface_as_typed_auth_error() {
 }
 
 #[tokio::test]
-async fn workflow_method_preview_sends_nothing_and_apply_hits_method_envelope() {
+async fn workflow_submit_drives_docstatus_and_verifies_the_stored_state() {
     let server = MockServer::start_async().await;
-    let method = server.mock(|when, then| {
-        when.method(POST)
-            .path("/api/v2/document/Sales%20Invoice/INV-0001/method/submit/");
+    let put = server.mock(|when, then| {
+        when.method(PUT)
+            .path("/api/v2/document/Sales%20Invoice/INV-0001")
+            .json_body(json!({ "docstatus": 1 }));
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    let read_back = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/INV-0001");
         then.status(200)
             .json_body(json!({ "data": { "docstatus": 1 } }));
     });
 
     let client = Client::new(context_for(&server)).expect("client");
 
-    let preview_exit =
-        commands::workflow::run_method(&client, "Sales Invoice", "INV-0001", "submit", None, false)
-            .await;
-    assert_eq!(preview_exit, 0);
-    assert_eq!(method.hits(), 0, "preview must not touch the site");
+    let preview = commands::workflow::submit(&client, "Sales Invoice", "INV-0001", false).await;
+    assert_eq!(preview, 0);
+    assert_eq!(put.hits(), 0, "preview must not touch the site");
 
-    let apply_exit =
-        commands::workflow::run_method(&client, "Sales Invoice", "INV-0001", "submit", None, true)
-            .await;
-    assert_eq!(apply_exit, 0);
-    method.assert();
+    let applied = commands::workflow::submit(&client, "Sales Invoice", "INV-0001", true).await;
+    assert_eq!(applied, 0);
+    put.assert();
+    read_back.assert();
+}
+
+/// The site answers a declined lifecycle request with the document body and an
+/// unchanged docstatus. Reporting that as success is the defect this pins.
+#[tokio::test]
+async fn workflow_submit_fails_when_the_docstatus_never_changes() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(PUT).path("/api/v2/document/Quotation/Q-1");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 0 } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Quotation/Q-1");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 0 } }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::workflow::submit(&client, "Quotation", "Q-1", true).await;
+
+    assert_eq!(exit, 1, "a silent no-op must never be reported as success");
+}
+
+#[tokio::test]
+async fn workflow_amend_refuses_a_document_that_is_not_cancelled() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Quotation/Q-2");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Quotation");
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::workflow::amend(&client, "Quotation", "Q-2", "{}", true).await;
+
+    assert_eq!(exit, 1);
+    assert_eq!(create.hits(), 0, "only cancelled documents are amended");
 }
 
 #[tokio::test]

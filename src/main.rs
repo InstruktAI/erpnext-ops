@@ -243,6 +243,16 @@ enum WorkflowCommand {
         #[arg(long)]
         apply: bool,
     },
+    /// Amend a cancelled document into a new draft (preview by default)
+    Amend {
+        doctype: String,
+        name: String,
+        /// JSON object of field changes for the amended draft
+        #[arg(long, default_value = "{}")]
+        data: String,
+        #[arg(long)]
+        apply: bool,
+    },
     /// Run a whitelisted controller method on a document (preview by default)
     Method {
         doctype: String,
@@ -443,18 +453,18 @@ async fn main() {
                 doctype,
                 name,
                 apply,
-            } => {
-                commands::workflow::run_method(&client, &doctype, &name, "submit", None, apply)
-                    .await
-            }
+            } => commands::workflow::submit(&client, &doctype, &name, apply).await,
             WorkflowCommand::Cancel {
                 doctype,
                 name,
                 apply,
-            } => {
-                commands::workflow::run_method(&client, &doctype, &name, "cancel", None, apply)
-                    .await
-            }
+            } => commands::workflow::cancel(&client, &doctype, &name, apply).await,
+            WorkflowCommand::Amend {
+                doctype,
+                name,
+                data,
+                apply,
+            } => commands::workflow::amend(&client, &doctype, &name, &data, apply).await,
             WorkflowCommand::Method {
                 doctype,
                 name,
