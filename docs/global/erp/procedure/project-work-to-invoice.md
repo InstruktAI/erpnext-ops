@@ -48,6 +48,10 @@ native mapper and set the Project on the resulting Sales Order before submission
 stored Sales Order back and require both its source-quotation link and Project link; a detached
 order cannot support project profitability or safe resume.
 
+When the customer pays a deposit before work or milestone billing, compose
+`customer-advance-to-invoice` from the submitted Sales Order. Keep the receipt distinct from
+earned revenue until the company's configured billing event occurs.
+
 ### 4. Record actual work
 
 Record work in a Timesheet whose rows link the Project and Task and carry the actual hours,

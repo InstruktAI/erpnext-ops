@@ -41,6 +41,10 @@ Create or update the draft Quotation, Sales Order, Project, or Task structure th
 matches the company's operating model. Let the preview surface missing fields, links, and
 side effects.
 
+When a received deposit confirms the custom order, compose `customer-advance-to-invoice`
+from the submitted Sales Order. Keep a promised deposit as follow-up rather than recording
+cash that has not arrived.
+
 ### 4. Track production and delivery obligations
 
 Carry production, batching, courier, delivery, and customer communication as tasks, events,

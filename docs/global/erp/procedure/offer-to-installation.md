@@ -46,6 +46,9 @@ When the customer accepts, use workflow commands to move from Quotation toward S
 Project work. Preserve the acceptance source and create follow-up for unresolved scheduling,
 site access, supplier timing, or installation prerequisites.
 
+When a received deposit secures the work, compose `customer-advance-to-invoice` from the
+submitted Sales Order. A requested or promised deposit remains follow-up until receipt is true.
+
 ### 5. Handle procurement and stock carefully
 
 Record supplier commitments and purchase intent without increasing actual stock before goods
