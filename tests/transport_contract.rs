@@ -374,6 +374,55 @@ async fn source_retry_after_lost_response_replays_without_second_create() {
     assert_eq!(create.hits(), 0, "the retry must send zero create requests");
 }
 
+/// ERPNext enriches child rows with names, indexes, accounts, and derived amounts. A
+/// replay compares the caller-owned fields recursively and must not mistake those
+/// server-owned additions for divergent input.
+#[tokio::test]
+async fn source_replay_accepts_server_enriched_child_rows() {
+    let server = MockServer::start_async().await;
+
+    let get_existing = server.mock(|when, then| {
+        when.method(GET).path_matches(
+            Regex::new("^/api/v2/document/Sales%20Invoice/SRC-[0-9a-f]{20}$").expect("regex"),
+        );
+        then.status(200).json_body(json!({ "data": {
+            "name": "SRC-known",
+            "customer": "CUSTOMER-1",
+            "items": [{
+                "item_code": "SERVICE-1",
+                "qty": 1.0,
+                "rate": 100.0,
+                "amount": 100.0,
+                "income_account": "Services - CO",
+                "idx": 1,
+                "name": "row-1",
+            }],
+        }}));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Sales%20Invoice");
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let exit = commands::doc::create(
+        &client,
+        "Sales Invoice",
+        r#"{"customer":"CUSTOMER-1","items":[{"item_code":"SERVICE-1","qty":1,"rate":100}]}"#,
+        Some("sales-invoice/customer-1/service-1"),
+        true,
+    )
+    .await;
+
+    assert_eq!(exit, 0, "server-owned child fields do not break replay");
+    get_existing.assert();
+    assert_eq!(
+        create.hits(),
+        0,
+        "a replay must not create a second invoice"
+    );
+}
+
 /// Same token, different data: a structured idempotency conflict, never a write.
 #[tokio::test]
 async fn source_token_reuse_with_different_data_is_a_conflict() {

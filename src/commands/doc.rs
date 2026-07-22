@@ -257,6 +257,13 @@ fn json_loosely_equal(a: &Value, b: &Value) -> bool {
         (Value::Array(xs), Value::Array(ys)) => {
             xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| json_loosely_equal(x, y))
         }
+        (Value::Object(requested), Value::Object(existing)) => {
+            requested.iter().all(|(key, value)| {
+                existing
+                    .get(key)
+                    .is_some_and(|stored| json_loosely_equal(value, stored))
+            })
+        }
         _ => false,
     }
 }
