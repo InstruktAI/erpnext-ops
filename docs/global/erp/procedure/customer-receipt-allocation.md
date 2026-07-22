@@ -1,8 +1,4 @@
 ---
-id: erp/procedure/customer-receipt-allocation
-type: procedure
-domain: erp
-scope: global
 description: Allocate a received customer payment across invoices, preserve any excess as credit, and prove partial or complete settlement from native state.
 ---
 # Customer Receipt Allocation — Procedure
@@ -59,8 +55,8 @@ receivables and ledger reports back.
   leaves it partly paid.
 - The final allocation reduces outstanding to zero and leaves the invoice paid.
 - An excess receipt leaves the invoice paid, records the excess as the Payment Entry's
-  unallocated amount, and exposes an equal customer credit in receivables. It is not revenue
-  and is not silently consumed by another invoice.
+  unallocated amount, and exposes an equal customer balance in the configured receivable or
+  customer-advance account. It is not revenue and is not silently consumed by another invoice.
 - Bank or cash debit and the customer-side credit equal the actual receipt under the company's
   configured advance-account treatment, and total debits equal total credits.
 

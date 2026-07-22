@@ -84,7 +84,7 @@ active customer credit or advance rather than being silently treated as revenue.
 - If invoice creation or submission fails, leave the submitted advance intact and rebuild the
   invoice from the order only after resolving existing drafts and source links.
 - An advance created by this procedure references the Sales Order, while the later invoice
-  carries the allocation. To compensate that proven chain, cancel the dependent invoice first
+  carries the allocation. Cancel the dependent invoice first
   so it releases the allocation, then cancel the Sales-Order-linked Payment Entry. A Payment
   Entry linked directly to an invoice follows that invoice's native payment dependency order
   instead. Verify that the invoice no longer consumes the order, the advance ledger entry is
