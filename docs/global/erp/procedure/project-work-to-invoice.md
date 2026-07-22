@@ -24,8 +24,9 @@ payment, and follow-up without forcing a stock-oriented workflow.
 
 ## Steps
 
-For every mutation below, inspect the CLI preview first and apply only after the proposed
-business effect, references, and amounts are correct.
+For every mutation below that exposes a CLI preview, inspect it first and apply only after
+the proposed business effect, references, and amounts are correct. Activity capture writes
+the trace directly because that additive operation has no preview gate.
 
 ### 1. Capture the work intent
 
