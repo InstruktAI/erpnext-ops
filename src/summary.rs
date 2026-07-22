@@ -46,8 +46,9 @@ pub enum Action<'a> {
     },
 }
 
-/// State the action in one sentence, followed by its lasting consequence where it has one,
-/// and the words that approve it.
+/// State the action in one sentence, followed by its lasting consequence where it has one.
+/// Whether the preview needs human approval is a business-intent decision made by the agent,
+/// not a property of the native operation.
 pub fn describe(action: &Action, company: Option<&str>) -> String {
     let (sentence, consequence) = match action {
         Action::Create { doctype, payload } => (
@@ -123,7 +124,6 @@ pub fn describe(action: &Action, company: Option<&str>) -> String {
         out.push(' ');
         out.push_str(&c);
     }
-    out.push_str(" If this is correct, say approve.");
     out
 }
 
