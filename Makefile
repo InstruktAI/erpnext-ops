@@ -16,6 +16,7 @@ test:
 # rebuilds, so firewall and security rules survive recompilation. Without it the
 # linker's ad-hoc signature changes every build.
 SIGN_IDENTITY ?= InstruktAI Dev
+SIGN_ID ?= ai.instrukt.erpnext
 
 build:
 	cargo build
@@ -27,8 +28,8 @@ release:
 
 sign:
 	@if security find-identity -v -p codesigning 2>/dev/null | grep -q "$(SIGN_IDENTITY)"; then \
-		codesign --force --options runtime --sign "$(SIGN_IDENTITY)" "$(BIN)" && \
-		echo "signed $(BIN) with '$(SIGN_IDENTITY)'"; \
+		codesign --force --options runtime --identifier "$(SIGN_ID)" --sign "$(SIGN_IDENTITY)" "$(BIN)" && \
+		echo "signed $(BIN) as '$(SIGN_ID)' with '$(SIGN_IDENTITY)'"; \
 	else \
 		echo "no signing identity '$(SIGN_IDENTITY)' in the keychain; $(BIN) keeps its ad-hoc signature"; \
 	fi
