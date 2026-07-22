@@ -1,6 +1,7 @@
 use serde_json::{json, Map, Value};
 
 use crate::output;
+use crate::summary;
 use crate::transport::{encode_segment, Client};
 
 /// `erpnext doc list <doctype> [--filter k=v]... [--limit n]`
@@ -92,6 +93,10 @@ pub async fn create(
                 "company": client.context().company,
                 "privilege": client.context().privilege,
             },
+            "summary": summary::describe(
+                &summary::Action::Create { doctype, payload: &payload },
+                client.context().company.as_deref(),
+            ),
             "operation": { "method": "POST", "path": path, "payload": payload },
             "idempotency": derived_name.as_ref().map(|n| json!({ "source_derived_name": n })),
             "preflight": "runs against live DocType metadata on apply",
@@ -327,6 +332,14 @@ pub async fn map(
                 "company": client.context().company,
                 "privilege": client.context().privilege,
             },
+            "summary": summary::describe(
+                &summary::Action::Convert {
+                    source_doctype: doctype,
+                    source_name: name,
+                    target_doctype: &target_doctype,
+                },
+                client.context().company.as_deref(),
+            ),
             "source": { "doctype": doctype, "name": name },
             "target_doctype": target_doctype,
             "operation": { "method": "POST", "path": path, "payload": mapped },
@@ -399,7 +412,17 @@ pub async fn update(client: &Client, doctype: &str, name: &str, data: &str, appl
     );
 
     if !apply {
-        return output::ok(preview_envelope(client, "PUT", &path, &payload));
+        return output::ok(preview_envelope(
+            client,
+            &summary::Action::Update {
+                doctype,
+                name,
+                payload: &payload,
+            },
+            "PUT",
+            &path,
+            &payload,
+        ));
     }
 
     let meta = match super::meta::fetch(client, doctype).await {
@@ -431,7 +454,13 @@ pub async fn delete(client: &Client, doctype: &str, name: &str, apply: bool) -> 
     );
 
     if !apply {
-        return output::ok(preview_envelope(client, "DELETE", &path, &Value::Null));
+        return output::ok(preview_envelope(
+            client,
+            &summary::Action::Delete { doctype, name },
+            "DELETE",
+            &path,
+            &Value::Null,
+        ));
     }
 
     match client.delete(&path).await {
@@ -495,7 +524,16 @@ pub async fn copy(
     let path = format!("/api/v2/document/{}", encode_segment(doctype));
 
     if !apply {
-        return output::ok(preview_envelope(client, "POST", &path, &payload));
+        return output::ok(preview_envelope(
+            client,
+            &summary::Action::Create {
+                doctype,
+                payload: &payload,
+            },
+            "POST",
+            &path,
+            &payload,
+        ));
     }
 
     match client.post(&path, &payload).await {
@@ -504,10 +542,18 @@ pub async fn copy(
     }
 }
 
-/// The documented preview shape: context, exact native operation, apply pointer.
-fn preview_envelope(client: &Client, method: &str, path: &str, payload: &Value) -> Value {
+/// The documented preview shape: plain-language restatement, context, exact native
+/// operation, apply pointer.
+fn preview_envelope(
+    client: &Client,
+    action: &summary::Action,
+    method: &str,
+    path: &str,
+    payload: &Value,
+) -> Value {
     json!({
         "preview": true,
+        "summary": summary::describe(action, client.context().company.as_deref()),
         "context": {
             "site": client.context().site(),
             "company": client.context().company,

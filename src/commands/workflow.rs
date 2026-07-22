@@ -1,6 +1,7 @@
 use serde_json::{json, Map, Value};
 
 use crate::output;
+use crate::summary;
 use crate::transport::{encode_segment, Client};
 
 /// Docstatus values ERPNext gives documents: draft, submitted, cancelled.
@@ -31,7 +32,14 @@ async fn transition(client: &Client, doctype: &str, name: &str, target: i64, app
     let payload = json!({ "docstatus": target });
 
     if !apply {
-        return output::ok(preview_envelope(client, "PUT", &path, &payload, target));
+        let action = if target == CANCELLED {
+            summary::Action::Cancel { doctype, name }
+        } else {
+            summary::Action::Submit { doctype, name }
+        };
+        return output::ok(preview_envelope(
+            client, &action, "PUT", &path, &payload, target,
+        ));
     }
 
     if let Err(e) = client.put(&path, &payload).await {
@@ -135,6 +143,7 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
     if !apply {
         return output::ok(preview_envelope(
             client,
+            &summary::Action::Amend { doctype, name },
             "POST",
             &create_path,
             &payload,
@@ -189,6 +198,10 @@ pub async fn run_method(
     if !apply {
         return output::ok(json!({
             "preview": true,
+            "summary": summary::describe(
+                &summary::Action::Method { doctype, name, method },
+                client.context().company.as_deref(),
+            ),
             "context": {
                 "site": client.context().site(),
                 "company": client.context().company,
@@ -207,6 +220,7 @@ pub async fn run_method(
 
 fn preview_envelope(
     client: &Client,
+    action: &summary::Action,
     method: &str,
     path: &str,
     payload: &Value,
@@ -214,6 +228,7 @@ fn preview_envelope(
 ) -> Value {
     json!({
         "preview": true,
+        "summary": summary::describe(action, client.context().company.as_deref()),
         "context": {
             "site": client.context().site(),
             "company": client.context().company,

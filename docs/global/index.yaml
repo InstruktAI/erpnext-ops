@@ -136,6 +136,8 @@ snippets:
   activation_trigger: null
   path: docs/erp/spec/cli-surface.md
   visibility: internal
+  superseded_by:
+  - erpnext-agent-admin-context
   source_project: erpnext-ops
 - id: erp/spec/company-layout
   description: Site and company identity and credential layout for operating per-tenant
@@ -146,4 +148,6 @@ snippets:
   activation_trigger: null
   path: docs/erp/spec/company-layout.md
   visibility: internal
+  superseded_by:
+  - erpnext-agent-admin-context
   source_project: erpnext-ops

@@ -710,3 +710,67 @@ fn site_responses_are_emitted_without_the_vendor_envelope() {
         "a response carrying no data wrapper is emitted as it stands"
     );
 }
+
+/// A preview is read by the person who asked for the work, not only by the agent that
+/// composed it. It states the record in business language and the consequence that
+/// outlives the action, so a misread instruction is caught before anything is sent.
+#[test]
+fn preview_restates_the_action_in_business_language() {
+    use erpnext::summary::{describe, Action};
+
+    let payload = json!({ "customer_name": "Sunfield BV", "grand_total": 2500.0 });
+    let create = describe(
+        &Action::Create {
+            doctype: "Sales Invoice",
+            payload: &payload,
+        },
+        Some("Instrukt AI Sandbox"),
+    );
+    assert!(create.contains("Sunfield BV"), "names the record: {create}");
+    assert!(create.contains("2500.00"), "names the money: {create}");
+    assert!(
+        create.contains("Instrukt AI Sandbox"),
+        "names whose books: {create}"
+    );
+    assert!(
+        create.contains("--apply"),
+        "states how to approve: {create}"
+    );
+
+    let submit = describe(
+        &Action::Submit {
+            doctype: "Sales Invoice",
+            name: "ACC-SINV-2026-00001",
+        },
+        None,
+    );
+    assert!(
+        submit.contains("cancelled") && submit.contains("never edited"),
+        "submitting states its lasting consequence: {submit}"
+    );
+
+    let delete = describe(
+        &Action::Delete {
+            doctype: "Customer",
+            name: "Acme Pilot BV",
+        },
+        None,
+    );
+    assert!(
+        delete.contains("not a cancellation"),
+        "deleting is distinguished from cancelling: {delete}"
+    );
+
+    let convert = describe(
+        &Action::Convert {
+            source_doctype: "Sales Order",
+            source_name: "SAL-ORD-2026-00001",
+            target_doctype: "Sales Invoice",
+        },
+        None,
+    );
+    assert!(
+        convert.contains("second document"),
+        "converting warns about double conversion: {convert}"
+    );
+}

@@ -53,6 +53,12 @@ the CLI contract below, not raw transport mechanics.
 
 Preview output for mutating commands contains:
 
+- `summary` — the action restated in business language for the person who asked for it:
+  the record by the name they know it by, the money where the payload carries it, whose
+  books it lands in, the consequence that outlives the action, and the words that approve
+  it. Submitting names that the figures reach the books and the document can afterwards
+  only be cancelled; deleting distinguishes itself from cancelling; converting names that
+  a second conversion creates a second document.
 - `context` — site, company, identity, and privilege mode.
 - `operation` — the exact native request that would be sent: method, endpoint, and payload.
 - `preflight` — findings from basic checks against live DocType metadata: unknown fields,
@@ -69,9 +75,16 @@ non-zero exit.
 ## Known caveats
 
 - The site is the tenant boundary; company selection scopes accounting inside the site.
+<!-- planned-change:erpnext-agent-admin-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrator context selection is refused in this release —
   administrator bootstrap secrets live only in itsUP.
+<!-- change:erpnext-agent-admin-context -->
+- Routine work runs as the site operator; an operator failure never falls back to
+  administrator authority. Administrative work uses an explicitly selected, dedicated
+  company-scoped agent-admin identity. The bootstrap `Administrator` identity and its
+  deployment secret remain unavailable to the CLI.
+<!-- /planned-change:erpnext-agent-admin-context -->
 - Mutating commands preview by default; `--apply` sends the native operation and reports
   ERPNext's result.
 - Create and update commands check payload fields against live DocType metadata before

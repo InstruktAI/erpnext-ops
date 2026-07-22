@@ -34,6 +34,7 @@ Then subsequent commands run as that site's operator identity with company `acme
 accounting scope
 And the selection is visible in `erpnext context show`.
 
+<!-- planned-change:erpnext-agent-admin-context -->
 #### UC-3
 
 Scenario: Administrator context selection is refused
@@ -43,6 +44,16 @@ Then the command fails with a structured failure naming administrator resolution
 unavailable
 And it states that administrator bootstrap secrets live only in itsUP, never in the
 company credential home.
+<!-- change:erpnext-agent-admin-context -->
+#### UC-3
+
+Scenario: Select a dedicated agent-admin context
+Given dedicated agent-admin credentials exist for site `acme.erpnext.example.com`
+When the agent runs `erpnext context use --site acme.erpnext.example.com --as admin`
+Then subsequent commands run as that site's dedicated agent-admin identity
+And the bootstrap `Administrator` identity is refused
+And no operator credential is used as fallback.
+<!-- /planned-change:erpnext-agent-admin-context -->
 
 #### UC-4
 
