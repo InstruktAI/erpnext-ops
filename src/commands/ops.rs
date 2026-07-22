@@ -79,8 +79,12 @@ pub async fn doctor(client: &Client) -> i32 {
     } else {
         output::EXIT_OK
     };
-    output::ok(json!({ "verdict": verdict, "checks": checks }));
-    exit
+    let output_exit = output::ok(json!({ "verdict": verdict, "checks": checks }));
+    if failed {
+        exit
+    } else {
+        output_exit
+    }
 }
 
 fn check(name: &str, state: &str, detail: &str) -> Value {

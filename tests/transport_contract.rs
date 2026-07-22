@@ -1,7 +1,7 @@
 use httpmock::prelude::*;
 use serde_json::{json, Value};
 use std::fs;
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
@@ -841,6 +841,69 @@ async fn report_run_uses_the_native_runner_with_filters() {
     runner.assert();
 }
 
+/// The normal client deadline is deliberately unusable here. A successful report proves the
+/// public command replaced it at the real HTTP request boundary rather than inheriting it.
+#[tokio::test]
+// spec: project/spec/feature/erp-operations/reporting UC-3
+async fn report_run_uses_its_distinct_request_bound() {
+    let server = MockServer::start_async().await;
+    let runner = server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/method/frappe.desk.query_report.run");
+        then.status(200).json_body(json!({ "message": {
+            "columns": [],
+            "result": [],
+        }}));
+    });
+    let client = Client::with_request_timeout(context_for(&server), std::time::Duration::ZERO)
+        .expect("client");
+
+    let exit = commands::report::run(&client, "Profit and Loss", &[]).await;
+
+    assert_eq!(exit, 0);
+    runner.assert();
+}
+
+/// A peer that accepts the request but never answers exercises the report deadline itself.
+/// Tokio's paused clock makes the 120-second contract deterministic and instantaneous.
+#[tokio::test(start_paused = true)]
+// spec: project/spec/feature/erp-operations/reporting UC-3
+async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("local listener");
+    let address = listener.local_addr().expect("listener address");
+    let (accepted_tx, accepted_rx) = std::sync::mpsc::channel();
+    let (release_tx, release_rx) = std::sync::mpsc::channel();
+    let peer = std::thread::spawn(move || {
+        let (_stream, _) = listener.accept().expect("accept report request");
+        accepted_tx.send(()).expect("signal accepted request");
+        let _ = release_rx.recv();
+    });
+    let context = Context {
+        site_url: Url::parse(&format!("http://{address}")).expect("peer url"),
+        company_slug: "test-co".into(),
+        company: None,
+        privilege: PrivilegeMode::Operator,
+        credentials: Credentials {
+            user: None,
+            api_key: "test-key".into(),
+            api_secret: "test-secret".into(),
+        },
+    };
+    let client = Client::new(context).expect("client");
+    let run =
+        tokio::spawn(async move { commands::report::run(&client, "Profit and Loss", &[]).await });
+
+    while accepted_rx.try_recv().is_err() {
+        tokio::task::yield_now().await;
+    }
+    tokio::time::advance(std::time::Duration::from_secs(121)).await;
+    let exit = run.await.expect("report task completes");
+
+    assert_eq!(exit, 1);
+    let _ = release_tx.send(());
+    peer.join().expect("stalled peer exits");
+}
+
 #[test]
 // spec: project/spec/feature/erp-operations/reporting UC-2
 fn malformed_report_response_is_a_structured_shape_failure() {
@@ -863,6 +926,63 @@ fn malformed_report_response_is_a_structured_shape_failure() {
     let shape_kind = ApiError::Shape(String::new()).kind();
     assert_eq!(failure.pointer("/error/kind"), Some(&json!(shape_kind)));
     runner.assert();
+}
+
+#[cfg(unix)]
+#[test]
+fn cli_exits_cleanly_when_its_output_consumer_has_closed() {
+    use std::os::fd::OwnedFd;
+    use std::os::unix::net::UnixStream;
+
+    let server = MockServer::start();
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    let home = std::env::temp_dir().join(format!(
+        "erpnext-closed-output-{}-{unique}",
+        std::process::id()
+    ));
+    let company_home = home.join(".teleclaude/companies/test-co");
+    fs::create_dir_all(&company_home).expect("test credential home");
+    fs::write(
+        company_home.join("erpnext.json"),
+        serde_json::to_vec(&json!({
+            "site_url": server.base_url().replace("127.0.0.1", "localhost"),
+            "company": "Test Company",
+            "operator": {
+                "api_key": "test-key",
+                "api_secret": "test-secret"
+            }
+        }))
+        .expect("credential json"),
+    )
+    .expect("write credentials");
+    let (reader, writer) = UnixStream::pair().expect("local output pipe");
+    drop(reader);
+    let writer: OwnedFd = writer.into();
+
+    let output = Command::new(env!("CARGO_BIN_EXE_erpnext"))
+        .env("HOME", &home)
+        .args(["--company", "test-co"])
+        .args([
+            "doc",
+            "create",
+            "Customer",
+            "--data",
+            r#"{"customer_name":"Acme"}"#,
+        ])
+        .stdout(Stdio::from(writer))
+        .stderr(Stdio::piped())
+        .output()
+        .expect("run erpnext CLI");
+
+    assert!(
+        output.status.success(),
+        "a closed consumer is normal termination: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    fs::remove_dir_all(home).expect("remove test home");
 }
 
 #[tokio::test]
