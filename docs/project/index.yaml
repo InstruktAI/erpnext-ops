@@ -62,6 +62,8 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/operational-diagnostics.md
   visibility: internal
+  superseded_by:
+  - erpnext-agent-admin-context
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/reference-resolution
   description: Deterministic resolution of parties, items, and documents from business
