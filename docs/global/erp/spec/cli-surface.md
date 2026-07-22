@@ -144,9 +144,9 @@ non-zero exit.
   site binds what its signature declares. Fields the mapper leaves empty — a delivery date,
   a payment reference — are supplied with `--data`, and the mapper is never second-guessed.
 <!-- change:erpnext-mapper-arguments -->
-- `doc map` passes the source under every argument name the native mappers use, because the
-  selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the
-  site binds what its signature declares. `--args` supplies additional native mapper inputs
+- `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
+  `dn`; the site binds only the names its signature declares. `--args` supplies additional native
+  mapper inputs
   before the site builds the target document. `--data` overrides target-document fields only
   after mapping. A value that changes what the mapper computes — such as the receipt date used
   to decide whether an early-payment discount is valid — belongs in `--args`, never `--data`.

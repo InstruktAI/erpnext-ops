@@ -1,8 +1,4 @@
 ---
-id: erp/procedure/overdue-collection
-type: procedure
-domain: erp
-scope: global
 description: Detect overdue customer debt, progress it through native dunning and follow-up, and close the loop only when the receivable is actually settled.
 ---
 # Overdue Collection — Procedure
