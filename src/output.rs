@@ -58,13 +58,8 @@ pub fn site_payload(mut response: Value) -> Value {
 
 /// Print the machine-readable failure envelope to stderr and return the exit code.
 pub fn fail(kind: &str, message: &str, exit: i32) -> i32 {
-    let envelope = failure_envelope(kind, message);
+    let envelope: Value = json!({ "ok": false, "error": { "kind": kind, "message": message } });
     emit_failure(io::stderr().lock(), &envelope, exit)
-}
-
-/// Build the canonical machine-readable failure envelope.
-pub fn failure_envelope(kind: &str, message: &str) -> Value {
-    json!({ "ok": false, "error": { "kind": kind, "message": message } })
 }
 
 /// Failure envelope that preserves partial results (e.g. writes that landed before

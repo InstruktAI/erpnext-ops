@@ -2,7 +2,6 @@ use httpmock::prelude::*;
 use serde_json::{json, Value};
 use std::fs;
 use std::process::{Command, Output, Stdio};
-use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
@@ -25,6 +24,10 @@ fn context_for(server: &MockServer) -> Context {
 }
 
 fn run_cli_against(server: &MockServer, args: &[&str]) -> Output {
+    run_cli_at(&server.base_url().replace("127.0.0.1", "localhost"), args)
+}
+
+fn run_cli_at(site_url: &str, args: &[&str]) -> Output {
     let unique = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("clock after epoch")
@@ -35,7 +38,6 @@ fn run_cli_against(server: &MockServer, args: &[&str]) -> Output {
     ));
     let company_home = home.join(".teleclaude/companies/test-co");
     fs::create_dir_all(&company_home).expect("test credential home");
-    let site_url = server.base_url().replace("127.0.0.1", "localhost");
     fs::write(
         company_home.join("erpnext.json"),
         serde_json::to_vec(&json!({
@@ -892,21 +894,8 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
         },
     };
     let client = Client::new(context).expect("client");
-    let captured_failure = Arc::new(Mutex::new(None));
-    let failure_for_run = Arc::clone(&captured_failure);
-    let run = tokio::spawn(async move {
-        commands::report::run_with_failure_emitter(
-            &client,
-            "Profit and Loss",
-            &[],
-            |kind, message, exit| {
-                *failure_for_run.lock().expect("failure capture") =
-                    Some(erpnext::output::failure_envelope(kind, message));
-                exit
-            },
-        )
-        .await
-    });
+    let run =
+        tokio::spawn(async move { commands::report::run(&client, "Profit and Loss", &[]).await });
 
     let mut accepted = false;
     for _ in 0..1_024 {
@@ -940,15 +929,35 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
         .expect("report task remains available");
 
     assert_eq!(exit, 1);
-    let failure = captured_failure
-        .lock()
-        .expect("failure capture")
-        .clone()
-        .expect("timeout emits a structured failure");
-    assert_eq!(failure.get("ok"), Some(&json!(false)));
-    assert_eq!(failure.pointer("/error/kind"), Some(&json!("transport")));
     peer.abort();
     peer.await.expect_err("stalled peer is cancelled");
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/reporting UC-3
+fn report_transport_failure_is_structured_at_the_compiled_cli_boundary() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("local listener");
+    let address = listener.local_addr().expect("listener address");
+    let peer = std::thread::spawn(move || {
+        let (stream, _) = listener.accept().expect("accept report request");
+        drop(stream);
+    });
+
+    let output = run_cli_at(
+        &format!("http://localhost:{}", address.port()),
+        &["report", "run", "Profit and Loss"],
+    );
+    peer.join().expect("peer closes the accepted connection");
+    let failure = json_output(&output.stderr);
+    let transport_kind = ApiError::Transport(String::new()).kind();
+
+    assert!(!output.status.success());
+    assert!(
+        output.stdout.is_empty(),
+        "a transport failure has no success payload"
+    );
+    assert_eq!(failure.get("ok"), Some(&json!(false)));
+    assert_eq!(failure.pointer("/error/kind"), Some(&json!(transport_kind)));
 }
 
 #[test]
