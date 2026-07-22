@@ -18,8 +18,9 @@ payment, and follow-up without forcing a stock-oriented workflow.
 ## Preconditions
 
 - The company context is active in `erpnext`.
-- The customer, project, opportunity, event, or production context is known or can be resolved.
-- The scope, price, deadline, or next action is known enough to capture.
+- The customer and service item resolve unambiguously.
+- The scope, price, delivery window, and billing trigger are known or carried as open loops.
+- The company has an income account suitable for the service being billed.
 
 ## Steps
 
@@ -30,40 +31,65 @@ uncertainty with `erpnext activity capture`.
 
 ### 2. Resolve the business object
 
-Use `erpnext resolve` to find or create the Customer, Opportunity, Project, Task, Quotation,
-or Sales Order target. Keep uncertain commitments in draft state.
+Resolve the Customer and any existing Project, Quotation, or Sales Order before creating
+anything. Create the Project with the customer and delivery dates, then create its Task records
+with their expected dates. Use source tokens for series-named records so a repeated create
+returns the existing record.
 
-### 3. Track work and obligations
+### 3. Bind the commercial promise to the project
 
-Create tasks, events, or linked project work for promised deliverables, approvals, deadlines,
-and dependencies. Carry unresolved decisions as open loops.
+Create and submit the Quotation only when the offer is real. Convert it through ERPNext's
+native mapper and set the Project on the resulting Sales Order before submission. Read the
+stored Sales Order back and require both its source-quotation link and Project link; a detached
+order cannot support project profitability or safe resume.
 
-### 4. Confirm completion before billing
+### 4. Record actual work
 
-Use the preview/apply flow to create or submit invoice state only when the billing event is
-true: accepted proposal, milestone reached, work completed, or another agreed billing trigger.
+Record work in a Timesheet whose rows link the Project and Task and carry the actual hours,
+costing rate, and billing rate where applicable. Submit the Timesheet before relying on its
+figures. Read the Project back and require its total costing and billable amounts to include the
+submitted work.
 
-### 5. Record payment and review open loops
+### 5. Bill the agreed trigger
 
-Record payment when received and use `erpnext activity open-loops` or `erpnext ops open-loops`
-to find unresolved project, customer, or billing work.
+Bill only when the accepted proposal, milestone, completed work, or other agreed trigger is
+true. Convert the Sales Order through ERPNext's native invoice mapper. Before submission, run
+the invoice's `add_timesheet_data` controller method so the submitted Timesheet is linked to
+the invoice and the returned document is persisted. Read the draft back and require its
+Project, Sales Order, and Timesheet links before submitting it.
+
+### 6. Close work and payment
+
+Record the payment through the native Payment Entry mapper and submit it only when receipt is
+true. Complete Tasks when their work is complete. Read back the invoice, Timesheet, Task, and
+Project and require: zero invoice outstanding after full payment, billed Timesheet hours,
+completed Task progress, and Project sales, cost, billed amount, and margin consistent with the
+linked records. Close honoured follow-ups and keep the remaining ones visible through
+`erpnext activity open-loops`.
 
 ## Outputs
 
-- Traceable project/service activity.
-- Draft or submitted project, task, sales, invoice, and payment state as appropriate.
-- Open-loop visibility for deadlines, decisions, and customer follow-up.
+- Native links from commercial promise through Project, Task, Timesheet, invoice, and payment.
+- Project totals that expose contracted sales, actual work cost, billed revenue, and margin.
+- Open-loop visibility for deadlines, decisions, customer follow-up, and unpaid amounts.
 
 ## Recovery
 
 - If the billing trigger is unclear, record activity and follow-up instead of invoicing.
-- If the preview shows accounting effects the human did not authorize, stop before applying.
+- If a create or mapper response is lost, inspect the source's native links and remaining billed
+  quantity or amount before resuming; never map the same source blindly.
+- If a controller method returns a changed document but saving it fails, preserve the partial
+  result, inspect the stored draft, and retry from observed state.
+- Correct submitted billing through cancel-and-amend and reverse dependent payments first;
+  never edit a submitted invoice in place.
 - If the work belongs to an external booking or production system, capture the ERP trail only
   for the business outcome ERPNext actually owns.
 
 ## Discipline
 
-The failure mode is forcing project or service businesses through a stock-heavy mental model.
-Track work, obligations, and billing triggers explicitly. Use ERPNext for the business states
-it owns, and preserve activity around external systems when ERPNext is only the accounting or
-overview layer.
+The failure mode is correct-looking books with detached operational records: an order without
+its Project, hours without their Task, an invoice without its Timesheet, or a payment reported
+without settling the invoice. Track work, obligations, and billing triggers explicitly, then
+verify the native links and derived totals that make project profitability trustworthy. Use
+ERPNext for the business states it owns, and preserve activity around external systems when
+ERPNext is only the accounting or overview layer.
