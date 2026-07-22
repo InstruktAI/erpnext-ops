@@ -2,7 +2,7 @@ use serde_json::{json, Map, Value};
 
 use crate::output;
 use crate::summary;
-use crate::transport::{encode_segment, Client};
+use crate::transport::{encode_segment, ApiError, Client};
 
 /// Docstatus values ERPNext gives documents: draft, submitted, cancelled.
 const DRAFT: i64 = 0;
@@ -213,13 +213,57 @@ pub async fn run_method(
         }));
     }
 
-    let method_result = match client.post(&path, &payload).await {
-        Ok(v) => v,
-        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
-    };
+    match apply_method(client, doctype, name, method, &payload).await {
+        Ok(stored) => output::ok(stored),
+        Err(MethodApplyError::Request(e)) => {
+            output::fail(e.kind(), &e.to_string(), output::EXIT_API)
+        }
+        Err(MethodApplyError::Shape(message)) => output::fail("shape", &message, output::EXIT_API),
+        Err(MethodApplyError::Save {
+            error,
+            method_result,
+        }) => output::fail_with_data(
+            error.kind(),
+            &format!("controller method ran but its returned document was not saved: {error}"),
+            json!({ "method_result": method_result }),
+            output::EXIT_API,
+        ),
+    }
+}
+
+#[derive(Debug)]
+pub enum MethodApplyError {
+    Request(ApiError),
+    Shape(String),
+    Save {
+        error: ApiError,
+        method_result: Value,
+    },
+}
+
+/// Apply a native document controller method and return the state the site actually
+/// stored. Kept separate from output rendering so the persistence contract is directly
+/// testable without mistaking the controller's in-memory response for stored state.
+pub async fn apply_method(
+    client: &Client,
+    doctype: &str,
+    name: &str,
+    method: &str,
+    payload: &Value,
+) -> Result<Value, MethodApplyError> {
+    let method_path = format!(
+        "/api/v2/document/{}/{}/method/{}/",
+        encode_segment(doctype),
+        encode_segment(name),
+        encode_segment(method)
+    );
+    let method_result = client
+        .post(&method_path, payload)
+        .await
+        .map_err(MethodApplyError::Request)?;
 
     let Some(returned_doc) = method_result.pointer("/docs/0") else {
-        return output::ok_payload(method_result);
+        return Ok(output::site_payload(method_result));
     };
     let returned_doctype = returned_doc
         .pointer("/doctype")
@@ -230,13 +274,9 @@ pub async fn run_method(
         .and_then(Value::as_str)
         .unwrap_or_default();
     if returned_doctype != doctype || returned_name != name {
-        return output::fail(
-            "shape",
-            &format!(
+        return Err(MethodApplyError::Shape(format!(
                 "controller method returned {returned_doctype} {returned_name}, expected {doctype} {name}"
-            ),
-            output::EXIT_API,
-        );
+            )));
     }
 
     let document_path = format!(
@@ -245,13 +285,11 @@ pub async fn run_method(
         encode_segment(name)
     );
     match client.put(&document_path, returned_doc).await {
-        Ok(saved) => output::ok_payload(saved),
-        Err(e) => output::fail_with_data(
-            e.kind(),
-            &format!("controller method ran but its returned document was not saved: {e}"),
-            json!({ "method_result": method_result }),
-            output::EXIT_API,
-        ),
+        Ok(saved) => Ok(output::site_payload(saved)),
+        Err(error) => Err(MethodApplyError::Save {
+            error,
+            method_result,
+        }),
     }
 }
 

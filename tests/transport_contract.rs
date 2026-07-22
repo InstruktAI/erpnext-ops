@@ -158,10 +158,12 @@ async fn workflow_method_persists_the_native_controller_result() {
     let method = server.mock(|when, then| {
         when.method(POST)
             .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002/method/add_timesheet_data/")
+            .header("Authorization", "token test-key:test-secret")
             .json_body(json!({}));
         then.status(200).json_body(json!({ "docs": [{
                 "doctype": "Sales Invoice",
                 "name": "ACC-SINV-2026-00002",
+                "controller_only": true,
                 "timesheets": [{ "time_sheet": "TS-0001" }]
             }] }));
     });
@@ -171,29 +173,113 @@ async fn workflow_method_persists_the_native_controller_result() {
             .json_body(json!({
                 "doctype": "Sales Invoice",
                 "name": "ACC-SINV-2026-00002",
+                "controller_only": true,
                 "timesheets": [{ "time_sheet": "TS-0001" }]
             }));
         then.status(200).json_body(json!({ "data": {
             "doctype": "Sales Invoice",
             "name": "ACC-SINV-2026-00002",
+            "stored_only": true,
             "timesheets": [{ "time_sheet": "TS-0001" }]
         } }));
     });
 
     let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::workflow::run_method(
+    let stored = commands::workflow::apply_method(
         &client,
         "Sales Invoice",
         "ACC-SINV-2026-00002",
         "add_timesheet_data",
+        &json!({}),
+    )
+    .await
+    .expect("controller document is saved");
+
+    assert_eq!(stored.pointer("/stored_only"), Some(&json!(true)));
+    assert_eq!(
+        stored.pointer("/controller_only"),
         None,
-        true,
+        "the command reports the stored PUT result, not the controller response"
+    );
+    method.assert();
+    save.assert();
+}
+
+#[tokio::test]
+// spec: project/spec/feature/erp-operations/document-lifecycle UC-7
+async fn workflow_method_rejects_a_different_returned_document_without_saving() {
+    let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data/");
+        then.status(200).json_body(json!({ "docs": [{
+            "doctype": "Sales Invoice", "name": "INV-OTHER"
+        }] }));
+    });
+    let save = server.mock(|when, then| {
+        when.method(PUT)
+            .path_matches(Regex::new("^/api/v2/document/.*").expect("regex"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let result = commands::workflow::apply_method(
+        &client,
+        "Sales Invoice",
+        "INV-1",
+        "add_timesheet_data",
+        &json!({}),
     )
     .await;
 
-    assert_eq!(exit, 0);
-    method.assert();
-    save.assert();
+    assert!(matches!(
+        result,
+        Err(commands::workflow::MethodApplyError::Shape(_))
+    ));
+    assert_eq!(save.hits(), 0, "a mismatched document is never saved");
+}
+
+#[tokio::test]
+// spec: project/spec/feature/erp-operations/document-lifecycle UC-7
+async fn workflow_method_preserves_the_controller_result_when_save_fails() {
+    let server = MockServer::start_async().await;
+    let method_result = json!({ "docs": [{
+        "doctype": "Sales Invoice",
+        "name": "INV-1",
+        "timesheets": [{ "time_sheet": "TS-1" }]
+    }] });
+    server.mock(|when, then| {
+        when.method(POST)
+            .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data/");
+        then.status(200).json_body(method_result.clone());
+    });
+    server.mock(|when, then| {
+        when.method(PUT)
+            .path("/api/v2/document/Sales%20Invoice/INV-1");
+        then.status(417)
+            .json_body(json!({ "message": "save rejected" }));
+    });
+
+    let client = Client::new(context_for(&server)).expect("client");
+    let result = commands::workflow::apply_method(
+        &client,
+        "Sales Invoice",
+        "INV-1",
+        "add_timesheet_data",
+        &json!({}),
+    )
+    .await;
+
+    match result {
+        Err(commands::workflow::MethodApplyError::Save {
+            method_result: observed,
+            ..
+        }) => assert_eq!(
+            observed, method_result,
+            "partial success remains observable for recovery"
+        ),
+        other => panic!("expected save failure, got {other:?}"),
+    }
 }
 
 /// The site answers a declined lifecycle request with the document body and an
@@ -378,6 +464,7 @@ async fn source_retry_after_lost_response_replays_without_second_create() {
 /// replay compares the caller-owned fields recursively and must not mistake those
 /// server-owned additions for divergent input.
 #[tokio::test]
+// spec: project/spec/feature/erp-operations/document-operations UC-8
 async fn source_replay_accepts_server_enriched_child_rows() {
     let server = MockServer::start_async().await;
 
