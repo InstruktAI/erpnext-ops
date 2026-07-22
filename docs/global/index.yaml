@@ -220,6 +220,7 @@ snippets:
   visibility: internal
   superseded_by:
   - erpnext-agent-admin-context
+  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/spec/company-layout
   description: Site and company identity and credential layout for operating per-tenant

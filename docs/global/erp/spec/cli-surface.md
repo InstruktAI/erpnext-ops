@@ -44,7 +44,11 @@ the CLI contract below, not raw transport mechanics.
 - `erpnext doc update <doctype> <name> --data <json> [--apply]`
 - `erpnext doc delete <doctype> <name> [--apply]`
 - `erpnext doc copy <doctype> <name> [--data <json>] [--apply]`
+<!-- planned-change:erpnext-mapper-arguments -->
 - `erpnext doc map <doctype> <name> --via <native-mapper> [--apply]`
+<!-- change:erpnext-mapper-arguments -->
+- `erpnext doc map <doctype> <name> --via <native-mapper> [--args <json>] [--data <json>] [--apply]`
+<!-- /planned-change:erpnext-mapper-arguments -->
 - `erpnext workflow submit <doctype> <name> [--apply]`
 - `erpnext workflow cancel <doctype> <name> [--apply]`
 - `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
@@ -134,10 +138,19 @@ non-zero exit.
   returns a changed document, apply refuses a different doctype or name, saves that exact
   returned document, and reports the stored result. A controller that ran but could not save
   is a partial failure carrying the method result, never success.
+<!-- planned-change:erpnext-mapper-arguments -->
 - `doc map` passes the source under every argument name the native mappers use, because the
   selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the
   site binds what its signature declares. Fields the mapper leaves empty — a delivery date,
   a payment reference — are supplied with `--data`, and the mapper is never second-guessed.
+<!-- change:erpnext-mapper-arguments -->
+- `doc map` passes the source under every argument name the native mappers use, because the
+  selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the
+  site binds what its signature declares. `--args` supplies additional native mapper inputs
+  before the site builds the target document. `--data` overrides target-document fields only
+  after mapping. A value that changes what the mapper computes — such as the receipt date used
+  to decide whether an early-payment discount is valid — belongs in `--args`, never `--data`.
+<!-- /planned-change:erpnext-mapper-arguments -->
 - `doc map` converts a document along an ERPNext chain through the native mapper the caller
   names, so the site builds the target document; the created document is read back and a
   result that references no source fails. Mapping the same source twice creates a second
