@@ -35,6 +35,7 @@ the CLI contract below, not raw transport mechanics.
 - `erpnext doc update <doctype> <name> --data <json> [--apply]`
 - `erpnext doc delete <doctype> <name> [--apply]`
 - `erpnext doc copy <doctype> <name> [--data <json>] [--apply]`
+- `erpnext doc map <doctype> <name> --via <native-mapper> [--apply]`
 - `erpnext workflow submit <doctype> <name> [--apply]`
 - `erpnext workflow cancel <doctype> <name> [--apply]`
 - `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
@@ -75,6 +76,15 @@ Preview output for mutating commands contains:
 - Import commands use ERPNext's native data-import semantics with preview and explicit
   apply, reporting honest per-row results. The vendor gates Data Import to privileged
   roles; an operator context receives the site's typed permission failure.
+- Lifecycle transitions drive `docstatus` through the document envelope and read the
+  document back; a site that answers the request while leaving `docstatus` unchanged is
+  reported as a failed transition, never as success. `workflow amend` builds the new draft
+  carrying `amended_from` and applies only to a cancelled document.
+- `doc map` converts a document along an ERPNext chain through the native mapper the caller
+  names, so the site builds the target document; the created document is read back and a
+  result that references no source fails, because an unlinked conversion leaves the source
+  open and bills twice. Mapping the same source twice creates a second document — resolve
+  before mapping.
 - `doc create --source <token>` is exactly idempotent: the document name derives
   deterministically from site, doctype, and token; a retry replays the existing document,
   divergent token reuse is a structured conflict, and such documents opt out of native

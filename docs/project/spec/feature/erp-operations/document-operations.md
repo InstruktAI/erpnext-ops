@@ -85,3 +85,11 @@ When the agent applies it, loses the response, and applies the same command agai
 Then the retry finds the document whose name derives from the token and reports it as
 replayed, sending no second create
 And reusing the token with different data fails as a structured idempotency conflict.
+
+#### UC-9
+
+Scenario: Conversion along an ERPNext chain keeps its link to the source
+Given a submitted document and the native mapper for its next document in the chain
+When the agent runs `erpnext doc map <doctype> <name> --via <native-mapper> --apply`
+Then the site builds the target document and it is created with its items and terms
+And a created document that references no source fails as a linkage error.

@@ -46,7 +46,8 @@ And on success the document's docstatus is cancelled.
 Scenario: Amend a cancelled document
 Given a cancelled document
 When the agent previews and applies `erpnext workflow amend <doctype> <name> --data <json>`
-Then a new amended draft linked to the cancelled document is created with the payload applied.
+Then a new draft carrying `amended_from` is created with the payload applied
+And amending a document that is not cancelled fails without creating anything.
 
 #### UC-5
 
@@ -57,6 +58,15 @@ Then the command fails with a structured failure carrying ERPNext's lifecycle re
 And the failure points to the cancel-and-amend path instead of editing in place.
 
 #### UC-6
+
+Scenario: A transition the site silently declines is reported as failure
+Given a document the site will not move to the requested state
+When the agent applies a submit or a cancel and the site answers without changing
+`docstatus`
+Then the command fails, naming the state the document remains in
+And no success is reported for a transition that did not take effect.
+
+#### UC-7
 
 Scenario: Doctype-specific workflow methods follow the preview contract
 Given a doctype exposing a native workflow method
