@@ -37,7 +37,19 @@ name, abbreviation, country, currency, fiscal year, chart of accounts, timezone,
 data. The step is repeatable: a completed wizard is skipped, and additional companies on a
 site are created as ordinary `Company` documents through the CLI's preview/apply flow.
 
-### 3. Create the operator user
+### 3. Configure the outgoing email account
+
+Configure the site's outgoing email account. ERPNext delivers person invitations, password
+resets, and business correspondence through it, so a site without it cannot invite anyone.
+Re-running the step against a configured account changes nothing.
+
+### 4. Review system settings
+
+Review the site's system settings — time zone, date and number formats, session expiry, and
+password policy — against the company's operating reality. The setup wizard seeds them from
+its country and currency answers; this step confirms them rather than assuming them.
+
+### 5. Create the operator user
 
 Create an ERPNext user for the site's operator agent. ERPNext roles are additive, not
 hierarchical: a Manager role does not imply its User role. Grant the User role for each
@@ -45,12 +57,12 @@ business surface the operator works (e.g. `Sales User` alongside `Sales Manager`
 dedicated `Item Manager` role for item master maintenance. The operator must not carry
 administrator authority. Re-granting an existing role is a no-op; the step is repeatable.
 
-### 4. Mint the operator API credentials
+### 6. Mint the operator API credentials
 
 Generate the operator user's API key and secret. Treat the secret as one-time sensitive
 output. Re-generation is rotation: update the credential home in the same pass.
 
-### 5. Store the operator credentials
+### 7. Store the operator credentials
 
 Record the site base URL, company name, operator API key, and operator API secret in the
 company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
@@ -58,15 +70,21 @@ readable only by its owner. Writing it is idempotent — the entry is the single
 CLI resolves at command time. Do not copy administrator credentials there — administrator
 bootstrap secrets live only in itsUP.
 
-### 6. Verify the operator identity
+### 8. Verify the operator identity
 
 Authenticate with the operator credentials, confirm the logged-in user is the operator,
 confirm access to the intended company data, and confirm the identity lacks administrator
 authority.
 
+People other than the operator are invited through
+`erp/procedure/person-onboarding`, which grants each person the roles their company role
+carries. The site's own Getting Started checklist enumerates this same ground; onboarding is
+complete when every one of its steps is satisfied or deliberately skipped.
+
 ## Outputs
 
 - The company's site exists and answers at its FQDN.
+- The outgoing email account is configured and system settings are reviewed.
 - ERPNext `Company` record inside the site.
 - Site operator user with API credentials stored in the company credential home.
 - Verified operator identity.

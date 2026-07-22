@@ -353,7 +353,7 @@ None.
 
 ---
 
-## Baseline index — load via `telec docs get <id>` when relevant
+## Domain baseline index — load via `telec docs get <id>` when relevant
 
 - `erp/spec/cli-surface` — Agent-facing erpnext CLI command surface for operating per-tenant ERPNext sites.
 
