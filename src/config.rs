@@ -39,6 +39,8 @@ impl std::str::FromStr for PrivilegeMode {
 /// API credential pair. Debug/Display never reveal the secret material.
 #[derive(Clone, serde::Deserialize)]
 pub struct Credentials {
+    #[serde(default)]
+    pub user: Option<String>,
     pub api_key: String,
     pub api_secret: String,
 }
@@ -46,6 +48,7 @@ pub struct Credentials {
 impl fmt::Debug for Credentials {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Credentials")
+            .field("user", &self.user)
             .field("api_key", &"[redacted]")
             .field("api_secret", &"[redacted]")
             .finish()
@@ -77,6 +80,8 @@ struct CredentialFile {
     site_url: String,
     company: Option<String>,
     operator: Credentials,
+    #[serde(default)]
+    admin: Option<Credentials>,
 }
 
 #[derive(Debug, Error)]
@@ -95,8 +100,14 @@ pub enum ConfigError {
     UnknownSite(String),
     #[error("site '{0}' is served by multiple company scaffolds ({1}); select by --company")]
     AmbiguousSite(String, String),
-    #[error("administrator context resolution is not implemented; administrator bootstrap secrets live in itsUP, never in the company credential home")]
-    AdminUnsupported,
+    #[error("company '{0}' has no {1} credentials in credential home ({2}); no privilege fallback is allowed")]
+    MissingPrivilegeCredentials(String, PrivilegeMode, String),
+    #[error("company '{0}' has no declared user for its dedicated agent-admin credentials")]
+    MissingAdminIdentity(String),
+    #[error("bootstrap Administrator credentials are refused; configure a dedicated agent-admin identity for company '{0}'")]
+    BootstrapAdministratorRefused(String),
+    #[error("configured {0} identity '{1}' authenticated as '{2}'")]
+    IdentityMismatch(PrivilegeMode, String, String),
     #[error("cannot locate home directory")]
     NoHome,
     #[error("io failure at {0}: {1}")]
@@ -162,15 +173,13 @@ pub fn resolve_override(
     paths: &Paths,
     site: Option<&str>,
     company_slug: Option<&str>,
+    privilege: PrivilegeMode,
 ) -> Result<Context, ConfigError> {
     let slug = match (company_slug, site) {
         (Some(slug), _) => slug.to_owned(),
         (None, Some(site)) => find_slug_by_site(&paths.registry_root, site)?,
         (None, None) => return Err(ConfigError::NoSelection),
     };
-    let privilege = resolve(paths)
-        .map(|ctx| ctx.privilege)
-        .unwrap_or(PrivilegeMode::Operator);
     resolve_selection(
         paths,
         &Selection {
@@ -180,8 +189,24 @@ pub fn resolve_override(
     )
 }
 
+/// Resolve the selected company under an explicit privilege for one invocation,
+/// without changing the persisted selection.
+pub fn resolve_with_privilege(
+    paths: &Paths,
+    privilege: PrivilegeMode,
+) -> Result<Context, ConfigError> {
+    let mut selection = read_selection(paths)?;
+    selection.privilege = privilege;
+    resolve_selection(paths, &selection)
+}
+
 /// Resolve the active context from the persisted selection and the credential home.
 pub fn resolve(paths: &Paths) -> Result<Context, ConfigError> {
+    let selection = read_selection(paths)?;
+    resolve_selection(paths, &selection)
+}
+
+fn read_selection(paths: &Paths) -> Result<Selection, ConfigError> {
     let raw = fs::read_to_string(&paths.selection_file).map_err(|e| {
         if e.kind() == std::io::ErrorKind::NotFound {
             ConfigError::NoSelection
@@ -189,16 +214,10 @@ pub fn resolve(paths: &Paths) -> Result<Context, ConfigError> {
             ConfigError::Io(paths.selection_file.display().to_string(), e.to_string())
         }
     })?;
-    let selection: Selection =
-        serde_json::from_str(&raw).map_err(|e| ConfigError::InvalidSelection(e.to_string()))?;
-    resolve_selection(paths, &selection)
+    serde_json::from_str(&raw).map_err(|e| ConfigError::InvalidSelection(e.to_string()))
 }
 
 fn resolve_selection(paths: &Paths, selection: &Selection) -> Result<Context, ConfigError> {
-    if selection.privilege == PrivilegeMode::Admin {
-        return Err(ConfigError::AdminUnsupported);
-    }
-
     let slug = &selection.company_slug;
     let file = credential_file_path(&paths.registry_root, slug);
     let raw = fs::read_to_string(&file)
@@ -215,13 +234,57 @@ fn resolve_selection(paths: &Paths, selection: &Selection) -> Result<Context, Co
         ));
     }
 
+    let credentials = match selection.privilege {
+        PrivilegeMode::Operator => parsed.operator,
+        PrivilegeMode::Admin => {
+            let credentials = parsed.admin.ok_or_else(|| {
+                ConfigError::MissingPrivilegeCredentials(
+                    slug.clone(),
+                    PrivilegeMode::Admin,
+                    file.display().to_string(),
+                )
+            })?;
+            let user = credentials
+                .user
+                .as_deref()
+                .ok_or_else(|| ConfigError::MissingAdminIdentity(slug.clone()))?;
+            if user.eq_ignore_ascii_case("Administrator") {
+                return Err(ConfigError::BootstrapAdministratorRefused(slug.clone()));
+            }
+            credentials
+        }
+    };
+
     Ok(Context {
         site_url,
         company_slug: slug.clone(),
         company: parsed.company,
         privilege: selection.privilege,
-        credentials: parsed.operator,
+        credentials,
     })
+}
+
+/// Verify that the site authenticated the configured identity. Admin commands use this
+/// before doing work so bootstrap credentials cannot be smuggled in under another label.
+pub fn validate_authenticated_identity(
+    context: &Context,
+    authenticated_user: &str,
+) -> Result<(), ConfigError> {
+    if authenticated_user.eq_ignore_ascii_case("Administrator") {
+        return Err(ConfigError::BootstrapAdministratorRefused(
+            context.company_slug.clone(),
+        ));
+    }
+    if let Some(configured_user) = context.credentials.user.as_deref() {
+        if configured_user != authenticated_user {
+            return Err(ConfigError::IdentityMismatch(
+                context.privilege,
+                configured_user.to_owned(),
+                authenticated_user.to_owned(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn credential_file_path(registry_root: &Path, slug: &str) -> PathBuf {
@@ -335,19 +398,85 @@ mod tests {
         fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
     }
 
+    /// project/spec/feature/erp-operations/operating-context UC-3
     #[test]
-    fn admin_selection_is_refused_without_fallback() {
+    fn missing_admin_credentials_never_fall_back_to_operator() {
         let paths = temp_paths("admin");
         write_company(&paths, "x", "x.erpnext.example", "X");
         let err = select(&paths, None, Some("x"), PrivilegeMode::Admin)
-            .expect_err("admin resolution is not silently granted");
-        assert!(matches!(err, ConfigError::AdminUnsupported));
+            .expect_err("admin resolution must not use operator credentials");
+        assert!(matches!(err, ConfigError::MissingPrivilegeCredentials(..)));
         fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    /// project/spec/feature/erp-operations/operating-context UC-3
+    #[test]
+    fn dedicated_agent_admin_credentials_resolve() {
+        let paths = temp_paths("dedicated-admin");
+        let dir = paths.registry_root.join("x");
+        fs::create_dir_all(&dir).expect("company dir");
+        fs::write(
+            dir.join("erpnext.json"),
+            r#"{"site_url":"https://x.erpnext.example","company":"X","operator":{"api_key":"operator-key","api_secret":"operator-secret"},"admin":{"user":"agent-admin@instrukt.ai","api_key":"admin-key","api_secret":"admin-secret"}}"#,
+        )
+        .expect("credential file");
+
+        let ctx = select(&paths, None, Some("x"), PrivilegeMode::Admin)
+            .expect("dedicated admin resolves");
+        assert_eq!(ctx.privilege, PrivilegeMode::Admin);
+        assert_eq!(
+            ctx.credentials.user.as_deref(),
+            Some("agent-admin@instrukt.ai")
+        );
+        assert_eq!(ctx.credentials.api_key, "admin-key");
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    /// project/spec/feature/erp-operations/operating-context UC-3
+    #[test]
+    fn bootstrap_administrator_credentials_are_refused() {
+        let paths = temp_paths("bootstrap-admin");
+        let dir = paths.registry_root.join("x");
+        fs::create_dir_all(&dir).expect("company dir");
+        fs::write(
+            dir.join("erpnext.json"),
+            r#"{"site_url":"https://x.erpnext.example","company":"X","operator":{"api_key":"operator-key","api_secret":"operator-secret"},"admin":{"user":"Administrator","api_key":"admin-key","api_secret":"admin-secret"}}"#,
+        )
+        .expect("credential file");
+
+        let err = select(&paths, None, Some("x"), PrivilegeMode::Admin)
+            .expect_err("bootstrap identity must remain unavailable");
+        assert!(matches!(
+            err,
+            ConfigError::BootstrapAdministratorRefused(..)
+        ));
+        fs::remove_dir_all(paths.registry_root.parent().unwrap()).ok();
+    }
+
+    /// project/spec/feature/erp-operations/operating-context UC-3
+    #[test]
+    fn authenticated_admin_must_match_the_configured_identity() {
+        let context = Context {
+            site_url: Url::parse("https://x.erpnext.example").expect("url"),
+            company_slug: "x".into(),
+            company: Some("X".into()),
+            privilege: PrivilegeMode::Admin,
+            credentials: Credentials {
+                user: Some("agent-admin@instrukt.ai".into()),
+                api_key: "key".into(),
+                api_secret: "secret".into(),
+            },
+        };
+
+        let err = validate_authenticated_identity(&context, "other-admin@instrukt.ai")
+            .expect_err("the authenticated identity must match configuration");
+        assert!(matches!(err, ConfigError::IdentityMismatch(..)));
     }
 
     #[test]
     fn credentials_debug_never_reveals_secrets() {
         let c = Credentials {
+            user: Some("agent@instrukt.ai".into()),
             api_key: "k-123".into(),
             api_secret: "s-456".into(),
         };

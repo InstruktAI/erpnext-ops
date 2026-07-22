@@ -13,6 +13,7 @@ fn context_for(server: &MockServer) -> Context {
         company: None,
         privilege: PrivilegeMode::Operator,
         credentials: Credentials {
+            user: None,
             api_key: "test-key".into(),
             api_secret: "test-secret".into(),
         },
@@ -676,7 +677,8 @@ fn an_explicit_company_resolves_without_the_persisted_selection() {
         registry_root: registry,
     };
 
-    let ctx = resolve_override(&paths, None, Some("other-co")).expect("explicit company resolves");
+    let ctx = resolve_override(&paths, None, Some("other-co"), PrivilegeMode::Operator)
+        .expect("explicit company resolves");
     assert_eq!(ctx.company_slug, "other-co");
     assert_eq!(ctx.site(), "other.erpnext.example");
     assert_eq!(ctx.privilege, PrivilegeMode::Operator);
@@ -685,7 +687,8 @@ fn an_explicit_company_resolves_without_the_persisted_selection() {
         "an override must not write the shared selection"
     );
 
-    let err = resolve_override(&paths, None, None).expect_err("no selector is a blocker");
+    let err = resolve_override(&paths, None, None, PrivilegeMode::Operator)
+        .expect_err("no selector is a blocker");
     assert!(matches!(err, ConfigError::NoSelection));
 
     fs::remove_dir_all(&base).ok();

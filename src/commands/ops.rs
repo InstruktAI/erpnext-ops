@@ -22,18 +22,12 @@ pub async fn doctor(client: &Client) -> i32 {
     match client.whoami().await {
         Ok(user) => {
             checks.push(check("authenticated_identity", "pass", &user));
-            // 3. Privilege separation: the operator identity must not be Administrator.
-            let claims_operator = matches!(
-                client.context().privilege,
-                crate::config::PrivilegeMode::Operator
-            );
-            if claims_operator && user == "Administrator" {
+            // 3. Privilege separation: the configured identity must be the identity
+            // the site authenticated, and bootstrap Administrator is never accepted.
+            if let Err(e) = crate::config::validate_authenticated_identity(client.context(), &user)
+            {
                 failed = true;
-                checks.push(check(
-                    "credential_separation",
-                    "fail",
-                    "context claims operator privilege but authenticates as Administrator",
-                ));
+                checks.push(check("credential_separation", "fail", &e.to_string()));
             } else {
                 checks.push(check(
                     "credential_separation",

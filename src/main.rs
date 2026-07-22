@@ -17,6 +17,9 @@ struct Cli {
     /// Operate this site for this invocation, ignoring the persisted selection
     #[arg(long, global = true)]
     site: Option<String>,
+    /// Privilege identity for this invocation: operator (default) or admin
+    #[arg(long = "as", global = true)]
+    privilege: Option<PrivilegeMode>,
     #[command(subcommand)]
     command: Command,
 }
@@ -87,9 +90,6 @@ enum ContextCommand {
         /// Company slug in the TeleClaude company registry
         #[arg(long)]
         company: Option<String>,
-        /// Privilege identity: operator (default) or admin
-        #[arg(long = "as", default_value = "operator")]
-        privilege: PrivilegeMode,
     },
 }
 
@@ -343,11 +343,12 @@ async fn main() {
                 Ok(ctx) => commands::context::show(&ctx),
                 Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),
             },
-            ContextCommand::Use {
-                site,
-                company,
-                privilege,
-            } => match config::select(&paths, site.as_deref(), company.as_deref(), *privilege) {
+            ContextCommand::Use { site, company } => match config::select(
+                &paths,
+                site.as_deref(),
+                company.as_deref(),
+                cli.privilege.unwrap_or(PrivilegeMode::Operator),
+            ) {
                 Ok(ctx) => commands::context::show(&ctx),
                 Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),
             },
@@ -356,7 +357,14 @@ async fn main() {
     }
 
     let resolved = if cli.company.is_some() || cli.site.is_some() {
-        config::resolve_override(&paths, cli.site.as_deref(), cli.company.as_deref())
+        config::resolve_override(
+            &paths,
+            cli.site.as_deref(),
+            cli.company.as_deref(),
+            cli.privilege.unwrap_or(PrivilegeMode::Operator),
+        )
+    } else if let Some(privilege) = cli.privilege {
+        config::resolve_with_privilege(&paths, privilege)
     } else {
         config::resolve(&paths)
     };
@@ -372,6 +380,23 @@ async fn main() {
             output::EXIT_CONFIG,
         )),
     };
+    let diagnostics_owns_identity_check = matches!(
+        &cli.command,
+        Command::Ops {
+            command: OpsCommand::Doctor
+        }
+    );
+    if client.context().privilege == PrivilegeMode::Admin && !diagnostics_owns_identity_check {
+        let authenticated_user = match client.whoami().await {
+            Ok(user) => user,
+            Err(e) => std::process::exit(output::fail(e.kind(), &e.to_string(), output::EXIT_API)),
+        };
+        if let Err(e) =
+            config::validate_authenticated_identity(client.context(), &authenticated_user)
+        {
+            std::process::exit(output::fail("config", &e.to_string(), output::EXIT_CONFIG));
+        }
+    }
 
     let exit = match cli.command {
         Command::Context { .. } => unreachable!("handled above"),
