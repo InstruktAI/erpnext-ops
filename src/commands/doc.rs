@@ -108,9 +108,7 @@ pub async fn create(
     if let Some(name) = &derived_name {
         match replay_check(client, doctype, name, &payload_map).await {
             ReplayCheck::Missing => {}
-            ReplayCheck::Replayed(existing) => {
-                return output::ok(json!({ "replayed": true, "data": existing }))
-            }
+            ReplayCheck::Replayed(existing) => return output::ok(create_result(true, existing)),
             ReplayCheck::Conflict(diff) => {
                 return output::fail(
                     "idempotency-conflict",
@@ -142,7 +140,7 @@ pub async fn create(
     }
 
     match client.post(&path, &payload).await {
-        Ok(v) => output::ok_payload(v),
+        Ok(v) => output::ok(create_result(false, v)),
         Err(e) => {
             // A concurrent create with the same derived name loses the primary-key race;
             // resolve it as a replay instead of surfacing the duplicate error.
@@ -150,7 +148,7 @@ pub async fn create(
                 if matches!(e, crate::transport::ApiError::Rejected { .. }) {
                     match replay_check(client, doctype, name, &payload_map).await {
                         ReplayCheck::Replayed(existing) => {
-                            return output::ok(json!({ "replayed": true, "data": existing }))
+                            return output::ok(create_result(true, existing))
                         }
                         ReplayCheck::Conflict(diff) => {
                             return output::fail(
@@ -168,6 +166,15 @@ pub async fn create(
             output::fail(e.kind(), &e.to_string(), output::EXIT_API)
         }
     }
+}
+
+/// A create and its idempotent replay return the same shape. The vendor's response
+/// wrapper is removed before the document enters the CLI result envelope.
+fn create_result(replayed: bool, response: Value) -> Value {
+    json!({
+        "replayed": replayed,
+        "document": output::site_payload(response),
+    })
 }
 
 /// Deterministic, length-bounded document name for a source token.
@@ -649,5 +656,16 @@ mod tests {
     fn preflight_accepts_valid_payload_and_defaults() {
         let payload = json!({ "customer_name": "Acme" });
         assert!(preflight(&meta_fixture(), payload.as_object().unwrap()).is_none());
+    }
+
+    #[test]
+    fn create_and_replay_share_one_result_shape() {
+        let response = json!({ "data": { "name": "SRC-known" } });
+        let created = create_result(false, response.clone());
+        let replayed = create_result(true, response);
+
+        assert_eq!(created.pointer("/document"), replayed.pointer("/document"));
+        assert_eq!(created.pointer("/replayed"), Some(&Value::Bool(false)));
+        assert_eq!(replayed.pointer("/replayed"), Some(&Value::Bool(true)));
     }
 }

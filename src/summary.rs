@@ -146,6 +146,7 @@ fn label(payload: &Value) -> Option<String> {
         "customer_name",
         "supplier_name",
         "item_name",
+        "project_name",
         "employee_name",
         "party_name",
         "title",
