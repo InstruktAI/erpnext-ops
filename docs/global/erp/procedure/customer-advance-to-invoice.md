@@ -49,7 +49,8 @@ allocation. Preserve every mapper-produced row and its Sales Order row link. Rea
 draft back before submission and require:
 
 - an advance row naming the submitted Payment Entry;
-- allocated advance no greater than either the active receipt or the invoice total;
+- allocated advance no greater than either that Payment Entry's active remaining balance in
+  the Advance Payment Ledger or the invoice total;
 - `total_advance` equal to the sum of the stored allocation rows;
 - the expected Project and per-row Sales Order links; and
 - the remaining outstanding amount equal to invoice total less allocated advance.
@@ -82,15 +83,20 @@ active customer credit or advance rather than being silently treated as revenue.
   commands or a cached Sales Order total alone.
 - If invoice creation or submission fails, leave the submitted advance intact and rebuild the
   invoice from the order only after resolving existing drafts and source links.
-- To reverse a completed allocation, cancel the dependent invoice before cancelling the
-  Payment Entry. Verify that the invoice no longer consumes the order, the advance ledger entry
-  is delinked, and no active GL cash or customer balance remains.
+- An advance created by this procedure references the Sales Order, while the later invoice
+  carries the allocation. To compensate that proven chain, cancel the dependent invoice first
+  so it releases the allocation, then cancel the Sales-Order-linked Payment Entry. A Payment
+  Entry linked directly to an invoice follows that invoice's native payment dependency order
+  instead. Verify that the invoice no longer consumes the order, the advance ledger entry is
+  delinked, and no active GL cash or customer balance remains.
 - A cancelled Payment Entry can leave the Sales Order's derived `advance_paid` display stale even
   when its advance ledger entry is delinked and its active GL effect is gone. A newly mapped
   invoice must then carry no advance row. Treat the active ledger, document status, and stored
   mapper result as authoritative; never repair the derived field by writing it directly.
-- Cancellation does not reverse an external bank transfer. Preserve the correction trail and
-  perform any real-world refund through the customer-credit-and-refund procedure.
+- Cancellation does not reverse an external bank transfer. Returning the cash is a separate
+  outbound payment event: preserve the original receipt, use ERPNext's native customer-credit
+  or reverse-payment path for the active balance, and verify the bank and customer ledgers. Use
+  `customer-credit-and-refund` only when a submitted invoice correction created the credit.
 
 ## Discipline
 
