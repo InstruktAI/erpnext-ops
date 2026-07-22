@@ -207,14 +207,51 @@ pub async fn run_method(
                 "company": client.context().company,
                 "privilege": client.context().privilege,
             },
-            "operation": { "method": "PUT", "path": path, "payload": payload },
+            "operation": { "method": "POST", "path": path, "payload": payload },
+            "persistence": "when the method returns the changed document, apply saves that exact document and reports the stored result",
             "apply_command": "re-run the same command with --apply",
         }));
     }
 
-    match client.put(&path, &payload).await {
-        Ok(v) => output::ok_payload(v),
-        Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    let method_result = match client.post(&path, &payload).await {
+        Ok(v) => v,
+        Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    };
+
+    let Some(returned_doc) = method_result.pointer("/docs/0") else {
+        return output::ok_payload(method_result);
+    };
+    let returned_doctype = returned_doc
+        .pointer("/doctype")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let returned_name = returned_doc
+        .pointer("/name")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    if returned_doctype != doctype || returned_name != name {
+        return output::fail(
+            "shape",
+            &format!(
+                "controller method returned {returned_doctype} {returned_name}, expected {doctype} {name}"
+            ),
+            output::EXIT_API,
+        );
+    }
+
+    let document_path = format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    );
+    match client.put(&document_path, returned_doc).await {
+        Ok(saved) => output::ok_payload(saved),
+        Err(e) => output::fail_with_data(
+            e.kind(),
+            &format!("controller method ran but its returned document was not saved: {e}"),
+            json!({ "method_result": method_result }),
+            output::EXIT_API,
+        ),
     }
 }
 

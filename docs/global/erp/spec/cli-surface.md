@@ -68,7 +68,10 @@ Preview output for mutating commands contains:
   only be cancelled; deleting distinguishes itself from cancelling; converting names that
   a second conversion creates a second document.
 - `context` — site, company, identity, and privilege mode.
-- `operation` — the exact native request that would be sent: method, endpoint, and payload.
+- `operation` — the exact native request that starts apply: method, endpoint, and payload.
+- `persistence` — for a document controller method, the returned document is validated as
+  the requested record and saved as the second native step; the preview cannot show that
+  payload before the site runs the method.
 - `preflight` — findings from basic checks against live DocType metadata: unknown fields,
   missing mandatory fields, and invalid link targets, plus any lifecycle or permission
   conflict ERPNext reports without mutating.
@@ -127,6 +130,10 @@ non-zero exit.
   document back; a site that answers the request while leaving `docstatus` unchanged is
   reported as a failed transition, never as success. `workflow amend` builds the new draft
   carrying `amended_from` and applies only to a cancelled document.
+- `workflow method` invokes the site's whitelisted document controller. When the controller
+  returns a changed document, apply refuses a different doctype or name, saves that exact
+  returned document, and reports the stored result. A controller that ran but could not save
+  is a partial failure carrying the method result, never success.
 - `doc map` passes the source under every argument name the native mappers use, because the
   selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the
   site binds what its signature declares. Fields the mapper leaves empty — a delivery date,
