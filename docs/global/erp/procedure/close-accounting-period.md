@@ -58,9 +58,13 @@ mistake two dimension groups for duplication merely because they share an accoun
 
 ### 4. Prove the post-close reports
 
-Run the Profit and Loss, Trial Balance, and Balance Sheet for the closed boundary again. Require
-the closed income and expense balances, retained result, and report totals to agree with the
-voucher's entries. A submitted voucher or `Completed` processing flag is not sufficient without
+Run the General Ledger, Profit and Loss, Trial Balance, and Balance Sheet for the closed boundary
+again. In the General Ledger, require each closed income and expense balance to net to zero when
+the voucher is included, and require the closing account to receive the equal opposite result.
+The Profit and Loss report may continue to present the period's income, expenses, and profit as
+performance for that range; require its profit or loss to agree with the amount transferred by
+the voucher. Require the Trial Balance and Balance Sheet to agree with the resulting closing
+account balance. A submitted voucher or `Completed` processing flag is not sufficient without
 this report-level proof.
 
 ### 5. Lock accepted transaction types
