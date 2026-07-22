@@ -34,14 +34,21 @@ A fresh site refuses company creation until ERPNext's native setup wizard has ru
 wizard seeds the masters (warehouse types, fiscal year, chart of accounts) and creates the
 first company. Complete it as the site administrator with the company's grounded payload —
 name, abbreviation, country, currency, fiscal year, chart of accounts, timezone, no demo
-data. The step is repeatable: a completed wizard is skipped, and additional companies on a
-site are created as ordinary `Company` documents through the CLI's preview/apply flow.
+data. Resolve the chart of accounts through the site's native
+`get_charts_for_country` method and pass the exact returned identifier; a translated display
+fragment is not a template identifier. Treat the wizard as complete only after reading back
+the Company, fiscal year, and seeded masters. The step is repeatable: a completed and
+verified wizard is skipped, and additional companies on a site are created as ordinary
+`Company` documents through the CLI's preview/apply flow.
 
 ### 3. Configure the outgoing email account
 
-Configure the site's outgoing email account. ERPNext delivers person invitations, password
-resets, and business correspondence through it, so a site without it cannot invite anyone.
-Re-running the step against a configured account changes nothing.
+Confirm the site inherits the bench-wide outgoing sender and prove it with a received test
+message. ERPNext delivers person invitations, password resets, and business correspondence
+through this path, so onboarding does not continue on configuration presence alone. A
+company that supplies its own sender follows `apps/procedure/erpnext/email-account`; its
+site-local Email Account overrides the bench-wide fallback. Re-running either verification
+or an already-matching override changes nothing.
 
 ### 4. Review system settings
 
@@ -92,6 +99,15 @@ complete when every one of its steps is satisfied or deliberately skipped.
 ## Recovery
 
 - If key generation is repeated, treat it as rotation and update the company credential home.
+- If the setup endpoint reports success but the Company or seeded masters are absent, inspect
+  the site's setup error before continuing. Correct the grounded payload, clear only the
+  inconsistent setup-completion markers, and replay the native wizard; do not hand-build the
+  missing ERP records.
+- If the available chart list contains a qualified name such as
+  `Netherlands - Grootboekschema`, use that full identifier rather than its display fragment.
+- If invitation mail is not present in the outgoing queue or recipient inbox, the email step
+  is incomplete even when user creation succeeded; repair the sender and resend the native
+  password-reset message.
 - If an existing API secret cannot decrypt, inspect the site's encryption key before treating
   the operator credential as wrong.
 - If verification shows administrator authority on the operator, revoke the operator

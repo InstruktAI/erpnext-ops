@@ -29,7 +29,9 @@ companies of the business group, scope the user to the intended company's data.
 
 ### 3. Send the login email
 
-Trigger ERPNext's welcome or login email so the person can set credentials and sign in.
+Trigger ERPNext's welcome or password-reset email so the person can set credentials and sign
+in. Verify the message reaches the outgoing queue and the recipient; a successful User write
+does not prove mail delivery.
 
 ### 4. Verify access
 
@@ -43,8 +45,9 @@ Confirm the user can access the intended data and holds no roles beyond those as
 
 ## Recovery
 
-- If the email does not arrive, confirm ERPNext email configuration and resend the login
-  message.
+- If the email does not arrive, inspect the outgoing queue and site error log, confirm the
+  resolved sender is a plain email address with its display name configured separately, and
+  resend the native password-reset message after repair.
 - If access is too broad, disable the user or revoke roles until the permission scope is
   corrected.
 
