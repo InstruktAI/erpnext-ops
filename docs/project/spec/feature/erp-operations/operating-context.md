@@ -55,6 +55,7 @@ And the bootstrap `Administrator` identity is refused
 And no operator credential is used as fallback.
 <!-- /planned-change:erpnext-agent-admin-context -->
 
+<!-- planned-change:erpnext-agent-admin-context -->
 #### UC-4
 
 Scenario: Operator failure never falls back to administrator
@@ -62,6 +63,15 @@ Given a site-operator context is active and its credentials are rejected by the 
 When the agent runs any command
 Then the command fails with a structured authentication failure
 And no retry or fallback under administrator authority occurs.
+<!-- change:erpnext-agent-admin-context -->
+#### UC-4
+
+Scenario: Operator failure never falls back to administrator
+Given a site-operator context is active and its credentials are rejected by the site
+When the agent runs any command
+Then the command fails with a structured authentication failure
+And no retry or fallback under administrator authority occurs.
+<!-- /planned-change:erpnext-agent-admin-context -->
 
 #### UC-5
 

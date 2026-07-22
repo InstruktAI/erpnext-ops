@@ -18,6 +18,7 @@ surface is governed by `erp/spec/cli-surface`.
 
 ### Acceptance scenarios
 
+<!-- planned-change:erpnext-agent-admin-context -->
 #### UC-1
 
 Scenario: Doctor reports the operating ground truth
@@ -43,6 +44,33 @@ Scenario: Diagnostics never mutate
 Given any context
 When the agent runs `erpnext ops doctor`
 Then no document, setting, or activity record on the site is created or changed.
+<!-- change:erpnext-agent-admin-context -->
+#### UC-1
+
+Scenario: Doctor reports the operating ground truth
+Given an active site context
+When the agent runs `erpnext ops doctor`
+Then the structured output names the configured endpoint, the site it actually answers as,
+the authenticated identity, the selected company's presence on the site, the privilege
+mode, and whether operator and administrator credentials are kept separate
+And each check reports pass, fail, or indeterminate with a reason.
+
+#### UC-2
+
+Scenario: Doctor detects a broken or misconfigured context
+Given a context whose endpoint is unreachable, whose credentials are rejected, or whose
+selected company does not exist on the site
+When the agent runs `erpnext ops doctor`
+Then the affected checks fail with structured reasons naming the gap
+And the command exits non-zero without guessing a working configuration.
+
+#### UC-3
+
+Scenario: Diagnostics never mutate
+Given any context
+When the agent runs `erpnext ops doctor`
+Then no document, setting, or activity record on the site is created or changed.
+<!-- /planned-change:erpnext-agent-admin-context -->
 
 #### UC-4
 
