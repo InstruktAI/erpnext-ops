@@ -146,6 +146,16 @@ snippets:
   path: docs/erp/procedure/customer-invoice-and-payment.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/customer-receipt-allocation
+  description: Allocate a received customer payment across invoices, preserve any
+    excess as credit, and prove partial or complete settlement from native state.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/customer-receipt-allocation.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/procedure/offer-to-installation
   description: Playbook for a business moving from lead and proposal to procurement,
     installation, invoice, payment, and follow-up.

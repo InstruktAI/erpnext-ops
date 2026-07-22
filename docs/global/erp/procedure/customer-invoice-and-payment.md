@@ -69,6 +69,9 @@ invoice or carrying the same external payment reference before invoking the nati
 mapper. Preview the mapped payment, verify its party, bank or cash account, amount, allocation,
 and invoice reference, then apply and submit it.
 
+Compose `customer-receipt-allocation` when the receipt is partial, settles several invoices,
+or exceeds the current outstanding amount.
+
 Read the invoice and payment back. A fully paid invoice must report zero outstanding and a
 paid status. Its receivable debit and the payment's receivable credit must net to zero, while
 the payment posts the received amount to the intended bank or cash account.
@@ -105,4 +108,5 @@ from the last command an agent remembers running.
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
+- ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
 - ~/.teleclaude/docs/erp/procedure/project-work-to-invoice.md
