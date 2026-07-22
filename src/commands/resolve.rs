@@ -64,6 +64,17 @@ pub async fn document_resolution(
     doctype: &str,
     query: &str,
 ) -> Result<Resolution, ApiError> {
+    let meta = crate::commands::meta::fetch(client, doctype).await?;
+    if let Some(title_field) = meta
+        .pointer("/data/title_field")
+        .and_then(Value::as_str)
+        .filter(|field| !field.is_empty() && *field != "name")
+    {
+        return Ok(classify(
+            collect(client, doctype, title_field, query).await?,
+        ));
+    }
+
     let path = format!(
         "/api/v2/document/{}/{}",
         encode_segment(doctype),
@@ -154,5 +165,84 @@ fn render(outcome: Result<Resolution, ApiError>) -> i32 {
     match outcome {
         Ok(resolution) => output::ok(resolution.envelope()),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use httpmock::prelude::*;
+    use serde_json::json;
+    use url::Url;
+
+    use super::*;
+    use crate::config::{Context, Credentials, PrivilegeMode};
+
+    fn client_for(server: &MockServer) -> Client {
+        Client::new(Context {
+            site_url: Url::parse(&server.base_url()).expect("mock server url"),
+            company_slug: "test-co".into(),
+            company: None,
+            privilege: PrivilegeMode::Operator,
+            credentials: Credentials {
+                user: None,
+                api_key: "test-key".into(),
+                api_secret: "test-secret".into(),
+            },
+        })
+        .expect("client")
+    }
+
+    #[tokio::test]
+    async fn document_resolution_uses_the_live_title_field() {
+        let server = MockServer::start_async().await;
+        let meta = server.mock(|when, then| {
+            when.method(GET).path("/api/v2/doctype/Project/meta");
+            then.status(200).json_body(json!({
+                "data": { "title_field": "project_name" }
+            }));
+        });
+        let by_name = server.mock(|when, then| {
+            when.method(GET)
+                .path("/api/v2/document/Project")
+                .query_param(
+                    "filters",
+                    r#"[["Project","name","=","Sandbox Solar Installation"]]"#,
+                );
+            then.status(200).json_body(json!({ "data": [] }));
+        });
+        let by_title = server.mock(|when, then| {
+            when.method(GET)
+                .path("/api/v2/document/Project")
+                .query_param(
+                    "filters",
+                    r#"[["Project","project_name","=","Sandbox Solar Installation"]]"#,
+                );
+            then.status(200).json_body(json!({
+                "data": [{
+                    "name": "PROJ-0001",
+                    "project_name": "Sandbox Solar Installation"
+                }]
+            }));
+        });
+
+        let result = document_resolution(
+            &client_for(&server),
+            "Project",
+            "Sandbox Solar Installation",
+        )
+        .await
+        .expect("resolution");
+
+        assert_eq!(
+            result,
+            Resolution::Resolved(Reference {
+                doctype: "Project".into(),
+                name: "PROJ-0001".into(),
+                title: "Sandbox Solar Installation".into(),
+            })
+        );
+        meta.assert();
+        by_name.assert();
+        by_title.assert();
     }
 }
