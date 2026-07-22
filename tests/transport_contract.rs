@@ -913,7 +913,13 @@ async fn report_run_surfaces_its_finite_timeout_as_transport_failure() {
         accepted,
         "report request is accepted within bounded polling"
     );
-    tokio::time::advance(std::time::Duration::from_secs(121)).await;
+    tokio::time::advance(std::time::Duration::from_secs(31)).await;
+    tokio::task::yield_now().await;
+    assert!(
+        !run.is_finished(),
+        "report request remains live beyond the ordinary request timeout"
+    );
+    tokio::time::advance(std::time::Duration::from_secs(90)).await;
     let exit = tokio::time::timeout(std::time::Duration::from_secs(1), run)
         .await
         .expect("report task completes before the controlled deadline")
