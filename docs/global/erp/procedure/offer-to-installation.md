@@ -54,8 +54,10 @@ submitted Sales Order. A requested or promised deposit remains follow-up until r
 Record supplier commitments and purchase intent without increasing actual stock before goods
 arrive. Only receiving operations create received stock truth. Before the first receipt, verify
 that the operating identity has the purchase-master capability and that the effective configured
-inventory account for the warehouse or item resolves to a non-group ledger account. A chart group
-is not a transaction account. When resuming or billing partially, preserve the
+inventory account resolution mode. For item-wise accounting, the item, item group, or brand
+account must resolve to a non-group ledger account. Otherwise, the warehouse account hierarchy
+and company default must resolve to a non-group ledger account. A chart group is not a
+transaction account. When resuming or billing partially, preserve the
 mapper-produced per-row source links and adjust quantities on those rows; replacing the item
 list loses the links that ERPNext uses to track received, delivered, and billed quantities.
 
