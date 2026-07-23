@@ -52,7 +52,12 @@ submitted Sales Order. A requested or promised deposit remains follow-up until r
 ### 5. Handle procurement and stock carefully
 
 Record supplier commitments and purchase intent without increasing actual stock before goods
-arrive. Only receiving operations create received stock truth.
+arrive. Only receiving operations create received stock truth. Before the first receipt, verify
+that the operating identity has the purchase-master capability, that the warehouse resolves to
+a non-group inventory account, and that the company has a leaf default inventory account. A
+chart group is not a transaction account. When resuming or billing partially, preserve the
+mapper-produced per-row source links and adjust quantities on those rows; replacing the item
+list loses the links that ERPNext uses to track received, delivered, and billed quantities.
 
 ### 6. Complete, invoice, and collect
 
