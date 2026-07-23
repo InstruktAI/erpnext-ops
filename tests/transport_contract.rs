@@ -1,13 +1,17 @@
 use httpmock::prelude::*;
 use serde_json::{json, Value};
 use std::fs;
+use std::path::Path;
 use std::process::{Command, Output, Stdio};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
 use erpnext::commands;
 use erpnext::config::{Context, Credentials, PrivilegeMode};
 use erpnext::transport::{ApiError, Client};
+
+static TEST_HOME_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 fn context_for(server: &MockServer) -> Context {
     Context {
@@ -28,42 +32,519 @@ fn run_cli_against(server: &MockServer, args: &[&str]) -> Output {
 }
 
 fn run_cli_at(site_url: &str, args: &[&str]) -> Output {
-    let unique = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("clock after epoch")
-        .as_nanos();
-    let home = std::env::temp_dir().join(format!(
-        "erpnext-cli-contract-{}-{unique}",
-        std::process::id()
-    ));
-    let company_home = home.join(".teleclaude/companies/test-co");
-    fs::create_dir_all(&company_home).expect("test credential home");
-    fs::write(
-        company_home.join("erpnext.json"),
-        serde_json::to_vec(&json!({
-            "site_url": site_url,
-            "company": "Test Company",
-            "operator": {
-                "api_key": "test-key",
-                "api_secret": "test-secret"
-            }
-        }))
-        .expect("credential json"),
-    )
-    .expect("write credentials");
-
-    let output = Command::new(env!("CARGO_BIN_EXE_erpnext"))
-        .env("HOME", &home)
-        .args(["--company", "test-co"])
-        .args(args)
-        .output()
-        .expect("run erpnext CLI");
+    let home = test_home(site_url, false);
+    let output = run_cli_from_home(&home, args);
     fs::remove_dir_all(home).expect("remove test home");
     output
 }
 
+fn test_home(site_url: &str, include_admin: bool) -> std::path::PathBuf {
+    let unique = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("clock after epoch")
+        .as_nanos();
+    let sequence = TEST_HOME_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+    let home = std::env::temp_dir().join(format!(
+        "erpnext-cli-contract-{}-{unique}-{sequence}",
+        std::process::id(),
+    ));
+    let company_home = home.join(".teleclaude/companies/test-co");
+    fs::create_dir_all(&company_home).expect("test credential home");
+    let credentials = fixture_credentials(site_url, include_admin);
+    fs::write(
+        company_home.join("erpnext.json"),
+        serde_json::to_vec(&credentials).expect("credential json"),
+    )
+    .expect("write credentials");
+
+    home
+}
+
+fn fixture_credentials(site_url: &str, include_admin: bool) -> Value {
+    let mut credentials = json!({
+        "site_url": site_url,
+        "company": "Test Company",
+        "operator": {
+            "user": "operator@instrukt.ai",
+            "api_key": "test-key",
+            "api_secret": "test-secret"
+        }
+    });
+    if include_admin {
+        credentials["admin"] = json!({
+            "user": "agent-admin@instrukt.ai",
+            "api_key": "admin-key",
+            "api_secret": "admin-secret"
+        });
+    }
+    credentials
+}
+
+fn run_cli_from_home(home: &Path, args: &[&str]) -> Output {
+    let mut invocation = vec!["--company", "test-co"];
+    invocation.extend_from_slice(args);
+    run_cli_with_home(home, &invocation)
+}
+
+fn run_cli_with_home(home: &Path, args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_erpnext"))
+        .env("HOME", home)
+        .args(args)
+        .output()
+        .expect("run erpnext CLI")
+}
+
 fn json_output(bytes: &[u8]) -> Value {
     serde_json::from_slice(bytes).expect("machine-readable JSON envelope")
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-1
+fn context_show_exposes_the_selected_identity_without_credentials() {
+    let site_url = "https://context.erpnext.example";
+    let credentials = fixture_credentials(site_url, false);
+    let normalized_site_url = Url::parse(site_url).expect("fixture endpoint");
+    let home = test_home(site_url, false);
+
+    let selected = run_cli_with_home(&home, &["context", "use", "--company", "test-co"]);
+    assert!(selected.status.success(), "{selected:?}");
+
+    let shown = run_cli_from_home(&home, &["context", "show"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(shown.status.success(), "{shown:?}");
+    let envelope = json_output(&shown.stdout);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(true)));
+    assert_eq!(
+        envelope.pointer("/data/site_url"),
+        Some(&json!(normalized_site_url.as_str())),
+        "the public envelope reports the configured endpoint"
+    );
+    assert_eq!(
+        envelope.pointer("/data/company"),
+        credentials.pointer("/company"),
+        "the public envelope reports the selected company"
+    );
+    assert_eq!(
+        envelope.pointer("/data/identity"),
+        credentials.pointer("/operator/user"),
+        "the public envelope reports the configured operator identity"
+    );
+    assert_eq!(
+        envelope.pointer("/data/privilege"),
+        Some(&serde_json::to_value(PrivilegeMode::Operator).expect("serialized privilege")),
+        "the public envelope reports the selected privilege mode"
+    );
+    assert!(
+        !shown
+            .stdout
+            .windows(b"test-secret".len())
+            .any(|window| window == b"test-secret"),
+        "context output must never expose the API secret"
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-3
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-1
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-3
+fn explicit_admin_override_uses_only_admin_credentials_for_read_only_diagnostics() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let credentials = fixture_credentials(&site_url, true);
+    let home = test_home(&site_url, true);
+    let endpoint = Url::parse(&site_url).expect("fixture endpoint");
+
+    let ping = server.mock(|when, then| {
+        when.method(GET).path("/api/method/ping");
+        then.status(200).json_body(json!({ "message": "pong" }));
+    });
+    let admin_identity = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200)
+            .json_body(json!({ "message": "agent-admin@instrukt.ai" }));
+    });
+    let operator_identity = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token test-key:test-secret");
+        then.status(200)
+            .json_body(json!({ "message": "operator@instrukt.ai" }));
+    });
+    let admin_company = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Company/Test%20Company")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+    let writes = [POST, PUT, DELETE].map(|method| {
+        server.mock(move |when, then| {
+            when.method(method)
+                .path_matches(Regex::new(".*").expect("all paths"));
+            then.status(200).json_body(json!({}));
+        })
+    });
+
+    let selected = run_cli_with_home(&home, &["context", "use", "--company", "test-co"]);
+    assert!(selected.status.success(), "{selected:?}");
+
+    let doctor = run_cli_from_home(&home, &["--as", "admin", "ops", "doctor"]);
+    let shown = run_cli_from_home(&home, &["context", "show"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(doctor.status.success(), "{doctor:?}");
+    let envelope = json_output(&doctor.stdout);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(true)));
+    assert_eq!(
+        envelope.pointer("/data/endpoint"),
+        Some(&json!(endpoint.as_str())),
+        "doctor reports the configured endpoint"
+    );
+    assert_eq!(
+        envelope.pointer("/data/site"),
+        Some(&json!(endpoint.host_str().expect("fixture host"))),
+        "doctor reports the responding site"
+    );
+    assert_eq!(
+        envelope.pointer("/data/company"),
+        credentials.pointer("/company"),
+        "doctor reports the selected company"
+    );
+    assert_eq!(
+        envelope.pointer("/data/authenticated_identity"),
+        credentials.pointer("/admin/user"),
+        "doctor reports the authenticated admin identity"
+    );
+    assert_eq!(
+        envelope.pointer("/data/privilege"),
+        Some(&serde_json::to_value(PrivilegeMode::Admin).expect("serialized privilege")),
+        "doctor reports the explicit admin privilege"
+    );
+    assert_eq!(
+        envelope.pointer("/data/credential_separation"),
+        Some(&json!("pass")),
+        "doctor reports a passing credential-separation verdict"
+    );
+    assert!(
+        envelope
+            .pointer("/data/checks")
+            .and_then(Value::as_array)
+            .is_some(),
+        "doctor emits structured check results"
+    );
+    assert!(shown.status.success(), "{shown:?}");
+    assert_eq!(
+        json_output(&shown.stdout).pointer("/data/identity"),
+        credentials.pointer("/operator/user"),
+        "the per-invocation admin override does not replace the persisted operator context"
+    );
+    for output in [&doctor.stdout, &doctor.stderr, &shown.stdout, &shown.stderr] {
+        assert!(
+            !output
+                .windows(b"admin-secret".len())
+                .any(|window| window == b"admin-secret"),
+            "admin diagnostics and context output must never expose the API secret"
+        );
+    }
+    ping.assert();
+    admin_identity.assert();
+    admin_company.assert();
+    assert_eq!(
+        operator_identity.hits(),
+        0,
+        "operator credentials never reach admin diagnostics"
+    );
+    for write in writes {
+        assert_eq!(write.hits(), 0, "diagnostics remain read-only");
+    }
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-4
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-2
+fn rejected_operator_diagnostics_fail_without_an_admin_retry() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let home = test_home(&site_url, true);
+
+    let ping = server.mock(|when, then| {
+        when.method(GET).path("/api/method/ping");
+        then.status(200).json_body(json!({ "message": "pong" }));
+    });
+    let rejected_operator = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token test-key:test-secret");
+        then.status(401).json_body(json!({ "message": "rejected" }));
+    });
+    let unexpected_admin = server.mock(|when, then| {
+        when.method(GET)
+            .path_matches(Regex::new(".*").expect("all paths"))
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200).json_body(json!({}));
+    });
+
+    let selected = run_cli_with_home(&home, &["context", "use", "--company", "test-co"]);
+    assert!(selected.status.success(), "{selected:?}");
+    let doctor = run_cli_with_home(&home, &["ops", "doctor"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !doctor.status.success(),
+        "rejected credentials must fail the command"
+    );
+    let envelope = json_output(&doctor.stdout);
+    assert!(
+        envelope
+            .pointer("/data/checks")
+            .and_then(Value::as_array)
+            .is_some(),
+        "a rejected diagnostic context still reports structured checks"
+    );
+    assert!(
+        !doctor
+            .stdout
+            .windows(b"test-secret".len())
+            .any(|window| window == b"test-secret"),
+        "diagnostics never echo the rejected credential"
+    );
+    ping.assert();
+    rejected_operator.assert();
+    assert_eq!(
+        unexpected_admin.hits(),
+        0,
+        "operator failure cannot escalate to admin"
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-3
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-2
+fn diagnostics_fail_when_the_authenticated_admin_is_not_the_configured_user() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let home = test_home(&site_url, true);
+
+    server.mock(|when, then| {
+        when.method(GET).path("/api/method/ping");
+        then.status(200).json_body(json!({ "message": "pong" }));
+    });
+    let identity = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200)
+            .json_body(json!({ "message": "different-admin@instrukt.ai" }));
+    });
+    let company = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Company/Test%20Company")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+
+    let selected = run_cli_with_home(
+        &home,
+        &["context", "use", "--company", "test-co", "--as", "admin"],
+    );
+    assert!(selected.status.success(), "{selected:?}");
+    assert_eq!(
+        json_output(&selected.stdout).pointer("/data/privilege"),
+        Some(&serde_json::to_value(PrivilegeMode::Admin).expect("serialized privilege")),
+        "context use persists the requested admin privilege"
+    );
+    let doctor = run_cli_with_home(&home, &["ops", "doctor"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !doctor.status.success(),
+        "an identity mismatch must fail before the context is trusted"
+    );
+    let envelope = json_output(&doctor.stdout);
+    assert!(
+        envelope
+            .pointer("/data/authenticated_identity")
+            .and_then(Value::as_str)
+            .is_some_and(|identity| !identity.is_empty()),
+        "the structured diagnostic identifies the live user: {envelope}"
+    );
+    assert_eq!(
+        envelope.pointer("/data/credential_separation"),
+        Some(&json!("fail")),
+        "an identity mismatch reports a failed credential-separation verdict"
+    );
+    for output in [&doctor.stdout, &doctor.stderr] {
+        assert!(
+            !output
+                .windows(b"admin-secret".len())
+                .any(|window| window == b"admin-secret"),
+            "a failed admin diagnostic must never expose the API secret"
+        );
+    }
+    identity.assert();
+    company.assert();
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-3
+fn configured_bootstrap_admin_is_rejected_before_any_request() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let home = test_home(&site_url, true);
+    let mut credentials = fixture_credentials(&site_url, true);
+    credentials["admin"]["user"] = json!("Administrator");
+    fs::write(
+        home.join(".teleclaude/companies/test-co/erpnext.json"),
+        serde_json::to_vec(&credentials).expect("credential json"),
+    )
+    .expect("rewrite credentials");
+    let requests = server.mock(|when, then| {
+        when.path_matches(Regex::new(".*").expect("all paths"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let selected = run_cli_with_home(
+        &home,
+        &["context", "use", "--company", "test-co", "--as", "admin"],
+    );
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !selected.status.success(),
+        "configured bootstrap authority must be refused"
+    );
+    assert!(
+        json_output(&selected.stderr).pointer("/error").is_some(),
+        "the refusal is structured"
+    );
+    assert_eq!(
+        requests.hits(),
+        0,
+        "bootstrap refusal happens before any request"
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operating-context UC-3
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-2
+fn diagnostics_fail_when_the_live_site_reports_bootstrap_administrator() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let home = test_home(&site_url, true);
+    let ping = server.mock(|when, then| {
+        when.method(GET).path("/api/method/ping");
+        then.status(200).json_body(json!({ "message": "pong" }));
+    });
+    let identity = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200)
+            .json_body(json!({ "message": "Administrator" }));
+    });
+    let company = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Company/Test%20Company")
+            .header("Authorization", "token admin-key:admin-secret");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+
+    let selected = run_cli_with_home(
+        &home,
+        &["context", "use", "--company", "test-co", "--as", "admin"],
+    );
+    assert!(selected.status.success(), "{selected:?}");
+    let doctor = run_cli_with_home(&home, &["ops", "doctor"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !doctor.status.success(),
+        "live bootstrap authentication must never establish an admin context"
+    );
+    assert!(
+        json_output(&doctor.stdout)
+            .pointer("/data/authenticated_identity")
+            .and_then(Value::as_str)
+            .is_some_and(|identity| !identity.is_empty()),
+        "the diagnostic exposes the live identity without exposing credentials"
+    );
+    ping.assert();
+    identity.assert();
+    company.assert();
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-2
+fn diagnostics_fail_when_the_selected_company_is_missing_from_the_site() {
+    let server = MockServer::start();
+    let site_url = server.base_url().replace("127.0.0.1", "localhost");
+    let home = test_home(&site_url, false);
+    let ping = server.mock(|when, then| {
+        when.method(GET).path("/api/method/ping");
+        then.status(200).json_body(json!({ "message": "pong" }));
+    });
+    let identity = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/method/frappe.auth.get_logged_user")
+            .header("Authorization", "token test-key:test-secret");
+        then.status(200)
+            .json_body(json!({ "message": "operator@instrukt.ai" }));
+    });
+    let missing_company = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Company/Test%20Company")
+            .header("Authorization", "token test-key:test-secret");
+        then.status(404).json_body(json!({ "message": "missing" }));
+    });
+
+    let selected = run_cli_with_home(&home, &["context", "use", "--company", "test-co"]);
+    assert!(selected.status.success(), "{selected:?}");
+    let doctor = run_cli_with_home(&home, &["ops", "doctor"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !doctor.status.success(),
+        "a missing selected company must fail diagnostics"
+    );
+    assert!(
+        json_output(&doctor.stdout)
+            .pointer("/data/checks")
+            .and_then(Value::as_array)
+            .is_some(),
+        "the missing company result remains structured"
+    );
+    ping.assert();
+    identity.assert();
+    missing_company.assert();
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/operational-diagnostics UC-2
+fn diagnostics_fail_when_the_configured_endpoint_is_unreachable() {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("reserve endpoint port");
+    let address = listener.local_addr().expect("reserved endpoint address");
+    drop(listener);
+    let site_url = format!("http://localhost:{}", address.port());
+    let home = test_home(&site_url, false);
+
+    let selected = run_cli_with_home(&home, &["context", "use", "--company", "test-co"]);
+    assert!(selected.status.success(), "{selected:?}");
+    let doctor = run_cli_with_home(&home, &["ops", "doctor"]);
+    fs::remove_dir_all(home).expect("remove test home");
+
+    assert!(
+        !doctor.status.success(),
+        "an unreachable configured endpoint must fail diagnostics"
+    );
+    assert!(
+        json_output(&doctor.stdout)
+            .pointer("/data/checks")
+            .and_then(Value::as_array)
+            .is_some(),
+        "the transport failure remains structured"
+    );
 }
 
 #[tokio::test]

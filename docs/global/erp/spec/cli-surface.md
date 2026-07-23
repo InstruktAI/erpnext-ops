@@ -21,15 +21,10 @@ the CLI contract below, not raw transport mechanics.
 
 ## Canonical fields
 
-<!-- planned-change:erpnext-agent-admin-context -->
-- Every command accepts `--company <company-slug>` or `--site <fqdn>` to operate that
-  context for one invocation without changing the persisted selection.
-<!-- change:erpnext-agent-admin-context -->
 - Every command accepts `--company <company-slug>` or `--site <fqdn>` and
   `--as operator|admin` to operate that context and privilege for one invocation without
   changing the persisted selection. Invocation overrides default to operator authority;
   admin authority is always explicit.
-<!-- /planned-change:erpnext-agent-admin-context -->
 - `erpnext context show`
 - `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
   at least one selector; the selection persists and credentials resolve from the company
@@ -90,16 +85,10 @@ non-zero exit.
 ## Known caveats
 
 - The site is the tenant boundary; company selection scopes accounting inside the site.
-<!-- planned-change:erpnext-agent-admin-context -->
-- Routine work runs as the site operator; an operator failure never falls back to
-  administrator authority. Administrator context selection is refused in this release —
-  administrator bootstrap secrets live only in itsUP.
-<!-- change:erpnext-agent-admin-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
   company-scoped agent-admin identity. The bootstrap `Administrator` identity and its
   deployment secret remain unavailable to the CLI.
-<!-- /planned-change:erpnext-agent-admin-context -->
 - Mutating commands preview by default; `--apply` sends the native operation and reports
   ERPNext's result.
 - Create and update commands check payload fields against live DocType metadata before

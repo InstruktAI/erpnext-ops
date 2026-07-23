@@ -8,6 +8,8 @@ use crate::transport::Client;
 pub async fn doctor(client: &Client) -> i32 {
     let mut checks: Vec<Value> = Vec::new();
     let mut failed = false;
+    let mut authenticated_identity: Option<String> = None;
+    let mut credential_separation = "indeterminate";
 
     // 1. Endpoint answers.
     match client.ping().await {
@@ -21,14 +23,17 @@ pub async fn doctor(client: &Client) -> i32 {
     // 2. Credentials authenticate; report the identity the site sees.
     match client.whoami().await {
         Ok(user) => {
+            authenticated_identity = Some(user.clone());
             checks.push(check("authenticated_identity", "pass", &user));
             // 3. Privilege separation: the configured identity must be the identity
             // the site authenticated, and bootstrap Administrator is never accepted.
             if let Err(e) = crate::config::validate_authenticated_identity(client.context(), &user)
             {
                 failed = true;
+                credential_separation = "fail";
                 checks.push(check("credential_separation", "fail", &e.to_string()));
             } else {
+                credential_separation = "pass";
                 checks.push(check(
                     "credential_separation",
                     "pass",
@@ -79,7 +84,16 @@ pub async fn doctor(client: &Client) -> i32 {
     } else {
         output::EXIT_OK
     };
-    let output_exit = output::ok(json!({ "verdict": verdict, "checks": checks }));
+    let output_exit = output::ok(json!({
+        "endpoint": client.context().site_url.as_str(),
+        "site": client.context().site(),
+        "company": client.context().company,
+        "privilege": client.context().privilege,
+        "authenticated_identity": authenticated_identity,
+        "credential_separation": credential_separation,
+        "verdict": verdict,
+        "checks": checks,
+    }));
     if failed {
         exit
     } else {
