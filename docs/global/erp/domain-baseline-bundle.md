@@ -129,6 +129,10 @@ site provisioning; the CLI operates an already-provisioned site.
 - **Business flow.** Business outcomes are achieved by composing CLI primitives and ERP
   procedures. The common selling lane is Lead/Customer -> Quotation -> Sales Order ->
   Sales Invoice -> Payment Entry.
+- **Outward integration.** Reflecting ERP state to an external system is the job of an
+  adapter — one kind of company-coupled app in the company `apps/` home
+  (see `general/concept/company-knowledge`), running outside the tenant site. ERP is the
+  system of record; projections flow one way, never a bidirectional sync into the site.
 
 ## Why
 
