@@ -50,8 +50,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/operating-context.md
   visibility: internal
-  superseded_by:
-  - erpnext-agent-admin-context
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/operational-diagnostics
   description: "Read-only diagnosis of the CLI's operating ground \u2014 endpoint,\
@@ -62,8 +60,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/operational-diagnostics.md
   visibility: internal
-  superseded_by:
-  - erpnext-agent-admin-context
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/reference-resolution
   description: Deterministic resolution of parties, items, and documents from business
