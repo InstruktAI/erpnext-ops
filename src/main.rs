@@ -90,6 +90,9 @@ enum ContextCommand {
         /// Company slug in the TeleClaude company registry
         #[arg(long)]
         company: Option<String>,
+        /// Privilege identity to persist for the selected context
+        #[arg(long = "as")]
+        privilege: Option<PrivilegeMode>,
     },
 }
 
@@ -351,11 +354,17 @@ async fn main() {
                 Ok(ctx) => commands::context::show(&ctx),
                 Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),
             },
-            ContextCommand::Use { site, company } => match config::select(
+            ContextCommand::Use {
+                site,
+                company,
+                privilege,
+            } => match config::select(
                 &paths,
                 site.as_deref(),
                 company.as_deref(),
-                cli.privilege.unwrap_or(PrivilegeMode::Operator),
+                privilege
+                    .or(cli.privilege)
+                    .unwrap_or(PrivilegeMode::Operator),
             ) {
                 Ok(ctx) => commands::context::show(&ctx),
                 Err(e) => output::fail("config", &e.to_string(), output::EXIT_CONFIG),

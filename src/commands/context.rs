@@ -11,6 +11,7 @@ pub fn show(ctx: &Context) -> i32 {
         "site_url": ctx.site_url.as_str(),
         "company_slug": ctx.company_slug,
         "company": ctx.company,
+        "identity": ctx.credentials.user,
         "privilege": ctx.privilege,
         "credential_home": format!("~/.teleclaude/companies/{}/erpnext.json", ctx.company_slug),
     }))

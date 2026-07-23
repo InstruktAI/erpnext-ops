@@ -7,16 +7,10 @@ activation_trigger: Use when a business, legal company, or operating entity must
 
 ## Goal
 
-<!-- planned-change:erpnext-agent-admin-context -->
-A company is operable on its own ERPNext site: the site exists on the bench, the Company
-record exists inside it, and a dedicated operator identity with stored credentials performs
-routine work.
-<!-- change:erpnext-agent-admin-context -->
 A company is operable on its own ERPNext site: the site exists on the bench, the Company
 record exists inside it, a dedicated operator identity performs routine work, and a distinct
 agent-admin identity performs explicit administrative work without exposing the bootstrap
 `Administrator` identity.
-<!-- /planned-change:erpnext-agent-admin-context -->
 
 ## Preconditions
 
@@ -85,19 +79,11 @@ output. Re-generation is rotation: update the credential home in the same pass.
 
 ### 8. Store the operator credentials
 
-<!-- planned-change:erpnext-agent-admin-context -->
-Record the site base URL, company name, operator API key, and operator API secret in the
-company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
-readable only by its owner. Writing it is idempotent — the entry is the single source the
-CLI resolves at command time. Do not copy administrator credentials there — administrator
-bootstrap secrets live only in itsUP.
-<!-- change:erpnext-agent-admin-context -->
 Record the site base URL, company name, operator API key, and operator API secret in the
 company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
 readable only by its owner. Writing it is idempotent — the entry is the single source the
 CLI resolves at command time. The bootstrap `Administrator` credential remains only in
 itsUP and is never written to the company credential home.
-<!-- /planned-change:erpnext-agent-admin-context -->
 
 ### 9. Verify the operator identity
 
@@ -110,7 +96,6 @@ People other than the operator are invited through
 carries. The site's own Getting Started checklist enumerates this same ground; onboarding is
 complete when every one of its steps is satisfied or deliberately skipped.
 
-<!-- planned:erpnext-agent-admin-context -->
 ### 10. Create the dedicated agent-admin user
 
 Use the infrastructure-held bootstrap `Administrator` identity once to create a distinct
@@ -134,7 +119,6 @@ Run `erpnext ops doctor` once under operator authority and once with explicit ad
 Each result names the live authenticated identity, selected company, privilege mode, and
 credential-separation verdict. On mismatch, missing credentials, or bootstrap
 `Administrator` authentication, onboarding fails closed before administrative work begins.
-<!-- /planned:erpnext-agent-admin-context -->
 
 ## Outputs
 
@@ -147,11 +131,9 @@ credential-separation verdict. On mismatch, missing credentials, or bootstrap
 - Site operator user with API credentials stored in the company credential home.
 - Verified operator identity.
 
-<!-- planned:erpnext-agent-admin-context -->
 - Dedicated agent-admin user with separately stored API credentials.
 - Verified operator and agent-admin identities, with bootstrap `Administrator` absent from
   the operating credential home.
-<!-- /planned:erpnext-agent-admin-context -->
 
 ## Recovery
 
@@ -173,38 +155,25 @@ credential-separation verdict. On mismatch, missing credentials, or bootstrap
   (`apps/procedure/operate-a-deployed-app`) — site availability is app infrastructure, not
   ERP work.
 
-<!-- planned:erpnext-agent-admin-context -->
 - If the configured agent-admin authenticates as another user or as bootstrap
   `Administrator`, stop before mutation, revoke the suspect credential, and repeat the
   dedicated-user provisioning and verification steps.
 - If agent-admin key generation is repeated, treat it as rotation and replace only the admin
   entry in the company credential home in the same pass.
-<!-- /planned:erpnext-agent-admin-context -->
 
 ## Discipline
 
-<!-- planned-change:erpnext-agent-admin-context -->
-This procedure crosses the strongest privilege boundary in ERP operations. Administrator
-authority exists only to bootstrap the site and create the scoped operator; it is not the
-operating identity for business work. State lives where it belongs: site deployment in
-itsUP, operating credentials in the TeleClaude company registry. Verify
-the operator identity before declaring the company operable. Never echo secrets into chat,
-logs, or shell history.
-<!-- change:erpnext-agent-admin-context -->
 This procedure crosses the strongest privilege boundary in ERP operations. Bootstrap
 `Administrator` authority exists only in infrastructure custody; explicit administrative
 work uses the dedicated agent-admin identity, and routine work uses the operator. State
 lives where it belongs: site deployment and bootstrap recovery in itsUP, operating
 credentials in the TeleClaude company registry. Verify both identities before declaring
 the company operable. Never echo secrets into chat, logs, or shell history.
-<!-- /planned-change:erpnext-agent-admin-context -->
 
 ## See Also
 
 - ~/.teleclaude/docs/erp/concept/multi-tenancy.md
 - ~/.teleclaude/docs/erp/procedure/person-onboarding.md
-<!-- planned:erpnext-agent-admin-context -->
 - https://docs.frappe.io/framework/user/en/api/rest
 - https://docs.frappe.io/erpnext/administrator
 - https://docs.aws.amazon.com/IAM/latest/UserGuide/root-user-best-practices.html
-<!-- /planned:erpnext-agent-admin-context -->
