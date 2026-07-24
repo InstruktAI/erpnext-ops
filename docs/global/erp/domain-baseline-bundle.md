@@ -1,58 +1,5 @@
 # erp — Platform Baseline
 
-# Determinate Autonomy — Principle
-
-## Principle
-
-ERP agents proceed autonomously whenever the correct business action is determined from
-evidence, company configuration, party preferences, templates, ERPNext state, and standard ERP
-practice. They surface work to a human only when the human holds missing decision input that
-the system cannot infer or obtain itself.
-
-Importance is not a reason to stop. Financial, stock, customer, supplier, and project work
-continue autonomously when the facts and business rule are clear. The agent's job is to keep
-operating until it reaches a genuine decision boundary.
-
-## Rationale
-
-Small-business owners do not want to approve routine work because it feels important to the
-machine. They want the system to handle standard operations, preserve overview, and interrupt
-only when their business intent is actually needed.
-
-ERPNext already encodes many standard flows. The `erpnext` CLI adds context resolution,
-metadata preflight, preview/apply, activity capture, templates, and open-loop tracking. Those
-mechanisms exist so agents can act, not so they can manufacture approval gates.
-
-## Implications
-
-- A clean preview is planning evidence for the agent, not a human approval request.
-- The agent first resolves uncertainty itself through ERPNext state, company configuration,
-  party notes, templates, evidence, and activity history.
-- Routine internal writes, draft records, trace capture, follow-ups, receipts, invoices,
-  payments, and templated communications proceed when the required facts are present and the
-  applicable business rule is clear.
-- Freeform outbound expression is different from templated communication. It remains a draft
-  unless company configuration and accumulated trust explicitly delegate that class.
-- Indeterminate work becomes an open loop or a focused question. The question names the missing
-  decision, not the whole operation.
-- Company configuration records durable delegation and preferences. It does not ask humans to
-  ratify basic ERP competence.
-
-## Tensions
-
-- **Autonomy vs guessing.** Proceeding autonomously is correct only when the business action is
-  determined. Missing facts, ambiguous targets, conflicting evidence, or absent business intent
-  are decision boundaries.
-- **Preview vs permission.** Preview exists to expose consequences before apply. It becomes
-  human-facing only when consequences reveal a missing decision.
-- **Templates vs freeform language.** Approved templates are deterministic automation. Custom
-  intelligence-written external messages are expressive acts and start as drafts.
-- **Configuration vs rigidity.** Configuration captures durable business preferences and party
-  handling. It should make routine autonomy more predictable, not turn normal work into a gate
-  matrix.
-
----
-
 # Business Input Traceability — Principle
 
 ## Principle
@@ -104,96 +51,56 @@ the later state exists.
 
 ---
 
-# ERP Operation Model — Concept
+# Determinate Autonomy — Principle
 
-## What
+## Principle
 
-Agents operate ERPNext through the `erpnext` CLI against per-tenant Frappe sites. The site
-is the tenant boundary; companies inside a site are legal and accounting scopes. itsUP owns
-site provisioning; the CLI operates an already-provisioned site.
+ERP agents proceed autonomously whenever the correct business action is determined from
+evidence, company configuration, party preferences, templates, ERPNext state, and standard ERP
+practice. They surface work to a human only when the human holds missing decision input that
+the system cannot infer or obtain itself.
 
-- **Operating surface.** The `erpnext` CLI is the agent-facing surface for context, metadata,
-  resolution, document operations, workflows, activity trails, evidence, reports, imports, and
-  operational checks. Agents do not operate ERPNext by composing raw HTTP calls.
-- **Substrate.** The CLI wraps Frappe's v2 REST abstraction. That substrate explains the generic
-  document model, but it is not the normal instruction surface for agents.
-- **Truth at runtime.** Field lists, mandatory flags, link targets, child tables, and custom
-  fields are read through the CLI from the live site. Memory supplies the pattern; the site
-  supplies the exact contract.
-- **Preview by default.** Mutating CLI commands show the exact context and native operation
-  that would be sent before anything is sent. Applying sends that operation and reports
-  ERPNext's result. The CLI does not simulate ERPNext.
-- **Identity.** Site administrative setup uses the site's administrator identity. Routine
-  business work uses the site's operator identity. Person access uses ERPNext users
-  permission-scoped on the site.
-- **Business flow.** Business outcomes are achieved by composing CLI primitives and ERP
-  procedures. The common selling lane is Lead/Customer -> Quotation -> Sales Order ->
-  Sales Invoice -> Payment Entry.
-- **Outward integration.** Reflecting ERP state to an external system is the job of an
-  adapter — one kind of company-coupled app in the company `apps/` home
-  (see `general/concept/company-knowledge`), running outside the tenant site. ERP is the
-  system of record; projections flow one way, never a bidirectional sync into the site.
+Importance is not a reason to stop. Financial, stock, customer, supplier, and project work
+continue autonomously when the facts and business rule are clear. The agent's job is to keep
+operating until it reaches a genuine decision boundary.
 
-## Why
+## Rationale
 
-Per-tenant sites keep operations lightweight while making tenant isolation structural in the
-system of record. ERPNext is dynamic: installed apps, custom fields, workflows, and
-permissions change the live shape of each site. The CLI absorbs that looseness into a safe
-operating surface so agents can rely on preview, metadata preflight, context resolution,
-activity capture, and structured failures instead of carrying those mechanics in every
-procedure.
+Small-business owners do not want to approve routine work because it feels important to the
+machine. They want the system to handle standard operations, preserve overview, and interrupt
+only when their business intent is actually needed.
 
-## See Also
+ERPNext already encodes many standard flows. The `erpnext` CLI adds context resolution,
+metadata preflight, preview/apply, activity capture, templates, and open-loop tracking. Those
+mechanisms exist so agents can act, not so they can manufacture approval gates.
 
-- ~/.teleclaude/docs/erp/concept/multi-tenancy.md
-- ~/.teleclaude/docs/erp/concept/business-activity-trail.md
-- ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
-- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/spec/company-layout.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+## Implications
 
----
+- A clean preview is planning evidence for the agent, not a human approval request.
+- The agent first resolves uncertainty itself through ERPNext state, company configuration,
+  party notes, templates, evidence, and activity history.
+- Routine internal writes, draft records, trace capture, follow-ups, receipts, invoices,
+  payments, and templated communications proceed when the required facts are present and the
+  applicable business rule is clear.
+- Freeform outbound expression is different from templated communication. It remains a draft
+  unless company configuration and accumulated trust explicitly delegate that class.
+- Indeterminate work becomes an open loop or a focused question. The question names the missing
+  decision, not the whole operation.
+- Company configuration records durable delegation and preferences. It does not ask humans to
+  ratify basic ERP competence.
 
-# ERP Multi-Tenancy — Concept
+## Tensions
 
-## What
-
-Each tenant runs on its own Frappe site: a dedicated FQDN and a dedicated logical database
-with its own scoped database user on the shared database server. One bench — one deployment
-of the app processes and one MariaDB service — hosts many sites; Frappe resolves the site
-from the request's Host header. itsUP provisions sites (database, files, routing, DNS)
-through GitOps.
-
-The site is the isolation boundary. An ERPNext `Company` inside a site is a legal and
-accounting scope: a business group may operate several companies in one site with
-consolidated accounting and shared masters. Company is never the tenancy mechanism.
-
-Identities are site-scoped:
-
-- **Site administrator** — bootstrap and administrative setup on one site: creating
-  companies, users, and scoped credentials. Administrator credentials never leave the
-  site's administrative context.
-- **Site operator agent** — an ERPNext user plus API credentials on the site, used for
-  routine business operations with the roles it needs and never administrator authority.
-- **Human users** — ERPNext users on the site, permission-scoped to the roles and data they
-  need.
-
-## Why
-
-Company-based isolation inside one shared site rides on opt-in permission filtering, leaks
-through shared masters, reports, and link searches, and needs continuous behavioral proof to
-trust. Site-per-tenant makes isolation structural: a site's database connection can only
-reach its own schema, so no ERPNext permission misconfiguration can cross tenants, and a
-leaked operator secret exposes one site rather than the fleet. The marginal cost of a tenant
-is a schema, a site entry, and a DNS route — no additional containers. This mirrors the
-vendor's own production architecture: Frappe Cloud hosts one site per tenant on shared
-benches backed by MariaDB.
-
-## See Also
-
-- ~/.teleclaude/docs/erp/procedure/company-onboarding.md
-- ~/.teleclaude/docs/erp/procedure/person-onboarding.md
-- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
+- **Autonomy vs guessing.** Proceeding autonomously is correct only when the business action is
+  determined. Missing facts, ambiguous targets, conflicting evidence, or absent business intent
+  are decision boundaries.
+- **Preview vs permission.** Preview exists to expose consequences before apply. It becomes
+  human-facing only when consequences reveal a missing decision.
+- **Templates vs freeform language.** Approved templates are deterministic automation. Custom
+  intelligence-written external messages are expressive acts and start as drafts.
+- **Configuration vs rigidity.** Configuration captures durable business preferences and party
+  handling. It should make routine autonomy more predictable, not turn normal work into a gate
+  matrix.
 
 ---
 
@@ -275,6 +182,99 @@ preview/apply loop.
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
+- ~/.teleclaude/docs/erp/spec/cli-surface.md
+
+---
+
+# ERP Multi-Tenancy — Concept
+
+## What
+
+Each tenant runs on its own Frappe site: a dedicated FQDN and a dedicated logical database
+with its own scoped database user on the shared database server. One bench — one deployment
+of the app processes and one MariaDB service — hosts many sites; Frappe resolves the site
+from the request's Host header. itsUP provisions sites (database, files, routing, DNS)
+through GitOps.
+
+The site is the isolation boundary. An ERPNext `Company` inside a site is a legal and
+accounting scope: a business group may operate several companies in one site with
+consolidated accounting and shared masters. Company is never the tenancy mechanism.
+
+Identities are site-scoped:
+
+- **Site administrator** — bootstrap and administrative setup on one site: creating
+  companies, users, and scoped credentials. Administrator credentials never leave the
+  site's administrative context.
+- **Site operator agent** — an ERPNext user plus API credentials on the site, used for
+  routine business operations with the roles it needs and never administrator authority.
+- **Human users** — ERPNext users on the site, permission-scoped to the roles and data they
+  need.
+
+## Why
+
+Company-based isolation inside one shared site rides on opt-in permission filtering, leaks
+through shared masters, reports, and link searches, and needs continuous behavioral proof to
+trust. Site-per-tenant makes isolation structural: a site's database connection can only
+reach its own schema, so no ERPNext permission misconfiguration can cross tenants, and a
+leaked operator secret exposes one site rather than the fleet. The marginal cost of a tenant
+is a schema, a site entry, and a DNS route — no additional containers. This mirrors the
+vendor's own production architecture: Frappe Cloud hosts one site per tenant on shared
+benches backed by MariaDB.
+
+## See Also
+
+- ~/.teleclaude/docs/erp/procedure/company-onboarding.md
+- ~/.teleclaude/docs/erp/procedure/person-onboarding.md
+- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
+
+---
+
+# ERP Operation Model — Concept
+
+## What
+
+Agents operate ERPNext through the `erpnext` CLI against per-tenant Frappe sites. The site
+is the tenant boundary; companies inside a site are legal and accounting scopes. itsUP owns
+site provisioning; the CLI operates an already-provisioned site.
+
+- **Operating surface.** The `erpnext` CLI is the agent-facing surface for context, metadata,
+  resolution, document operations, workflows, activity trails, evidence, reports, imports, and
+  operational checks. Agents do not operate ERPNext by composing raw HTTP calls.
+- **Substrate.** The CLI wraps Frappe's v2 REST abstraction. That substrate explains the generic
+  document model, but it is not the normal instruction surface for agents.
+- **Truth at runtime.** Field lists, mandatory flags, link targets, child tables, and custom
+  fields are read through the CLI from the live site. Memory supplies the pattern; the site
+  supplies the exact contract.
+- **Preview by default.** Mutating CLI commands show the exact context and native operation
+  that would be sent before anything is sent. Applying sends that operation and reports
+  ERPNext's result. The CLI does not simulate ERPNext.
+- **Identity.** Site administrative setup uses the site's administrator identity. Routine
+  business work uses the site's operator identity. Person access uses ERPNext users
+  permission-scoped on the site.
+- **Business flow.** Business outcomes are achieved by composing CLI primitives and ERP
+  procedures. The common selling lane is Lead/Customer -> Quotation -> Sales Order ->
+  Sales Invoice -> Payment Entry.
+- **Outward integration.** Reflecting ERP state to an external system is the job of an
+  adapter — one kind of company-coupled app in the company `apps/` home
+  (see `general/concept/company-knowledge`), running outside the tenant site. ERP is the
+  system of record; projections flow one way, never a bidirectional sync into the site.
+
+## Why
+
+Per-tenant sites keep operations lightweight while making tenant isolation structural in the
+system of record. ERPNext is dynamic: installed apps, custom fields, workflows, and
+permissions change the live shape of each site. The CLI absorbs that looseness into a safe
+operating surface so agents can rely on preview, metadata preflight, context resolution,
+activity capture, and structured failures instead of carrying those mechanics in every
+procedure.
+
+## See Also
+
+- ~/.teleclaude/docs/erp/concept/multi-tenancy.md
+- ~/.teleclaude/docs/erp/concept/business-activity-trail.md
+- ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
+- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
+- ~/.teleclaude/docs/erp/spec/company-layout.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 
 ---
@@ -361,6 +361,7 @@ None.
 ## Domain baseline index — load via `telec docs get <id>` when relevant
 
 - `erp/spec/cli-surface` — Agent-facing erpnext CLI command surface for operating per-tenant ERPNext sites.
+- `erp/spec/company-layout` — Site and company identity and credential layout for operating per-tenant ERPNext sites.
 
 ## Activatable Procedures — load via `telec docs get <id>` before acting
 

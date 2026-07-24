@@ -1,6 +1,16 @@
 project_root: ~/Workspace/InstruktAI/erpnext-ops
 snippets_root: ~/Workspace/InstruktAI/erpnext-ops/docs/project
 snippets:
+- id: project/principle/generic-cli-substrate
+  description: Keep the erpnext CLI generic over native Frappe and ERPNext mechanisms;
+    express business scenarios by composing those primitives in procedures.
+  type: principle
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/principle/generic-cli-substrate.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/activity-trail
   description: Capture, recall, and follow-up over business activity and evidence
     as thin operations on native Frappe and ERPNext records.

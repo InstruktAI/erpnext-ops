@@ -84,8 +84,8 @@ for the relevant date and voucher. For a full settlement, require:
 - equal total debits and credits.
 
 Carry bank clearance as a separate fact. When a Bank Transaction exists for the movement,
-compose the bank-reconciliation procedure rather than treating Payment Entry submission as
-clearance evidence.
+require native ERPNext reconciliation state before treating the payment as cleared; otherwise
+leave bank clearance as an open loop.
 
 ## Outputs
 
