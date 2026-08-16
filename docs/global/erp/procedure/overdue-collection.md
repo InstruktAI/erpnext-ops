@@ -108,8 +108,4 @@ authorized, and every resolution tied back to native receivable and ledger state
 
 ## See Also
 
-- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/concept/business-activity-trail.md
-- ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
 - ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
-- ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
