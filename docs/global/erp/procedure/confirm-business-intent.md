@@ -1,6 +1,6 @@
 ---
 description: Reframe unresolved human business intent once, obtain plain-language approval, and apply only the approved outcome.
-activation_trigger: Use when a human instruction would create, submit, cancel, delete, send, or materially change business state and a wrong interpretation would matter.
+activation_trigger: Use when a human instruction would create, submit, cancel, delete, send, or materially change business state and evidence, configuration, party preferences, templates, ERPNext state, and standard ERP practice do not determine the full business outcome.
 ---
 # Confirm Business Intent — Procedure
 

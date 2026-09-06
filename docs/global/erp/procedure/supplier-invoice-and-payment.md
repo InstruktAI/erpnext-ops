@@ -1,5 +1,6 @@
 ---
 description: Pay a submitted supplier invoice through a source-linked Payment Entry and prove the payable and bank ledger effects from native state.
+activation_trigger: Use when a submitted Purchase Invoice is approved for payment and the supplier must be paid through a source-linked Payment Entry with proven payable and bank ledger effects.
 ---
 # Supplier Invoice And Payment — Procedure
 

@@ -78,7 +78,9 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a reporting period has ended and its figures must be
+    accepted, its profit or loss transferred to the closing account, and its transaction
+    types locked against later change.
   path: docs/erp/procedure/close-accounting-period.md
   visibility: internal
   source_project: erpnext-ops
@@ -100,7 +102,9 @@ snippets:
   scope: global
   domain: erp
   activation_trigger: Use when a human instruction would create, submit, cancel, delete,
-    send, or materially change business state and a wrong interpretation would matter.
+    send, or materially change business state and evidence, configuration, party preferences,
+    templates, ERPNext state, and standard ERP practice do not determine the full
+    business outcome.
   path: docs/erp/procedure/confirm-business-intent.md
   visibility: internal
   source_project: erpnext-ops
@@ -122,7 +126,9 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a customer has actually paid money before final billing
+    and the receipt must be recorded against a submitted Sales Order and carried into
+    the eventual invoice.
   path: docs/erp/procedure/customer-advance-to-invoice.md
   visibility: internal
   source_project: erpnext-ops
@@ -132,18 +138,21 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a submitted customer invoice must be corrected in whole
+    or in part and plain cancellation is not available or a durable credit note is
+    required, ending in retained credit or a refund.
   path: docs/erp/procedure/customer-credit-and-refund.md
   visibility: internal
   source_project: erpnext-ops
 - id: erp/procedure/customer-early-payment-discount
   description: Settle a customer invoice under an agreed early-payment discount, using
-    the receipt date to prove eligibility and preserving the discount as an explicit
-    ledger effect.
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a customer pays less than an invoice's face value under
+    accepted payment terms that grant a discount for receipt by a stated date. the
+    receipt date to prove eligibility and preserving the discount as an explicit ledger
+    effect.
   path: docs/erp/procedure/customer-early-payment-discount.md
   visibility: internal
   source_project: erpnext-ops
@@ -153,7 +162,9 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a real customer billing event must become a submitted
+    invoice with a proven ledger effect, and when money received for it must be settled
+    through a linked payment.
   path: docs/erp/procedure/customer-invoice-and-payment.md
   visibility: internal
   source_project: erpnext-ops
@@ -163,7 +174,9 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when the bank amount received from a customer differs from
+    the debt it settles because of an accepted fee or loss rather than an unexplained
+    short payment.
   path: docs/erp/procedure/customer-payment-difference.md
   visibility: internal
   source_project: erpnext-ops
@@ -173,7 +186,8 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when one real customer receipt must be allocated across
+    several submitted invoices, is partial, or exceeds the outstanding amount.
   path: docs/erp/procedure/customer-receipt-allocation.md
   visibility: internal
   source_project: erpnext-ops
@@ -194,7 +208,8 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a submitted customer invoice is past due with a positive
+    outstanding amount and collection must progress through native dunning and follow-up.
   path: docs/erp/procedure/overdue-collection.md
   visibility: internal
   source_project: erpnext-ops
@@ -226,7 +241,9 @@ snippets:
   type: procedure
   scope: global
   domain: erp
-  activation_trigger: null
+  activation_trigger: Use when a submitted Purchase Invoice is approved for payment
+    and the supplier must be paid through a source-linked Payment Entry with proven
+    payable and bank ledger effects.
   path: docs/erp/procedure/supplier-invoice-and-payment.md
   visibility: internal
   source_project: erpnext-ops

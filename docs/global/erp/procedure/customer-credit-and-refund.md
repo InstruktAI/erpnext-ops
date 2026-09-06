@@ -1,5 +1,6 @@
 ---
 description: Correct a submitted customer invoice through a source-linked credit note, then preserve or refund the resulting customer credit with ledger proof.
+activation_trigger: Use when a submitted customer invoice must be corrected in whole or in part and plain cancellation is not available or a durable credit note is required, ending in retained credit or a refund.
 ---
 # Customer Credit And Refund — Procedure
 

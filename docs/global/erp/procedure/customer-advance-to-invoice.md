@@ -4,6 +4,7 @@ type: procedure
 domain: erp
 scope: global
 description: Record a customer advance against an order, allocate it to the eventual invoice, and prove settlement or reversal from active ledger state.
+activation_trigger: Use when a customer has actually paid money before final billing and the receipt must be recorded against a submitted Sales Order and carried into the eventual invoice.
 ---
 # Customer Advance To Invoice — Procedure
 

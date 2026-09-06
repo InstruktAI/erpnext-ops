@@ -1,5 +1,6 @@
 ---
 description: Allocate a received customer payment across invoices, preserve any excess as credit, and prove partial or complete settlement from native state.
+activation_trigger: Use when one real customer receipt must be allocated across several submitted invoices, is partial, or exceeds the outstanding amount.
 ---
 # Customer Receipt Allocation — Procedure
 

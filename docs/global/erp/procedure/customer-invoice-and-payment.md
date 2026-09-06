@@ -1,5 +1,6 @@
 ---
 description: Post a taxed or tax-exempt customer invoice, prove its ledger effect, and settle it through a linked payment.
+activation_trigger: Use when a real customer billing event must become a submitted invoice with a proven ledger effect, and when money received for it must be settled through a linked payment.
 ---
 # Customer Invoice And Payment — Procedure
 

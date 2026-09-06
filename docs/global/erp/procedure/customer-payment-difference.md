@@ -1,5 +1,6 @@
 ---
 description: Settle a customer invoice when the bank receives less than the allocated debt because of an approved fee or loss, without creating hidden credit.
+activation_trigger: Use when the bank amount received from a customer differs from the debt it settles because of an accepted fee or loss rather than an unexplained short payment.
 ---
 # Customer Payment Difference — Procedure
 

@@ -1,5 +1,6 @@
 ---
 description: Detect overdue customer debt, progress it through native dunning and follow-up, and close the loop only when the receivable is actually settled.
+activation_trigger: Use when a submitted customer invoice is past due with a positive outstanding amount and collection must progress through native dunning and follow-up.
 ---
 # Overdue Collection — Procedure
 

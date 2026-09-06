@@ -1,5 +1,6 @@
 ---
 description: Reconcile a financial period, transfer its profit or loss, lock completed transaction types, and prove both the close and any reversal from native ledger state.
+activation_trigger: Use when a reporting period has ended and its figures must be accepted, its profit or loss transferred to the closing account, and its transaction types locked against later change.
 ---
 # Close Accounting Period — Procedure
 
