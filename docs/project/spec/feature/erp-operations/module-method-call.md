@@ -6,6 +6,11 @@ delivered_by:
 
 # Module Method Call — Spec
 
+## Required reads
+
+@docs/project/principle/generic-cli-substrate.md
+@~/.teleclaude/docs/erp/spec/cli-surface.md
+
 ## What it is
 
 Agents invoke any whitelisted module-level Frappe or ERPNext method through one generic
