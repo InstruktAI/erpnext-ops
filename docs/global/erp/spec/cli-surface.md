@@ -133,9 +133,9 @@ Requests a preview does send:
 ### Envelope
 
 Every command answers with the same envelope: `ok` reporting whether the command
-succeeded, and `data` carrying the result. Commands that hand back a site response carry
-its payload under `data` rather than the vendor's own wrapper, so a result sits at one
-depth whichever command produced it. Failures carry `kind` and `message` on stderr with a
+succeeded, and `data` carrying the result. A site response that carries the vendor's `data`
+wrapper is unwrapped, so document results sit at one depth; a site response with no `data`
+wrapper is carried as it stands. Failures carry `kind` and `message` on stderr with a
 non-zero exit.
 
 ## Known caveats
@@ -164,11 +164,13 @@ non-zero exit.
 <!-- planned:erpnext-module-method-call -->
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.
   Its optional `--data` is an opaque JSON object for that method. The CLI previews or sends the
-  request under the selected context and reports the native response. Its preview contains only
-  `context`, `operation` (the dotted method and opaque payload), and `apply_command`; DocType
-  `preflight` and document `persistence` are not applicable. It does not
-  interpret business state, read back records, or substitute behavior when the method is
-  unavailable.
+  request under the selected context. Its preview contains only `context`, `operation` (the
+  dotted method and opaque payload), and `apply_command`; DocType `preflight` and document
+  `persistence` are not applicable. On apply, a native response that is a JSON object is
+  reported with its `message` value under `data`, and a method that returns nothing reports
+  `data` as null; a response that is not a JSON object is a typed failure, never success. It
+  does not interpret business state, read back records, or substitute behavior when the method
+  is unavailable.
 <!-- /planned:erpnext-module-method-call -->
 - `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
