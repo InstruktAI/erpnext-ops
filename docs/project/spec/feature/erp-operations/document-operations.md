@@ -110,7 +110,6 @@ replayed, sending no second create
 And reusing the token with different data fails as a structured idempotency conflict.
 ```
 
-<!-- planned-change:erpnext-mapper-arguments -->
 #### UC-9:
 
 ```gherkin
@@ -120,19 +119,7 @@ When the agent runs `erpnext doc map <doctype> <name> --via <native-mapper> --ap
 Then the site builds the target document and it is created with its items and terms
 And a created document that references no source fails as a linkage error.
 ```
-<!-- change:erpnext-mapper-arguments -->
-#### UC-9:
 
-```gherkin
-Scenario: Conversion along an ERPNext chain keeps its link to the source
-Given a submitted document and the native mapper for its next document in the chain
-When the agent runs `erpnext doc map <doctype> <name> --via <native-mapper> --apply`
-Then the site builds the target document and it is created with its items and terms
-And a created document that references no source fails as a linkage error.
-```
-<!-- /planned-change:erpnext-mapper-arguments -->
-
-<!-- planned:erpnext-mapper-arguments -->
 #### UC-MAP1:
 
 ```gherkin
@@ -184,4 +171,3 @@ When the agent previews a conversion and then explicitly applies that conversion
 Then the preview creates no target document
 And the target sent for creation matches the previewed target including its overrides
 ```
-<!-- /planned:erpnext-mapper-arguments -->

@@ -72,11 +72,9 @@ and invoice reference, then apply and submit it.
 Compose `customer-receipt-allocation` when the receipt is partial, settles several invoices,
 or exceeds the current outstanding amount.
 
-<!-- planned:erpnext-mapper-arguments -->
 Compose `customer-early-payment-discount` when the invoice's accepted payment schedule grants a
 discount for receipt by a stated date. Eligibility is established from the actual receipt date
 before mapping; it is never manufactured from a short payment.
-<!-- /planned:erpnext-mapper-arguments -->
 
 Read the invoice and payment back. A fully paid invoice must report zero outstanding and a
 paid status. Its receivable debit and the payment's receivable credit must net to zero, while
@@ -114,9 +112,7 @@ from the last command an agent remembers running.
 ## See Also
 
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
-<!-- planned:erpnext-mapper-arguments -->
 - ~/.teleclaude/docs/erp/procedure/customer-early-payment-discount.md
-<!-- /planned:erpnext-mapper-arguments -->
 - ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
 - ~/.teleclaude/docs/erp/procedure/overdue-collection.md
 - ~/.teleclaude/docs/erp/procedure/project-work-to-invoice.md
