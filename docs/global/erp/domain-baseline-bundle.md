@@ -1,5 +1,7 @@
 # erp — Platform Baseline
 
+id: erp/principle/business-input-traceability
+
 # Business Input Traceability — Principle
 
 ## Principle
@@ -50,6 +52,8 @@ the later state exists.
   question that resolves it.
 
 ---
+
+id: erp/principle/determinate-autonomy
 
 # Determinate Autonomy — Principle
 
@@ -104,6 +108,8 @@ mechanisms exist so agents can act, not so they can manufacture approval gates.
 
 ---
 
+id: erp/concept/business-activity-trail
+
 # Business Activity Trail — Concept
 
 ## What
@@ -146,6 +152,8 @@ confirmed business state.
 
 ---
 
+id: erp/concept/composable-business-procedures
+
 # Composable Business Procedures — Concept
 
 ## What
@@ -185,6 +193,8 @@ preview/apply loop.
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 
 ---
+
+id: erp/concept/multi-tenancy
 
 # ERP Multi-Tenancy — Concept
 
@@ -228,6 +238,8 @@ benches backed by MariaDB.
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 
 ---
+
+id: erp/concept/operation-model
 
 # ERP Operation Model — Concept
 
@@ -278,6 +290,8 @@ procedure.
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 
 ---
+
+id: erp/policy/operating-disciplines
 
 # ERP Operating Disciplines — Policy
 
