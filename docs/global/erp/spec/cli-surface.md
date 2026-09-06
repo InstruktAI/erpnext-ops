@@ -60,38 +60,46 @@ project-owned implementation details.
 - `erpnext import apply --batch <batch-id>`
 - `erpnext ops doctor`
 
-<!-- planned:erpnext-preview-native-facts -->
+<!-- planned:erpnext-command-surface-export -->
 The command inventory above is rendered from the binary's declared command surface, which
 the binary emits as a deterministic, credential-free, site-independent description. The
 root help carries one pointer to the ERP documentation and no per-command documentation
 references.
-<!-- /planned:erpnext-preview-native-facts -->
+<!-- /planned:erpnext-command-surface-export -->
 
 ### Preview
 
+<!-- planned-change:erpnext-preview-observed-facts -->
 A mutating document, workflow, or mapping command previews by default and persists nothing
-without `--apply`. Document and workflow previews send no request; a mapping preview invokes
+without `--apply`. Most document and workflow previews send no request; copying reads the
+native copy template and amending reads the source document. A mapping preview invokes
 the native mapper to obtain the mapped payload and persists nothing. Preview output contains:
+<!-- change:erpnext-preview-observed-facts -->
+A mutating document, workflow, or mapping command previews by default and persists nothing
+without `--apply`. Document and workflow previews read the native facts they report without
+sending the mutating operation. Mapping also invokes the native mapper to obtain the mapped
+payload. Preview output contains:
+<!-- /planned-change:erpnext-preview-observed-facts -->
 
 - `context` — site, company, and privilege mode of the invocation.
-<!-- planned:erpnext-preview-native-facts -->
+<!-- planned:erpnext-preview-observed-facts -->
 - `context` also names whether the identity is configured or authenticated, and a command
   targeting an existing document reports that document's own company separately from the
   selected context.
-<!-- /planned:erpnext-preview-native-facts -->
+<!-- /planned:erpnext-preview-observed-facts -->
 - `operation` — the exact native request that starts apply: method, endpoint, and payload.
 - `persistence` — for a document controller method, the returned document is validated as
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
-<!-- planned-change:erpnext-preview-native-facts -->
+<!-- planned-change:erpnext-preview-observed-facts -->
 - `preflight` — a statement that the unknown-field check runs against live DocType metadata
-  on apply. The preview itself performs no metadata or document read.
+  on apply. Create and update previews perform no metadata read.
 - `apply_command` — the apply form of the command, stated as an instruction rather than as
   a replayable invocation.
 - `summary` — one sentence restating the action, generated from the action kind and the
   payload alone. Its stated consequences are not verified against the site or the
   document's state.
-<!-- change:erpnext-preview-native-facts -->
+<!-- change:erpnext-preview-observed-facts -->
 - `target` — for a command targeting an existing document: the document's current
   `docstatus`, its own company, and its modification marker, read from the site.
 - `schema` — for a document operation: the DocType's `is_submittable`, its fields marked
@@ -103,7 +111,7 @@ the native mapper to obtain the mapped payload and persists nothing. Preview out
 - `apply_command` — the exact replayable invocation, carrying arguments, the source token,
   and context overrides. A replayed invocation is not a replayed result: state may have
   changed and the facts are read again on apply.
-<!-- /planned-change:erpnext-preview-native-facts -->
+<!-- /planned-change:erpnext-preview-observed-facts -->
 
 Preview exposes what the CLI observed and will send. Consequence and reversibility are the
 agent's judgment from those facts and from the procedure it is following.
@@ -166,17 +174,20 @@ non-zero exit.
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
   native mapper inputs before the site builds the target document; `--data` overrides
   target-document fields only after mapping.
-<!-- planned-change:erpnext-preview-native-facts -->
-- `doc map` reads the created document back and fails when it finds no mention of the
+<!-- planned-change:erpnext-map-native-links -->
+- `doc map` inspects the creation response and fails when it finds no mention of the
   source name in the returned document. That check does not establish a native link
   relationship.
-<!-- change:erpnext-preview-native-facts -->
+<!-- change:erpnext-map-native-links -->
 - `doc map` reads the created document back and verifies its relationship to the source
   through the DocType's Link and Dynamic Link fields, including child rows, reporting one
   of three outcomes: verified, missing, or not expressible through the inspected metadata.
+  A verified relationship reports success. Missing and not-expressible relationships
+  report distinct structured failures retaining the created document's reference; the
+  latter reports unavailable proof, not evidence that the relationship is absent.
   Preservation of every source-row identity and correctness of consumed quantities remain
   the calling procedure's proof.
-<!-- /planned-change:erpnext-preview-native-facts -->
+<!-- /planned-change:erpnext-map-native-links -->
 - Mapping the same source twice creates a second document; the command carries no replay
   protection.
 - Activity commands are thin operations over native Frappe and ERPNext records such as

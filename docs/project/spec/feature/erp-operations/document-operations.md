@@ -110,6 +110,7 @@ replayed, sending no second create
 And reusing the token with different data fails as a structured idempotency conflict.
 ```
 
+<!-- planned-change:erpnext-map-native-links -->
 #### UC-9:
 
 ```gherkin
@@ -119,6 +120,21 @@ When the agent runs `erpnext doc map <doctype> <name> --via <native-mapper> --ap
 Then the site builds the target document and it is created with its items and terms
 And a created document that references no source fails as a linkage error.
 ```
+<!-- change:erpnext-map-native-links -->
+#### UC-9:
+
+```gherkin
+Scenario: Native conversion reports the evidence for its source relationship
+Given an agent selects a source document and a native mapper
+When the agent explicitly applies the conversion and the site creates a target document
+Then the CLI reads the stored target and inspects its native relationship definitions including child rows
+And an exact relationship to the selected source is reported as verified
+And an expressible relationship without a matching source is reported as a missing-link failure
+And a relationship the inspected definitions cannot express is reported as a distinct unavailable-proof failure
+And either failure retains the created document reference without claiming that creation was rolled back
+And an incidental mention of the source in ordinary text never proves a relationship
+```
+<!-- /planned-change:erpnext-map-native-links -->
 
 #### UC-MAP1:
 
