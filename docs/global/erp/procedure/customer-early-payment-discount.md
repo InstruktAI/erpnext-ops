@@ -1,7 +1,7 @@
 ---
-description: Settle a customer invoice under an agreed early-payment discount, using the receipt date to prove eligibility and preserving the discount as an explicit ledger effect.
-delivered_by:
-  - erpnext-mapper-arguments
+description: Settle a customer invoice under an agreed early-payment discount, using
+  the receipt date to prove eligibility and preserving the discount as an explicit
+  ledger effect.
 ---
 # Customer Early-Payment Discount — Procedure
 
