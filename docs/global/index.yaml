@@ -146,13 +146,13 @@ snippets:
   source_project: erpnext-ops
 - id: erp/procedure/customer-early-payment-discount
   description: Settle a customer invoice under an agreed early-payment discount, using
+    the receipt date to prove eligibility and preserving the discount as an explicit
+    ledger effect.
   type: procedure
   scope: global
   domain: erp
   activation_trigger: Use when a customer pays less than an invoice's face value under
-    accepted payment terms that grant a discount for receipt by a stated date. the
-    receipt date to prove eligibility and preserving the discount as an explicit ledger
-    effect.
+    accepted payment terms that grant a discount for receipt by a stated date.
   path: docs/erp/procedure/customer-early-payment-discount.md
   visibility: internal
   source_project: erpnext-ops
@@ -233,6 +233,31 @@ snippets:
   activation_trigger: Use when a service, production, tour, or custom project business
     needs to track work, obligations, billing, and payment without stock-centric assumptions.
   path: docs/erp/procedure/project-work-to-invoice.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/prove-native-effect
+  description: "Prove a business mutation or its correction from independent native\
+    \ ERPNext views \u2014 stored document state, native links, and ledger \u2014\
+    \ and keep effects outside ERPNext as separate facts."
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use after applying, submitting, cancelling, or correcting any
+    financial or stock document, before reporting the outcome or building on it.
+  path: docs/erp/procedure/prove-native-effect.md
+  visibility: internal
+  source_project: erpnext-ops
+- id: erp/procedure/resume-from-native-state
+  description: Before creating, mapping, or submitting, establish from native ERPNext
+    state whether the business event is already recorded, and continue from what exists
+    rather than from a remembered command.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: Use when a create, mapper, or submit response was lost, a run
+    is resumed after interruption, or a business event may already be recorded and
+    writing again would duplicate it.
+  path: docs/erp/procedure/resume-from-native-state.md
   visibility: internal
   source_project: erpnext-ops
 - id: erp/procedure/supplier-invoice-and-payment

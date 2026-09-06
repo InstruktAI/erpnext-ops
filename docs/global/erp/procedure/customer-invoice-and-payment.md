@@ -93,10 +93,8 @@ Payment Entry merely to close a Dunning or make the invoice appear settled.
 
 ## Recovery
 
-- If a direct create response is lost, replay the same source token and payload; never change
-  the token to escape a conflict.
-- If a mapper response is lost, inspect the invoice's or payment's native links and external
-  reference before mapping again.
+- On a lost create or mapper response, compose `resume-from-native-state`: an invoice
+  resolves by its source token, a payment by its invoice link and external reference.
 - If tax rows or totals are absent or wrong, correct the draft and re-read it before submission.
 - Correct a submitted invoice through cancel-and-amend. Reverse or cancel dependent payments
   before cancelling the invoice they settle.
@@ -106,9 +104,9 @@ Payment Entry merely to close a Dunning or make the invoice appear settled.
 ## Discipline
 
 An invoice is not proven because its grand total looks plausible, and a payment is not proven
-because a mapper returned a document. Verification crosses three layers: stored document
-state, native links, and balanced ledger entries. Resume from those observed facts rather than
-from the last command an agent remembers running.
+because a mapper returned a document. Verification composes `prove-native-effect`: stored document
+state, native links, and balanced ledger entries. Resumption composes
+`resume-from-native-state`, never the last command an agent remembers running.
 
 ## See Also
 
@@ -117,3 +115,5 @@ from the last command an agent remembers running.
 - ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
 - ~/.teleclaude/docs/erp/procedure/overdue-collection.md
 - ~/.teleclaude/docs/erp/procedure/project-work-to-invoice.md
+- ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- ~/.teleclaude/docs/erp/procedure/prove-native-effect.md

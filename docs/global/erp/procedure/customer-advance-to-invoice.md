@@ -79,9 +79,8 @@ active customer credit or advance rather than being silently treated as revenue.
 
 ## Recovery
 
-- Resume from active Payment Entries, Advance Payment Ledger Entries, GL entries, invoice
-  advance rows, and the source order's per-row billed state. Do not resume from remembered
-  commands or a cached Sales Order total alone.
+- Resume per `resume-from-native-state` from active Payment Entries, Advance Payment Ledger
+  Entries, GL entries, invoice advance rows, and the source order's per-row billed state.
 - If invoice creation or submission fails, leave the submitted advance intact and rebuild the
   invoice from the order only after resolving existing drafts and source links.
 - An advance created by this procedure references the Sales Order, while the later invoice
@@ -94,10 +93,10 @@ active customer credit or advance rather than being silently treated as revenue.
   when its advance ledger entry is delinked and its active GL effect is gone. A newly mapped
   invoice must then carry no advance row. Treat the active ledger, document status, and stored
   mapper result as authoritative; never repair the derived field by writing it directly.
-- Cancellation does not reverse an external bank transfer. Returning the cash is a separate
-  outbound payment event: preserve the original receipt, use ERPNext's native customer-credit
-  or reverse-payment path for the active balance, and verify the bank and customer ledgers. Use
-  `customer-credit-and-refund` only when a submitted invoice correction created the credit.
+- Returning the cash is a separate outbound payment event that cancellation never performs:
+  preserve the original receipt, use ERPNext's native customer-credit or reverse-payment path
+  for the active balance, and prove the bank and customer ledgers per `prove-native-effect`.
+  Use `customer-credit-and-refund` only when a submitted invoice correction created the credit.
 
 ## Discipline
 
@@ -113,3 +112,5 @@ and prove the ledger after either completion or compensation.
 - ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
 - ~/.teleclaude/docs/erp/procedure/customer-credit-and-refund.md
 - ~/.teleclaude/docs/erp/procedure/project-work-to-invoice.md
+- ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- ~/.teleclaude/docs/erp/procedure/prove-native-effect.md

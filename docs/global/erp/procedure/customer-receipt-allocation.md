@@ -80,13 +80,13 @@ remaining credit afterwards.
 
 ## Recovery
 
-- If the Payment Entry response is lost, resolve by external reference and inspect stored
-  references before creating anything.
+- On a lost Payment Entry response, compose `resume-from-native-state`: the receipt resolves
+  by its external reference and stored reference rows.
 - If an allocation is wrong and no downstream action consumed it, cancel the invoice-linked
   Payment Entry before correcting or cancelling its invoice. Re-read all invoice outstanding
   amounts before replaying.
-- Cancelling ERPNext records does not return real cash. A real refund is a separate outbound
-  payment event whose bank and customer ledger effects must be recorded and proved.
+- A correction is proven per `prove-native-effect`; a real refund is a separate outbound
+  payment event that cancellation never performs.
 - Never turn an excess receipt into a larger invoice allocation, write-off, or revenue merely
   to make the difference disappear.
 
@@ -105,3 +105,5 @@ rest.
 - ~/.teleclaude/docs/erp/procedure/customer-payment-difference.md
 - ~/.teleclaude/docs/erp/procedure/customer-advance-to-invoice.md
 - ~/.teleclaude/docs/erp/procedure/customer-credit-and-refund.md
+- ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- ~/.teleclaude/docs/erp/procedure/prove-native-effect.md

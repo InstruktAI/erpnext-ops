@@ -98,14 +98,14 @@ leave bank clearance as an open loop.
 
 ## Recovery
 
-- If the mapper or create response is lost, resolve by Purchase Invoice link and external payment
-  reference before mapping again.
+- On a lost mapper or create response, compose `resume-from-native-state`: the payment resolves
+  by its Purchase Invoice link and external payment reference.
 - If a repeated preview carries zero paid and allocated amounts, stop and read the established
   settlement; do not apply it.
 - If the Payment Entry is wrong but no external transfer occurred, cancel it and require the
   Purchase Invoice outstanding and Accounts Payable balance to return before replaying.
-- Cancelling a Payment Entry does not recall an external bank transfer. Preserve the correction
-  trail and resolve the real bank movement separately.
+- A correction is proven per `prove-native-effect`; the external bank transfer is a separate
+  fact that cancellation never recalls.
 - If document state, Accounts Payable, and the ledger disagree, leave the discrepancy open and
   investigate the native links before recording another payment.
 
@@ -122,3 +122,5 @@ owns it.
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
 - ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md
+- ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- ~/.teleclaude/docs/erp/procedure/prove-native-effect.md

@@ -90,8 +90,8 @@ linked records. Close honoured follow-ups and keep the remaining ones visible th
 ## Recovery
 
 - If the billing trigger is unclear, record activity and follow-up instead of invoicing.
-- If a create or mapper response is lost, inspect the source's native links and remaining billed
-  quantity or amount before resuming; never map the same source blindly.
+- On a lost create or mapper response, compose `resume-from-native-state`: the invoice resolves
+  through the Sales Order's native links and remaining billed quantity or amount.
 - If a controller method returns a changed document but saving it fails, preserve the partial
   result, inspect the stored draft, and retry from observed state.
 - Correct submitted billing through cancel-and-amend and reverse dependent payments first;
@@ -110,3 +110,9 @@ without settling the invoice. Track work, obligations, and billing triggers expl
 verify the native links and derived totals that make project profitability trustworthy. Use
 ERPNext for the business states it owns, and preserve activity around external systems when
 ERPNext is only the accounting or overview layer.
+
+## See Also
+
+- ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- ~/.teleclaude/docs/erp/procedure/prove-native-effect.md
+- ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
