@@ -146,8 +146,6 @@ snippets:
   activation_trigger: null
   path: docs/erp/procedure/customer-early-payment-discount.md
   visibility: internal
-  delivered_by:
-  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/procedure/customer-invoice-and-payment
   description: Post a taxed or tax-exempt customer invoice, prove its ledger effect,
@@ -158,8 +156,6 @@ snippets:
   activation_trigger: null
   path: docs/erp/procedure/customer-invoice-and-payment.md
   visibility: internal
-  superseded_by:
-  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/procedure/customer-payment-difference
   description: Settle a customer invoice when the bank receives less than the allocated
@@ -170,8 +166,6 @@ snippets:
   activation_trigger: null
   path: docs/erp/procedure/customer-payment-difference.md
   visibility: internal
-  superseded_by:
-  - erpnext-mapper-arguments
   source_project: erpnext-ops
 - id: erp/procedure/customer-receipt-allocation
   description: Allocate a received customer payment across invoices, preserve any
@@ -246,7 +240,6 @@ snippets:
   path: docs/erp/spec/cli-surface.md
   visibility: internal
   superseded_by:
-  - erpnext-mapper-arguments
   - erpnext-module-method-call
   source_project: erpnext-ops
 - id: erp/spec/company-layout
