@@ -51,6 +51,19 @@ snippets:
   path: docs/project/spec/feature/erp-operations/document-operations.md
   visibility: internal
   source_project: erpnext-ops
+- id: project/spec/feature/erp-operations/module-method-call
+  description: Generic invocation of a whitelisted module-level Frappe or ERPNext
+    method through the erpnext CLI, with preview by default, an opaque payload, and
+    honest native results.
+  type: spec
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/spec/feature/erp-operations/module-method-call.md
+  visibility: internal
+  delivered_by:
+  - erpnext-module-method-call
+  source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/operating-context
   description: "Site, company, and privilege context selection for the erpnext CLI\
     \ \u2014 explicit identity, fail-closed credentials, secret-safe display."
