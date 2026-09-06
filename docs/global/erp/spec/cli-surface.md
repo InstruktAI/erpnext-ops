@@ -69,8 +69,9 @@ references.
 
 ### Preview
 
-A mutating document, workflow, or mapping command previews by default and sends its native
-operation only with `--apply`. Preview output contains:
+A mutating document, workflow, or mapping command previews by default and persists nothing
+without `--apply`. Document and workflow previews send no request; a mapping preview invokes
+the native mapper to obtain the mapped payload and persists nothing. Preview output contains:
 
 - `context` — site, company, and privilege mode of the invocation.
 <!-- planned:erpnext-preview-native-facts -->
@@ -114,8 +115,12 @@ Writes that do not preview, each with its own effect:
   content.
 - `import preview` stages native Data Import records and the uploaded file without
   importing target business records; `import apply` runs the staged batch.
-- `doc map` preview invokes the named mapper method on the site to show the mapped
-  payload. That is safe for a non-persisting mapper; it is not a request-free preview.
+
+Requests a preview does send:
+
+- `doc map` preview invokes the named mapper method on the site to obtain the mapped
+  payload it shows. The site persists nothing for a non-persisting mapper; only `--apply`
+  creates the target document.
 
 ### Envelope
 
