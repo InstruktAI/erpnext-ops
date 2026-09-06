@@ -51,11 +51,22 @@ And amending a document that is not cancelled fails without creating anything.
 
 #### UC-5
 
-Scenario: Direct edits to submitted documents fail toward cancel-and-amend
+Scenario: A submitted document rejects changes to fields it does not allow on submit
 Given a submitted document
-When the agent attempts `erpnext doc update` on it
-Then the command fails with a structured failure carrying ERPNext's lifecycle rejection
-And the failure points to the cancel-and-amend path instead of editing in place.
+And a payload changing a field the doctype does not mark `allow_on_submit`
+When the agent applies `erpnext doc update` with that payload
+Then the request is sent and the command fails with a structured failure carrying
+ERPNext's lifecycle rejection
+And the document is unchanged.
+
+#### UC-5b
+
+Scenario: A submitted document accepts changes to fields allowed on submit
+Given a submitted document
+And a payload touching only fields the doctype marks `allow_on_submit`
+When the agent applies `erpnext doc update` with that payload
+Then the request is sent as written and the site's result is reported
+And the document's docstatus is still submitted.
 
 #### UC-6
 

@@ -7,19 +7,22 @@ description: Agent-facing erpnext CLI command surface for operating per-tenant E
 ## What it is
 
 The `erpnext` CLI is the agent-facing operating surface for per-tenant ERPNext sites. It
-exposes generic, metadata-checked ERPNext operations with preview-by-default mutation,
-site- and company-scoped context, activity capture over native records, reporting, imports,
-and operational diagnostics.
+exposes generic ERPNext operations with preview-by-default mutation, site- and
+company-scoped context, activity capture over native records, reporting, imports, and
+operational diagnostics.
 
-The CLI is a deliberately thin, typed wrapper over Frappe's v2 REST abstraction. It owns
-context selection, authentication, secret redaction, stable command and output shapes, the
-explicit apply gate, basic preflight against live DocType metadata, and translation between
+The CLI is a deliberately thin, typed wrapper over Frappe's REST surface. It owns context
+selection, authentication, secret redaction, stable command and output shapes, the explicit
+apply gate, an unknown-field check against live DocType metadata, and translation between
 commands and native requests. ERPNext owns permissions, transactions, document validation,
 workflow and docstatus behavior, reports, data import, and activity records. The CLI does
-not simulate ERPNext and promises no guarantees the substrate does not provide. Agents use
-the CLI contract below, not raw transport mechanics.
+not simulate ERPNext and promises no guarantees the substrate does not provide. This is the
+global agent-facing contract; transport calls and internal command architecture are
+project-owned implementation details.
 
 ## Canonical fields
+
+### Commands
 
 - Every command accepts `--company <company-slug>` or `--site <fqdn>` and
   `--as operator|admin` to operate that context and privilege for one invocation without
@@ -57,23 +60,64 @@ the CLI contract below, not raw transport mechanics.
 - `erpnext import apply --batch <batch-id>`
 - `erpnext ops doctor`
 
-Preview output for mutating commands contains:
+<!-- planned:erpnext-preview-native-facts -->
+The command inventory above is rendered from the binary's declared command surface, which
+the binary emits as a deterministic, credential-free, site-independent description. The
+root help carries one pointer to the ERP documentation and no per-command documentation
+references.
+<!-- /planned:erpnext-preview-native-facts -->
 
-- `summary` — the action restated in business language for the person who asked for it:
-  the record by the name they know it by, the money where the payload carries it, whose
-  books it lands in, and the consequence that outlives the action. Submitting names that
-  the figures reach the books and the document can afterwards
-  only be cancelled; deleting distinguishes itself from cancelling; converting names that
-  a second conversion creates a second document.
-- `context` — site, company, identity, and privilege mode.
+### Preview
+
+A mutating document, workflow, or mapping command previews by default and sends its native
+operation only with `--apply`. Preview output contains:
+
+- `context` — site, company, and privilege mode of the invocation.
+<!-- planned:erpnext-preview-native-facts -->
+- `context` also names whether the identity is configured or authenticated, and a command
+  targeting an existing document reports that document's own company separately from the
+  selected context.
+<!-- /planned:erpnext-preview-native-facts -->
 - `operation` — the exact native request that starts apply: method, endpoint, and payload.
 - `persistence` — for a document controller method, the returned document is validated as
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
-- `preflight` — findings from basic checks against live DocType metadata: unknown fields,
-  missing mandatory fields, and invalid link targets, plus any lifecycle or permission
-  conflict ERPNext reports without mutating.
-- `apply_command` — the exact command form that applies the preview.
+<!-- planned-change:erpnext-preview-native-facts -->
+- `preflight` — a statement that the unknown-field check runs against live DocType metadata
+  on apply. The preview itself performs no metadata or document read.
+- `apply_command` — the apply form of the command, stated as an instruction rather than as
+  a replayable invocation.
+- `summary` — one sentence restating the action, generated from the action kind and the
+  payload alone. Its stated consequences are not verified against the site or the
+  document's state.
+<!-- change:erpnext-preview-native-facts -->
+- `target` — for a command targeting an existing document: the document's current
+  `docstatus`, its own company, and its modification marker, read from the site.
+- `schema` — for a document operation: the DocType's `is_submittable`, its fields marked
+  `allow_on_submit`, and `track_changes`, read from the site. An opaque module method
+  carries no document or schema facts.
+- `preflight` — the checks the preview actually ran and their findings: unknown payload
+  fields against live metadata, and an explicit statement of what remains the site's
+  validation.
+- `apply_command` — the exact replayable invocation, carrying arguments, the source token,
+  and context overrides. A replayed invocation is not a replayed result: state may have
+  changed and the facts are read again on apply.
+<!-- /planned-change:erpnext-preview-native-facts -->
+
+Preview exposes what the CLI observed and will send. Consequence and reversibility are the
+agent's judgment from those facts and from the procedure it is following.
+
+Writes that do not preview, each with its own effect:
+
+- `activity capture` records the business memory directly; the record is the trace.
+- `evidence attach` persists the file on the referenced document and may add timeline
+  content.
+- `import preview` stages native Data Import records and the uploaded file without
+  importing target business records; `import apply` runs the staged batch.
+- `doc map` preview invokes the named mapper method on the site to show the mapped
+  payload. That is safe for a non-persisting mapper; it is not a request-free preview.
+
+### Envelope
 
 Every command answers with the same envelope: `ok` reporting whether the command
 succeeded, and `data` carrying the result. Commands that hand back a site response carry
@@ -83,41 +127,19 @@ non-zero exit.
 
 ## Known caveats
 
-- The site is the tenant boundary; company selection scopes accounting inside the site.
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
   company-scoped agent-admin identity. The bootstrap `Administrator` identity and its
   deployment secret remain unavailable to the CLI.
-- Mutating commands preview by default; `--apply` sends the native operation and reports
-  ERPNext's result.
-- Create and update commands check payload fields against live DocType metadata before
-  sending and refuse a field the doctype does not define. Mandatory values ERPNext derives
-  during validation are left to it: ERPNext remains the authority on validation,
-  permissions, and transactions.
-- Externally visible or irreversible actions proceed autonomously when they are determined by
-  evidence, configuration, templates, and standard ERP practice. They surface only when a real
-  decision boundary remains.
-- Activity commands are thin operations over native Frappe and ERPNext records such as
-  `Communication`, `Comment`, `ToDo`, `Event`, `CRM Note`, and linked business documents.
-- `activity list` folds a document's native timeline into one ordered trail carrying both
-  what happened and what is still owed: contacts, comments, and outstanding follow-ups,
-  each naming its actor and, where the record has one, its status. The site groups these
-  by its own vocabulary — a follow-up arrives among the assignments and a contact names
-  its actor as the sender. A record the site leaves untimestamped survives a `--since` or
-  `--until` bound, because a bounded read that drops outstanding work defeats the reason
-  for reading it.
-- A follow-up is stored as a `ToDo` carrying its own reference to the business document,
-  so one party holds as many open commitments as the business owes it. The native
-  assignment API binds one open assignment per user per document and answers a refused
-  second one with success; a commitment layer built on it would keep the first and lose
-  every later one without a trace.
-- `activity close-loop` honours an open commitment and reads the stored status back: a
-  site that accepts the request while leaving the loop open is reported as a failure,
-  never as success. A `--note` records what honoured it on the business document's trail,
-  where the next reader of that party's history finds it.
-- Import commands use ERPNext's native data-import semantics with preview and explicit
-  apply, reporting honest per-row results. The vendor gates Data Import to privileged
-  roles; an operator context receives the site's typed permission failure.
+- Create and update commands refuse a payload field the doctype does not define. They do
+  not check mandatory values or link targets; those remain the site's validation, and a
+  create that omits values ERPNext derives is sent as written.
+- `doc create --source <token>` is exactly idempotent: the document name derives
+  deterministically from site, doctype, and token; a retry replays the existing document,
+  divergent token reuse is a structured conflict, and such documents opt out of native
+  series naming.
+- `doc update` sends the payload as written; the site decides whether a submitted
+  document accepts it.
 - Lifecycle transitions drive `docstatus` through the document envelope and read the
   document back; a site that answers the request while leaving `docstatus` unchanged is
   reported as a failed transition, never as success. `workflow amend` builds the new draft
@@ -130,49 +152,50 @@ non-zero exit.
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.
   Its optional `--data` is an opaque JSON object for that method. The CLI previews or sends the
   request under the selected context and reports the native response. Its preview contains only
-  `context`, `operation` (the dotted method and opaque payload), and `apply_command`; business
-  `summary`, DocType `preflight`, and document `persistence` are not applicable. It does not
+  `context`, `operation` (the dotted method and opaque payload), and `apply_command`; DocType
+  `preflight` and document `persistence` are not applicable. It does not
   interpret business state, read back records, or substitute behavior when the method is
   unavailable.
 <!-- /planned:erpnext-module-method-call -->
 - `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
-  `dn`; the site binds only the names its signature declares. `--args` supplies additional native
-  mapper inputs
-  before the site builds the target document. `--data` overrides target-document fields only
-  after mapping. A value that changes what the mapper computes — such as the receipt date used
-  to decide whether an early-payment discount is valid — belongs in `--args`, never `--data`.
-- `doc map` converts a document along an ERPNext chain through the native mapper the caller
-  names, so the site builds the target document; the created document is read back and a
-  result that references no source fails. Mapping the same source twice creates a second
-  document — resolve before mapping.
-- Cancelling a submitted document undoes what it did to everything that counted it, as
-  long as nothing downstream has consumed the effect. A cancelled partial invoice returns
-  the order's per-row billed quantities and its billed percentage to nothing, returns the
-  project's billed total to nothing, and clears the customer's balance — leaving the work
-  billable again with no residue. Undo is therefore a real operating move rather than a
-  repair of last resort, and the state to check afterwards is the source document's own
-  per-row quantities.
-- Billing part of an order adjusts the quantities on the rows the mapper produced; it never
-  replaces the item list. Each mapped row carries the identifier of the order row it bills,
-  and that per-row link is what the site uses to track how much of the order remains. A
-  replacement list drops it, and the resulting invoice still posts, still charges the
-  customer, and still counts toward the project — while the order reads as entirely
-  unbilled and offers the same work for billing again. The order's per-row billed and
-  delivered quantities are therefore the state a resumed or repeated run reads before
-  acting.
-- `--source` suits documents ERPNext names from a series; a master with a natural key, such
-  as an item code, carries its own identity and needs none.
-- `doc create --source <token>` is exactly idempotent: the document name derives
-  deterministically from site, doctype, and token; a retry replays the existing document,
-  divergent token reuse is a structured conflict, and such documents opt out of native
-  series naming.
-- `report run` returns the report's own columns and rows as the site produces them. A
-  native report names its data rows by field and may close with a totals row positioned by
-  column order rather than named, so a reader keys on the column list rather than assuming
-  every row carries the same shape. The report is ERPNext's; the CLI neither reshapes its
-  rows nor recomputes its figures.
+  `dn`; the site binds only the names its signature declares. `--args` supplies additional
+  native mapper inputs before the site builds the target document; `--data` overrides
+  target-document fields only after mapping.
+<!-- planned-change:erpnext-preview-native-facts -->
+- `doc map` reads the created document back and fails when it finds no mention of the
+  source name in the returned document. That check does not establish a native link
+  relationship.
+<!-- change:erpnext-preview-native-facts -->
+- `doc map` reads the created document back and verifies its relationship to the source
+  through the DocType's Link and Dynamic Link fields, including child rows, reporting one
+  of three outcomes: verified, missing, or not expressible through the inspected metadata.
+  Preservation of every source-row identity and correctness of consumed quantities remain
+  the calling procedure's proof.
+<!-- /planned-change:erpnext-preview-native-facts -->
+- Mapping the same source twice creates a second document; the command carries no replay
+  protection.
+- Activity commands are thin operations over native Frappe and ERPNext records such as
+  `Communication`, `Comment`, `ToDo`, `Event`, `CRM Note`, and linked business documents.
+- `activity list` folds a document's native timeline into one ordered trail carrying both
+  what happened and what is still owed: contacts, comments, and outstanding follow-ups,
+  each naming its actor and, where the record has one, its status. A record the site
+  leaves untimestamped survives a `--since` or `--until` bound.
+- A follow-up is stored as a `ToDo` carrying its own reference to the business document,
+  so one party holds as many open commitments as the business owes it.
+- `activity close-loop` honours an open commitment and reads the stored status back: a
+  site that accepts the request while leaving the loop open is reported as a failure,
+  never as success. A `--note` records what honoured it on the business document's trail.
+- Import commands use ERPNext's native data-import semantics with preview and explicit
+  apply, reporting honest per-row results. An operator context that the site does not
+  permit to import receives the site's typed permission failure.
+- `report run` returns the report's own columns and rows as the site produces them. The
+  report is ERPNext's; the CLI neither reshapes its rows nor recomputes its figures.
 - `ops doctor` verifies the CLI's own operating ground: configured endpoint, authenticated
   identity, selected company, privilege mode, credential separation, and fail-closed
   configuration. It does not test ERPNext's permission implementation.
-- This is the global agent-facing contract. Transport calls and internal command
-  architecture are project-owned implementation details, not global ERP doctrine.
+
+## See Also
+
+- ~/.teleclaude/docs/erp/concept/multi-tenancy.md — the site as tenant boundary and the company as accounting scope.
+- ~/.teleclaude/docs/erp/policy/operating-disciplines.md — when an agent previews, applies, resolves, and surfaces.
+- ~/.teleclaude/docs/erp/spec/company-layout.md — identities and the credential home the context resolves from.

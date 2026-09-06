@@ -95,7 +95,10 @@ linked records. Close honoured follow-ups and keep the remaining ones visible th
 - If a controller method returns a changed document but saving it fails, preserve the partial
   result, inspect the stored draft, and retry from observed state.
 - Correct submitted billing through cancel-and-amend and reverse dependent payments first;
-  never edit a submitted invoice in place.
+  never edit a submitted invoice in place. After cancelling a partial invoice, read the Sales
+  Order's per-row billed quantities back: the rows that invoice consumed are billable again
+  only when their billed quantity says so, and the order's billed percentage may still carry
+  other invoices.
 - If the work belongs to an external booking or production system, capture the ERP trail only
   for the business outcome ERPNext actually owns.
 

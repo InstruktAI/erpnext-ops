@@ -241,6 +241,7 @@ snippets:
   visibility: internal
   superseded_by:
   - erpnext-module-method-call
+  - erpnext-preview-native-facts
   source_project: erpnext-ops
 - id: erp/spec/company-layout
   description: Site and company identity and credential layout for operating per-tenant
