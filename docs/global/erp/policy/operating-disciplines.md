@@ -35,14 +35,14 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 - **Respect submitted-document semantics.** `docstatus` is `0` draft, `1` submitted, and `2`
   cancelled. Submitted financial documents are changed through cancel-and-amend flows, not
   direct edits.
-- **Establish the way back before relying on it.** Reversal is not one mechanism: a draft
-  edit is inverted from its version history, a deletion is restored, a submitted document is
-  cancelled and amended, a link or allocation is undone by its own native inverse, and an
-  external effect is compensated, never recalled. Before applying a mutation whose correctness
-  is not yet determined, the agent reads the target's submittability and `docstatus` from live
-  metadata, names the mechanism that would correct it, the dependencies that mechanism must
-  clear, and the read-back that proves the correction, and treats a mutation with no such
-  mechanism as irreversible under the applicable safety gate.
+- **Establish the way back before relying on it.** Reversal is not one mechanism, and which
+  correction a target supports is a fact about that target on that site, not a general rule.
+  Before applying a mutation whose correctness is not yet determined, the agent reads the
+  target's submittability and `docstatus` from live metadata, establishes from native state
+  and vendor source which correction the site supports for it, names the dependencies that
+  correction must clear and the read-back that proves it, and treats a mutation with no
+  supported correction as irreversible under the applicable safety gate. An effect outside
+  ERPNext is never recalled by a correction inside it.
 - **Keep secrets out of output.** API keys, secrets, and login links are written only to their
   credential destination or sent through the documented ERPNext channel.
 

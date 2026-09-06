@@ -1,8 +1,6 @@
 ---
-description: Settle a customer invoice under an agreed early-payment discount, using
+description: Settle a customer invoice under an agreed early-payment discount, using the receipt date to prove eligibility and preserving the discount as an explicit ledger effect.
 activation_trigger: Use when a customer pays less than an invoice's face value under accepted payment terms that grant a discount for receipt by a stated date.
-  the receipt date to prove eligibility and preserving the discount as an explicit
-  ledger effect.
 ---
 # Customer Early-Payment Discount — Procedure
 
