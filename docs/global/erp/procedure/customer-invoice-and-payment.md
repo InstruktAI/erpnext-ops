@@ -113,9 +113,6 @@ from the last command an agent remembers running.
 
 ## See Also
 
-- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/principle/business-input-traceability.md
-- ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
 <!-- planned:erpnext-mapper-arguments -->
 - ~/.teleclaude/docs/erp/procedure/customer-early-payment-discount.md

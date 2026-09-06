@@ -44,6 +44,9 @@ the CLI contract below, not raw transport mechanics.
 <!-- change:erpnext-mapper-arguments -->
 - `erpnext doc map <doctype> <name> --via <native-mapper> [--args <json>] [--data <json>] [--apply]`
 <!-- /planned-change:erpnext-mapper-arguments -->
+<!-- planned:erpnext-module-method-call -->
+- `erpnext method call <dotted-method> [--data <json>] [--apply]`
+<!-- /planned:erpnext-module-method-call -->
 - `erpnext workflow submit <doctype> <name> [--apply]`
 - `erpnext workflow cancel <doctype> <name> [--apply]`
 - `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
@@ -127,6 +130,15 @@ non-zero exit.
   returns a changed document, apply refuses a different doctype or name, saves that exact
   returned document, and reports the stored result. A controller that ran but could not save
   is a partial failure carrying the method result, never success.
+<!-- planned:erpnext-module-method-call -->
+- `method call` invokes a dotted native module method through Frappe's standard method endpoint.
+  Its optional `--data` is an opaque JSON object for that method. The CLI previews or sends the
+  request under the selected context and reports the native response. Its preview contains only
+  `context`, `operation` (the dotted method and opaque payload), and `apply_command`; business
+  `summary`, DocType `preflight`, and document `persistence` are not applicable. It does not
+  interpret business state, read back records, or substitute behavior when the method is
+  unavailable.
+<!-- /planned:erpnext-module-method-call -->
 <!-- planned-change:erpnext-mapper-arguments -->
 - `doc map` passes the source under every argument name the native mappers use, because the
   selling chain names it `source_name` and the accounts chain names it `dt` and `dn`; the

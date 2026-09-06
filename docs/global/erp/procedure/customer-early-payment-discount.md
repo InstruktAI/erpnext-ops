@@ -119,7 +119,4 @@ strictly distinct.
 
 ## See Also
 
-- ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/procedure/customer-invoice-and-payment.md
 - ~/.teleclaude/docs/erp/procedure/customer-payment-difference.md
-- ~/.teleclaude/docs/erp/procedure/customer-receipt-allocation.md

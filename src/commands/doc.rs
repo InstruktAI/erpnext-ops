@@ -268,7 +268,47 @@ fn json_loosely_equal(a: &Value, b: &Value) -> bool {
     }
 }
 
-/// `erpnext doc map <doctype> <name> --via <native.mapper> [--apply]`
+enum JsonObjectInputError {
+    InvalidJson {
+        option: &'static str,
+        source: serde_json::Error,
+    },
+    NotObject {
+        option: &'static str,
+    },
+}
+
+fn parse_json_object(
+    option: &'static str,
+    raw: Option<&str>,
+) -> Result<Map<String, Value>, JsonObjectInputError> {
+    let Some(raw) = raw else {
+        return Ok(Map::new());
+    };
+
+    match serde_json::from_str(raw) {
+        Ok(Value::Object(object)) => Ok(object),
+        Ok(_) => Err(JsonObjectInputError::NotObject { option }),
+        Err(source) => Err(JsonObjectInputError::InvalidJson { option, source }),
+    }
+}
+
+fn render_json_object_error(error: JsonObjectInputError) -> i32 {
+    match error {
+        JsonObjectInputError::InvalidJson { option, source } => output::fail(
+            "payload",
+            &format!("{option} is not valid JSON: {source}"),
+            output::EXIT_CONFIG,
+        ),
+        JsonObjectInputError::NotObject { option } => output::fail(
+            "payload",
+            &format!("{option} must be a JSON object"),
+            output::EXIT_CONFIG,
+        ),
+    }
+}
+
+/// `erpnext doc map <doctype> <name> --via <native.mapper> [--args <json>] [--data <json>] [--apply]`
 ///
 /// ERPNext converts documents along its own chains — quotation to sales order, sales
 /// order to invoice — through mapper methods that copy items, taxes and terms and link
@@ -279,37 +319,28 @@ pub async fn map(
     doctype: &str,
     name: &str,
     via: &str,
+    args: Option<&str>,
     data: Option<&str>,
     apply: bool,
 ) -> i32 {
-    let overrides: Map<String, Value> = match data {
-        None => Map::new(),
-        Some(raw) => match serde_json::from_str::<Value>(raw) {
-            Ok(Value::Object(m)) => m,
-            Ok(_) => {
-                return output::fail(
-                    "payload",
-                    "--data must be a JSON object",
-                    output::EXIT_CONFIG,
-                )
-            }
-            Err(e) => {
-                return output::fail(
-                    "payload",
-                    &format!("--data is not valid JSON: {e}"),
-                    output::EXIT_CONFIG,
-                )
-            }
-        },
+    let mut mapper_args = match parse_json_object("--args", args) {
+        Ok(arguments) => arguments,
+        Err(error) => return render_json_object_error(error),
+    };
+    let overrides = match parse_json_object("--data", data) {
+        Ok(overrides) => overrides,
+        Err(error) => return render_json_object_error(error),
     };
 
+    // Selling-chain mappers name the source `source_name`; accounts-chain mappers
+    // name it `dt` and `dn`. Insert these after optional arguments so the caller
+    // cannot redirect the mapper to a different source document.
+    mapper_args.insert("source_name".into(), Value::String(name.into()));
+    mapper_args.insert("dt".into(), Value::String(doctype.into()));
+    mapper_args.insert("dn".into(), Value::String(name.into()));
+
     let mapped = match client
-        .post(
-            &format!("/api/method/{via}"),
-            // Selling-chain mappers name the source `source_name`; accounts-chain mappers
-            // name it `dt` and `dn`. The site binds what its signature declares.
-            &json!({ "source_name": name, "dt": doctype, "dn": name }),
-        )
+        .post(&format!("/api/method/{via}"), &Value::Object(mapper_args))
         .await
     {
         Ok(v) => v.pointer("/message").cloned().unwrap_or(Value::Null),

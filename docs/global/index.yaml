@@ -226,6 +226,16 @@ snippets:
   path: docs/erp/procedure/project-work-to-invoice.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/procedure/supplier-invoice-and-payment
+  description: Pay a submitted supplier invoice through a source-linked Payment Entry
+    and prove the payable and bank ledger effects from native state.
+  type: procedure
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/procedure/supplier-invoice-and-payment.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/spec/cli-surface
   description: Agent-facing erpnext CLI command surface for operating per-tenant ERPNext
     sites.
@@ -237,6 +247,7 @@ snippets:
   visibility: internal
   superseded_by:
   - erpnext-mapper-arguments
+  - erpnext-module-method-call
   source_project: erpnext-ops
 - id: erp/spec/company-layout
   description: Site and company identity and credential layout for operating per-tenant
