@@ -9,6 +9,8 @@ activation_trigger: Use when a service, production, tour, or custom project busi
 @~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 @~/.teleclaude/docs/erp/concept/business-activity-trail.md
 @~/.teleclaude/docs/erp/policy/operating-disciplines.md
+@~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+@~/.teleclaude/docs/erp/procedure/prove-native-effect.md
 
 ## Goal
 

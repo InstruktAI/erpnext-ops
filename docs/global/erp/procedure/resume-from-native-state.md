@@ -4,6 +4,10 @@ activation_trigger: Use when a create, mapper, or submit response was lost, a ru
 ---
 # Resume From Native State — Procedure
 
+## Required reads
+
+@~/.teleclaude/docs/erp/procedure/prove-native-effect.md
+
 ## Goal
 
 Continue an ERP operation from what the site actually holds, so a lost response,

@@ -10,6 +10,8 @@ activation_trigger: Use when a submitted Purchase Invoice is approved for paymen
 @~/.teleclaude/docs/erp/principle/determinate-autonomy.md
 @~/.teleclaude/docs/erp/policy/operating-disciplines.md
 @~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
+@~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+@~/.teleclaude/docs/erp/procedure/prove-native-effect.md
 
 ## Goal
 

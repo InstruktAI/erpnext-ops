@@ -4,6 +4,11 @@ activation_trigger: Use when one real customer receipt must be allocated across 
 ---
 # Customer Receipt Allocation — Procedure
 
+## Required reads
+
+@~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+@~/.teleclaude/docs/erp/procedure/prove-native-effect.md
+
 ## Goal
 
 Record one real customer receipt against one or more submitted invoices, leaving each invoice

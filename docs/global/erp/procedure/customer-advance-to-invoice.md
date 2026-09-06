@@ -8,6 +8,11 @@ activation_trigger: Use when a customer has actually paid money before final bil
 ---
 # Customer Advance To Invoice — Procedure
 
+## Required reads
+
+@~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+@~/.teleclaude/docs/erp/procedure/prove-native-effect.md
+
 ## Goal
 
 Record money received before final billing as a source-linked customer advance, carry it into
