@@ -1,5 +1,8 @@
+kind: project
+company: instrukt-ai
 business:
   publishes:
-    - slug: erp
-      trigger: Operating ERPNext tenant sites, business records, or order-to-invoice workflows through the erpnext CLI
+  - slug: erp
+    trigger: Operating ERPNext tenant sites, business records, or 
+      order-to-invoice workflows through the erpnext CLI
 project_slug: erpnext-ops
