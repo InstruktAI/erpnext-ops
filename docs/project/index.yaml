@@ -1,6 +1,17 @@
 project_root: ~/Workspace/InstruktAI/erpnext-ops
 snippets_root: ~/Workspace/InstruktAI/erpnext-ops/docs/project
 snippets:
+- id: project/policy/test-authorship
+  description: This repository authors tests. Spec-bound behavior is proven by the
+    compiled erpnext binary against a mocked site; the corpus is kept and grown under
+    the global and Rust testing policies.
+  type: policy
+  scope: project
+  domain: project
+  activation_trigger: null
+  path: docs/project/policy/test-authorship.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: project/principle/generic-cli-substrate
   description: Keep the erpnext CLI generic over native Frappe and ERPNext mechanisms;
     express business scenarios by composing those primitives in procedures.
