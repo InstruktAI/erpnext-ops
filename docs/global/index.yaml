@@ -41,6 +41,17 @@ snippets:
   path: docs/erp/concept/operation-model.md
   visibility: internal
   source_project: erpnext-ops
+- id: erp/policy/documentation-authoring
+  description: "Where each kind of ERP knowledge belongs \u2014 CLI guarantee, vendor\
+    \ mechanism, business safeguard, company preference, or deployment fact \u2014\
+    \ and what never becomes prose because a live source answers it."
+  type: policy
+  scope: global
+  domain: erp
+  activation_trigger: null
+  path: docs/erp/policy/documentation-authoring.md
+  visibility: internal
+  source_project: erpnext-ops
 - id: erp/policy/operating-disciplines
   description: Disciplines for agents acting on ERPNext site data through the erpnext
     CLI.
