@@ -1,7 +1,5 @@
 ---
 description: Native facts and replayable invocations in read-only mutation previews.
-delivered_by:
-  - erpnext-preview-observed-facts
 ---
 # Mutation Preview — Spec
 
