@@ -110,17 +110,6 @@ replayed, sending no second create
 And reusing the token with different data fails as a structured idempotency conflict.
 ```
 
-<!-- planned-change:erpnext-map-native-links -->
-#### UC-9:
-
-```gherkin
-Scenario: Conversion along an ERPNext chain keeps its link to the source
-Given a submitted document and the native mapper for its next document in the chain
-When the agent runs `erpnext doc map <doctype> <name> --via <native-mapper> --apply`
-Then the site builds the target document and it is created with its items and terms
-And a created document that references no source fails as a linkage error.
-```
-<!-- change:erpnext-map-native-links -->
 #### UC-9:
 
 ```gherkin
@@ -134,7 +123,6 @@ And a relationship the inspected definitions cannot express is reported as a dis
 And either failure retains the created document reference without claiming that creation was rolled back
 And an incidental mention of the source in ordinary text never proves a relationship
 ```
-<!-- /planned-change:erpnext-map-native-links -->
 
 #### UC-MAP1:
 

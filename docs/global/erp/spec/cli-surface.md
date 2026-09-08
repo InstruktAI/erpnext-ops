@@ -176,11 +176,6 @@ non-zero exit.
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
   native mapper inputs before the site builds the target document; `--data` overrides
   target-document fields only after mapping.
-<!-- planned-change:erpnext-map-native-links -->
-- `doc map` inspects the creation response and fails when it finds no mention of the
-  source name in the returned document. That check does not establish a native link
-  relationship.
-<!-- change:erpnext-map-native-links -->
 - `doc map` reads the created document back and verifies its relationship to the source
   through the DocType's Link and Dynamic Link fields, including child rows, reporting one
   of three outcomes: verified, missing, or not expressible through the inspected metadata.
@@ -189,7 +184,6 @@ non-zero exit.
   latter reports unavailable proof, not evidence that the relationship is absent.
   Preservation of every source-row identity and correctness of consumed quantities remain
   the calling procedure's proof.
-<!-- /planned-change:erpnext-map-native-links -->
 - Mapping the same source twice creates a second document; the command carries no replay
   protection.
 - Activity commands are thin operations over native Frappe and ERPNext records such as
