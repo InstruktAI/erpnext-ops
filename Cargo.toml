@@ -19,6 +19,7 @@ url = "2"
 
 [dev-dependencies]
 httpmock = "0.7"
+insta = { version = "1", features = ["json"] }
 tokio = { version = "1", features = ["test-util", "time"] }
 
 [profile.release]

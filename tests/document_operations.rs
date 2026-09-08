@@ -48,6 +48,9 @@ fn target_meta() -> Value {
     json!({ "data": { "fields": [
         { "fieldname": "party", "fieldtype": "Link", "options": "Customer" },
         { "fieldname": "references", "fieldtype": "Table", "options": "Payment Entry Reference" },
+        { "fieldname": "reference_date" },
+        { "fieldname": "posting_date" },
+        { "fieldname": "discount_eligible" },
     ]}})
 }
 
@@ -92,6 +95,20 @@ fn mock_read_back<'a>(server: &'a MockServer, name: &str, stored: Value) -> Mock
     })
 }
 
+fn mock_source_document(server: &MockServer) {
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00001");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+}
+
+fn mock_source_and_target_metadata(server: &MockServer) {
+    mock_source_document(server);
+    mock_target_meta(server, target_meta());
+}
+
 fn map_invocation<'a>(args: Option<&'a str>, data: Option<&'a str>, apply: bool) -> Vec<&'a str> {
     let mut invocation = vec![
         "doc",
@@ -117,6 +134,7 @@ fn map_invocation<'a>(args: Option<&'a str>, data: Option<&'a str>, apply: bool)
 // spec: project/spec/feature/erp-operations/document-operations UC-MAP1
 fn mapper_inputs_reach_the_native_mapper_before_target_construction() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -140,6 +158,7 @@ fn mapper_inputs_reach_the_native_mapper_before_target_construction() {
 // spec: project/spec/feature/erp-operations/document-operations UC-MAP2
 fn target_overrides_apply_after_mapping_without_entering_mapper_inputs() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -176,6 +195,7 @@ fn target_overrides_apply_after_mapping_without_entering_mapper_inputs() {
 // spec: project/spec/feature/erp-operations/document-operations UC-MAP3
 fn mapper_inputs_cannot_replace_the_selected_source_identity() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -253,6 +273,7 @@ fn non_object_mapper_arguments_fail_before_any_http_request() {
 // spec: project/spec/feature/erp-operations/document-operations UC-MAP5
 fn preview_and_apply_use_the_same_post_override_target() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     let expected_mapper_request = mapper_request(json!({ "reference_date": "2026-09-01" }));
     let mapper = server.mock(|when, then| {
         when.method(POST)
@@ -295,7 +316,6 @@ fn preview_and_apply_use_the_same_post_override_target() {
             .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
     });
     assert_eq!(create.hits(), 0);
-    mock_target_meta(&server, target_meta());
     mock_reference_meta(&server);
     mock_read_back(
         &server,
@@ -328,6 +348,7 @@ fn preview_and_apply_use_the_same_post_override_target() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn stored_native_relationship_reports_verified_success() {
     let server = MockServer::start();
+    mock_source_document(&server);
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -368,6 +389,7 @@ fn stored_native_relationship_reports_verified_success() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn expressible_schema_with_no_matching_relationship_reports_linkage_missing() {
     let server = MockServer::start();
+    mock_source_document(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -399,6 +421,7 @@ fn expressible_schema_with_no_matching_relationship_reports_linkage_missing() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn source_free_schema_reports_linkage_unavailable() {
     let server = MockServer::start();
+    mock_source_document(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -429,6 +452,7 @@ fn source_free_schema_reports_linkage_unavailable() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn restricted_hidden_candidate_reports_linkage_unavailable_not_missing() {
     let server = MockServer::start();
+    mock_source_document(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -471,6 +495,7 @@ fn restricted_hidden_candidate_reports_linkage_unavailable_not_missing() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn missing_create_response_name_is_a_shape_failure_before_any_read_back() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -482,9 +507,9 @@ fn missing_create_response_name_is_a_shape_failure_before_any_read_back() {
         when.method(POST).path("/api/v2/document/Payment%20Entry");
         then.status(200).json_body(json!({ "data": {} }));
     });
-    let get_requests = server.mock(|when, then| {
+    let read_back = server.mock(|when, then| {
         when.method(GET)
-            .path_matches(Regex::new(".*").expect("request matcher"));
+            .path("/api/v2/document/Payment%20Entry/ACC-PAY-2026-00001");
         then.status(200).json_body(json!({}));
     });
 
@@ -498,13 +523,14 @@ fn missing_create_response_name_is_a_shape_failure_before_any_read_back() {
         Some(&json!("Payment Entry"))
     );
     assert_eq!(error.pointer("/data/created"), Some(&json!(true)));
-    assert_eq!(get_requests.hits(), 0);
+    assert_eq!(read_back.hits(), 0);
 }
 
 #[test]
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn read_back_rejection_preserves_the_created_reference() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -543,6 +569,7 @@ fn read_back_rejection_preserves_the_created_reference() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn read_back_of_a_different_document_is_a_shape_failure() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -580,6 +607,7 @@ fn read_back_of_a_different_document_is_a_shape_failure() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn read_back_of_a_matching_name_but_different_doctype_is_a_shape_failure() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -617,6 +645,7 @@ fn read_back_of_a_matching_name_but_different_doctype_is_a_shape_failure() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn malformed_root_metadata_is_a_shape_failure_via_collect_schema() {
     let server = MockServer::start();
+    mock_source_document(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -656,6 +685,7 @@ fn malformed_root_metadata_is_a_shape_failure_via_collect_schema() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn matched_root_link_verifies_despite_a_later_malformed_child_table() {
     let server = MockServer::start();
+    mock_source_document(&server);
     server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -700,6 +730,12 @@ fn matched_root_link_verifies_despite_a_later_malformed_child_table() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn mapper_rejection_is_a_failure_without_target_creation() {
     let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00001");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -727,6 +763,7 @@ fn mapper_rejection_is_a_failure_without_target_creation() {
 // spec: project/spec/feature/erp-operations/document-operations UC-9
 fn target_creation_rejection_is_a_failure_after_mapping() {
     let server = MockServer::start();
+    mock_source_and_target_metadata(&server);
     let mapper = server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
@@ -749,4 +786,70 @@ fn target_creation_rejection_is_a_failure_after_mapping() {
     );
     mapper.assert();
     create.assert();
+}
+
+/// ERPNext enriches child rows with names, indexes, accounts, and derived amounts. A
+/// replay compares the caller-owned fields recursively and must not mistake those
+/// server-owned additions for divergent input. Migrated from transport_contract.rs to
+/// the compiled-binary boundary per the live test-authorship ruling; the binding is
+/// unchanged.
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-8
+fn source_replay_accepts_server_enriched_child_rows() {
+    let server = MockServer::start();
+
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Sales%20Invoice/meta");
+        then.status(200).json_body(json!({ "data": { "fields": [
+            { "fieldname": "customer" }, { "fieldname": "items" },
+        ]}}));
+    });
+    let get_existing = server.mock(|when, then| {
+        when.method(GET).path_matches(
+            Regex::new("^/api/v2/document/Sales%20Invoice/SRC-[0-9a-f]{20}$").expect("regex"),
+        );
+        then.status(200).json_body(json!({ "data": {
+            "name": "SRC-known",
+            "customer": "CUSTOMER-1",
+            "items": [{
+                "item_code": "SERVICE-1",
+                "qty": 1.0,
+                "rate": 100.0,
+                "amount": 100.0,
+                "income_account": "Services - CO",
+                "idx": 1,
+                "name": "row-1",
+            }],
+        }}));
+    });
+    let create = server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Sales%20Invoice");
+        then.status(200).json_body(json!({}));
+    });
+
+    let output = cli::run_cli_against(
+        &server,
+        &[
+            "doc",
+            "create",
+            "Sales Invoice",
+            "--data",
+            r#"{"customer":"CUSTOMER-1","items":[{"item_code":"SERVICE-1","qty":1,"rate":100}]}"#,
+            "--source",
+            "sales-invoice/customer-1/service-1",
+            "--apply",
+        ],
+    );
+
+    assert!(
+        output.status.success(),
+        "server-owned child fields do not break replay: {output:?}"
+    );
+    get_existing.assert();
+    assert_eq!(
+        create.hits(),
+        0,
+        "a replay must not create a second invoice"
+    );
 }

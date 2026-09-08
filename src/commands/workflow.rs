@@ -1,13 +1,34 @@
 use serde_json::{json, Map, Value};
 
+use crate::_preview::{self, ReplayArgs};
 use crate::output;
-use crate::summary;
 use crate::transport::{encode_segment, ApiError, Client};
 
 /// Docstatus values ERPNext gives documents: draft, submitted, cancelled.
 const DRAFT: i64 = 0;
 const SUBMITTED: i64 = 1;
 const CANCELLED: i64 = 2;
+
+fn document_path(doctype: &str, name: &str) -> String {
+    format!(
+        "/api/v2/document/{}/{}",
+        encode_segment(doctype),
+        encode_segment(name)
+    )
+}
+
+fn collection_path(doctype: &str) -> String {
+    format!("/api/v2/document/{}", encode_segment(doctype))
+}
+
+fn method_path(doctype: &str, name: &str, method: &str) -> String {
+    format!(
+        "/api/v2/document/{}/{}/method/{}/",
+        encode_segment(doctype),
+        encode_segment(name),
+        encode_segment(method)
+    )
+}
 
 /// `erpnext workflow submit <doctype> <name> [--apply]`
 pub async fn submit(client: &Client, doctype: &str, name: &str, apply: bool) -> i32 {
@@ -22,24 +43,55 @@ pub async fn cancel(client: &Client, doctype: &str, name: &str, apply: bool) -> 
 /// Drive a document's docstatus through the native document envelope, then read the
 /// document back. The site answers a lifecycle request with the document body and an
 /// unchanged docstatus when it declines the transition, so success is only claimed
-/// once the stored docstatus proves it.
+/// once the stored docstatus proves it. Both preview and apply read the current
+/// document and its metadata first; an unreadable read stops the command before any
+/// PUT.
 async fn transition(client: &Client, doctype: &str, name: &str, target: i64, apply: bool) -> i32 {
-    let path = format!(
-        "/api/v2/document/{}/{}",
-        encode_segment(doctype),
-        encode_segment(name)
-    );
+    let path = document_path(doctype, name);
     let payload = json!({ "docstatus": target });
 
+    let doc = match client.get(&path).await {
+        Ok(v) => v,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("current document read failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
+    let meta = match super::meta::fetch(client, doctype).await {
+        Ok(m) => m,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("metadata read failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
+
     if !apply {
-        let action = if target == CANCELLED {
-            summary::Action::Cancel { doctype, name }
+        let doc_body = doc.pointer("/data").cloned().unwrap_or(Value::Null);
+        let args = if target == CANCELLED {
+            ReplayArgs::WorkflowCancel { doctype, name }
         } else {
-            summary::Action::Submit { doctype, name }
+            ReplayArgs::WorkflowSubmit { doctype, name }
         };
-        return output::ok(preview_envelope(
-            client, &action, "PUT", &path, &payload, target,
-        ));
+        return output::ok(
+            _preview::Preview {
+                context: _preview::context_json(client.context()),
+                operation: json!({ "method": "PUT", "path": path, "payload": payload }),
+                target: Some(_preview::target_json(&doc_body)),
+                schema: Some(_preview::schema_json(&meta)),
+                preflight: _preview::no_fields_preflight_json(),
+                apply_command: _preview::apply_command(client.context(), &args),
+                idempotency: None,
+                intended_state: Some(describe(target)),
+                persistence: None,
+            }
+            .into_json(),
+        );
     }
 
     if let Err(e) = client.put(&path, &payload).await {
@@ -82,7 +134,9 @@ async fn transition(client: &Client, doctype: &str, name: &str, target: i64, app
 /// `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
 ///
 /// ERPNext amends a cancelled document by creating a new draft that carries
-/// `amended_from`; the cancelled document itself never changes.
+/// `amended_from`; the cancelled document itself never changes. The source is
+/// read fresh on both preview and apply, so a source that changed status after a
+/// preview is re-checked before any draft is created.
 pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply: bool) -> i32 {
     let overrides: Map<String, Value> = match serde_json::from_str::<Value>(data) {
         Ok(Value::Object(m)) => m,
@@ -102,11 +156,7 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
         }
     };
 
-    let source_path = format!(
-        "/api/v2/document/{}/{}",
-        encode_segment(doctype),
-        encode_segment(name)
-    );
+    let source_path = document_path(doctype, name);
     let source = match client.get(&source_path).await {
         Ok(v) => v.pointer("/data").cloned().unwrap_or(Value::Null),
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
@@ -127,38 +177,65 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
         );
     }
 
-    let mut payload = source.as_object().cloned().unwrap_or_default();
-    payload.remove("name");
-    payload.remove("creation");
-    payload.remove("modified");
-    payload.insert("docstatus".into(), json!(DRAFT));
-    payload.insert("amended_from".into(), json!(name));
-    for (key, value) in overrides {
-        payload.insert(key, value);
-    }
-    let payload = Value::Object(payload);
+    let meta = match super::meta::fetch(client, doctype).await {
+        Ok(m) => m,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("metadata read failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
 
-    let create_path = format!("/api/v2/document/{}", encode_segment(doctype));
+    let mut draft_map = source.as_object().cloned().unwrap_or_default();
+    draft_map.remove("name");
+    draft_map.remove("creation");
+    draft_map.remove("modified");
+    draft_map.insert("docstatus".into(), json!(DRAFT));
+    draft_map.insert("amended_from".into(), json!(name));
+    for (key, value) in overrides.clone() {
+        draft_map.insert(key, value);
+    }
+    let draft = Value::Object(draft_map.clone());
+
+    let create_path = collection_path(doctype);
 
     if !apply {
-        return output::ok(preview_envelope(
-            client,
-            &summary::Action::Amend { doctype, name },
-            "POST",
-            &create_path,
-            &payload,
-            DRAFT,
-        ));
+        let requested_data = Value::Object(overrides);
+        return output::ok(
+            _preview::Preview {
+                context: _preview::context_json(client.context()),
+                operation: json!({ "method": "POST", "path": create_path, "payload": draft }),
+                target: Some(_preview::target_json(&source)),
+                schema: Some(_preview::schema_json(&meta)),
+                preflight: _preview::preflight_json(doctype, &meta, &draft_map),
+                apply_command: _preview::apply_command(
+                    client.context(),
+                    &ReplayArgs::WorkflowAmend {
+                        doctype,
+                        name,
+                        data: &requested_data,
+                    },
+                ),
+                idempotency: None,
+                intended_state: Some(describe(DRAFT)),
+                persistence: None,
+            }
+            .into_json(),
+        );
     }
 
-    match client.post(&create_path, &payload).await {
+    match client.post(&create_path, &draft).await {
         Ok(v) => output::ok_payload(v),
         Err(e) => output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     }
 }
 
 /// `erpnext workflow method <doctype> <name> <method> [--data <json>] [--apply]` — run a
-/// whitelisted controller method through the native method envelope.
+/// whitelisted controller method through the native method envelope. Both preview
+/// and apply read the current document and its metadata first; the method's
+/// `--data` is opaque method arguments, never checked as document fields.
 pub async fn run_method(
     client: &Client,
     doctype: &str,
@@ -188,29 +265,56 @@ pub async fn run_method(
         },
     };
 
-    let path = format!(
-        "/api/v2/document/{}/{}/method/{}/",
-        encode_segment(doctype),
-        encode_segment(name),
-        encode_segment(method)
-    );
+    let path = method_path(doctype, name, method);
+
+    let doc = match client.get(&document_path(doctype, name)).await {
+        Ok(v) => v,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("current document read failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
+    let meta = match super::meta::fetch(client, doctype).await {
+        Ok(m) => m,
+        Err(e) => {
+            return output::fail(
+                e.kind(),
+                &format!("metadata read failed: {e}"),
+                output::EXIT_API,
+            )
+        }
+    };
 
     if !apply {
-        return output::ok(json!({
-            "preview": true,
-            "summary": summary::describe(
-                &summary::Action::Method { doctype, name, method },
-                client.context().company.as_deref(),
-            ),
-            "context": {
-                "site": client.context().site(),
-                "company": client.context().company,
-                "privilege": client.context().privilege,
-            },
-            "operation": { "method": "POST", "path": path, "payload": payload },
-            "persistence": "when the method returns the changed document, apply saves that exact document and reports the stored result",
-            "apply_command": "re-run the same command with --apply",
-        }));
+        let doc_body = doc.pointer("/data").cloned().unwrap_or(Value::Null);
+        let requested_data = if data.is_some() { Some(&payload) } else { None };
+        return output::ok(
+            _preview::Preview {
+                context: _preview::context_json(client.context()),
+                operation: json!({ "method": "POST", "path": path, "payload": payload }),
+                target: Some(_preview::target_json(&doc_body)),
+                schema: Some(_preview::schema_json(&meta)),
+                preflight: _preview::opaque_preflight_json(),
+                apply_command: _preview::apply_command(
+                    client.context(),
+                    &ReplayArgs::WorkflowMethod {
+                        doctype,
+                        name,
+                        method,
+                        data: requested_data,
+                    },
+                ),
+                idempotency: None,
+                intended_state: None,
+                persistence: Some(
+                    "when the method returns the changed document, apply saves that exact document and reports the stored result",
+                ),
+            }
+            .into_json(),
+        );
     }
 
     match apply_method(client, doctype, name, method, &payload).await {
@@ -251,14 +355,8 @@ pub async fn apply_method(
     method: &str,
     payload: &Value,
 ) -> Result<Value, MethodApplyError> {
-    let method_path = format!(
-        "/api/v2/document/{}/{}/method/{}/",
-        encode_segment(doctype),
-        encode_segment(name),
-        encode_segment(method)
-    );
     let method_result = client
-        .post(&method_path, payload)
+        .post(&method_path(doctype, name, method), payload)
         .await
         .map_err(MethodApplyError::Request)?;
 
@@ -279,41 +377,16 @@ pub async fn apply_method(
             )));
     }
 
-    let document_path = format!(
-        "/api/v2/document/{}/{}",
-        encode_segment(doctype),
-        encode_segment(name)
-    );
-    match client.put(&document_path, returned_doc).await {
+    match client
+        .put(&document_path(doctype, name), returned_doc)
+        .await
+    {
         Ok(saved) => Ok(output::site_payload(saved)),
         Err(error) => Err(MethodApplyError::Save {
             error,
             method_result,
         }),
     }
-}
-
-fn preview_envelope(
-    client: &Client,
-    action: &summary::Action,
-    method: &str,
-    path: &str,
-    payload: &Value,
-    target: i64,
-) -> Value {
-    json!({
-        "preview": true,
-        "summary": summary::describe(action, client.context().company.as_deref()),
-        "context": {
-            "site": client.context().site(),
-            "company": client.context().company,
-            "privilege": client.context().privilege,
-        },
-        "operation": { "method": method, "path": path, "payload": payload },
-        "intended_state": describe(target),
-        "verification": "the stored docstatus is read back on apply; an unchanged docstatus fails",
-        "apply_command": "re-run the same command with --apply",
-    })
 }
 
 fn describe(docstatus: i64) -> &'static str {

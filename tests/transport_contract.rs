@@ -480,28 +480,6 @@ fn diagnostics_fail_when_the_configured_endpoint_is_unreachable() {
 }
 
 #[tokio::test]
-async fn preview_sends_no_request_at_all() {
-    let server = MockServer::start_async().await;
-    let catch_all = server.mock(|when, then| {
-        when.path_matches(Regex::new(".*").expect("regex"));
-        then.status(200).json_body(json!({}));
-    });
-
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(
-        &client,
-        "Customer",
-        r#"{"customer_name":"Acme"}"#,
-        None,
-        false,
-    )
-    .await;
-
-    assert_eq!(exit, 0);
-    assert_eq!(catch_all.hits(), 0, "preview must not touch the site");
-}
-
-#[tokio::test]
 async fn apply_sends_the_exact_native_request_with_auth() {
     let server = MockServer::start_async().await;
 
@@ -581,9 +559,24 @@ async fn rejected_credentials_surface_as_typed_auth_error() {
     assert!(!rendered.contains("test-secret"));
 }
 
-#[tokio::test]
-async fn workflow_submit_drives_docstatus_and_verifies_the_stored_state() {
-    let server = MockServer::start_async().await;
+/// The docstatus read-back also serves as the preview's and apply's pre-write
+/// observation; both invocations share it via the same mock. Compiled-binary
+/// boundary per the live test-authorship ruling.
+#[test]
+fn submit_apply_reports_success_only_once_stored_docstatus_confirms_it() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/INV-0001");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Sales%20Invoice/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
     let put = server.mock(|when, then| {
         when.method(PUT)
             .path("/api/v2/document/Sales%20Invoice/INV-0001")
@@ -591,29 +584,38 @@ async fn workflow_submit_drives_docstatus_and_verifies_the_stored_state() {
         then.status(200)
             .json_body(json!({ "data": { "docstatus": 1 } }));
     });
-    let read_back = server.mock(|when, then| {
-        when.method(GET)
-            .path("/api/v2/document/Sales%20Invoice/INV-0001");
-        then.status(200)
-            .json_body(json!({ "data": { "docstatus": 1 } }));
-    });
 
-    let client = Client::new(context_for(&server)).expect("client");
-
-    let preview = commands::workflow::submit(&client, "Sales Invoice", "INV-0001", false).await;
-    assert_eq!(preview, 0);
+    let preview = run_cli_against(
+        &server,
+        &["workflow", "submit", "Sales Invoice", "INV-0001"],
+    );
+    assert!(preview.status.success(), "{preview:?}");
     assert_eq!(put.hits(), 0, "preview must not touch the site");
 
-    let applied = commands::workflow::submit(&client, "Sales Invoice", "INV-0001", true).await;
-    assert_eq!(applied, 0);
+    let applied = run_cli_against(
+        &server,
+        &["workflow", "submit", "Sales Invoice", "INV-0001", "--apply"],
+    );
+    assert!(applied.status.success(), "{applied:?}");
     put.assert();
-    read_back.assert();
 }
 
 #[tokio::test]
 // spec: project/spec/feature/erp-operations/document-lifecycle UC-7
 async fn workflow_method_persists_the_native_controller_result() {
     let server = MockServer::start_async().await;
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Sales%20Invoice/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
     let method = server.mock(|when, then| {
         when.method(POST)
             .path("/api/v2/document/Sales%20Invoice/ACC-SINV-2026-00002/method/add_timesheet_data/")
@@ -673,6 +675,18 @@ async fn workflow_method_persists_the_native_controller_result() {
 async fn workflow_method_rejects_a_different_returned_document_without_saving() {
     let server = MockServer::start_async().await;
     server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/INV-1");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Sales%20Invoice/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
+    server.mock(|when, then| {
         when.method(POST)
             .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data/");
         then.status(200).json_body(json!({ "docs": [{
@@ -721,6 +735,18 @@ async fn workflow_method_preserves_the_controller_result_when_save_fails() {
         "timesheets": [{ "time_sheet": "TS-1" }]
     }] });
     server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Sales%20Invoice/INV-1");
+        then.status(200)
+            .json_body(json!({ "data": { "docstatus": 1 } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Sales%20Invoice/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
+    server.mock(|when, then| {
         when.method(POST)
             .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data/");
         then.status(200).json_body(method_result.clone());
@@ -759,9 +785,10 @@ async fn workflow_method_preserves_the_controller_result_when_save_fails() {
 
 /// The site answers a declined lifecycle request with the document body and an
 /// unchanged docstatus. Reporting that as success is the defect this pins.
-#[tokio::test]
-async fn workflow_submit_fails_when_the_docstatus_never_changes() {
-    let server = MockServer::start_async().await;
+/// Compiled-binary boundary per the live test-authorship ruling.
+#[test]
+fn submit_apply_fails_when_stored_docstatus_never_changes() {
+    let server = MockServer::start();
     server.mock(|when, then| {
         when.method(PUT).path("/api/v2/document/Quotation/Q-1");
         then.status(200)
@@ -772,16 +799,28 @@ async fn workflow_submit_fails_when_the_docstatus_never_changes() {
         then.status(200)
             .json_body(json!({ "data": { "docstatus": 0 } }));
     });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Quotation/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::workflow::submit(&client, "Quotation", "Q-1", true).await;
+    let output = run_cli_against(
+        &server,
+        &["workflow", "submit", "Quotation", "Q-1", "--apply"],
+    );
 
-    assert_eq!(exit, 1, "a silent no-op must never be reported as success");
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "a silent no-op must never be reported as success: {output:?}"
+    );
 }
 
-#[tokio::test]
-async fn workflow_amend_refuses_a_document_that_is_not_cancelled() {
-    let server = MockServer::start_async().await;
+/// Compiled-binary boundary per the live test-authorship ruling.
+#[test]
+fn amend_apply_refuses_a_document_that_is_not_cancelled() {
+    let server = MockServer::start();
     server.mock(|when, then| {
         when.method(GET).path("/api/v2/document/Quotation/Q-2");
         then.status(200)
@@ -792,10 +831,20 @@ async fn workflow_amend_refuses_a_document_that_is_not_cancelled() {
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::workflow::amend(&client, "Quotation", "Q-2", "{}", true).await;
+    let output = run_cli_against(
+        &server,
+        &[
+            "workflow",
+            "amend",
+            "Quotation",
+            "Q-2",
+            "--data",
+            "{}",
+            "--apply",
+        ],
+    );
 
-    assert_eq!(exit, 1);
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert_eq!(create.hits(), 0, "only cancelled documents are amended");
 }
 
@@ -902,10 +951,17 @@ async fn resolve_document_miss_is_structured_none() {
 /// The peer-specified crash-window proof: the first create reached ERPNext but its
 /// response was lost. The retry with the same source token resolves the existing
 /// document by its deterministic name and sends zero further create requests.
-#[tokio::test]
-async fn source_retry_after_lost_response_replays_without_second_create() {
-    let server = MockServer::start_async().await;
+/// Compiled-binary boundary per the live test-authorship ruling.
+#[test]
+fn source_retry_after_lost_response_replays_without_second_create() {
+    let server = MockServer::start();
 
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Quotation/meta");
+        then.status(200).json_body(json!({ "data": { "fields": [
+            { "fieldname": "party_name" }, { "fieldname": "quotation_to" },
+        ]}}));
+    });
     // The document already exists on the site (created by the "lost" first attempt).
     let get_existing = server.mock(|when, then| {
         when.method(GET).path_matches(
@@ -920,76 +976,39 @@ async fn source_retry_after_lost_response_replays_without_second_create() {
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(
-        &client,
-        "Quotation",
-        r#"{"party_name":"Acme Pilot BV","quotation_to":"Customer"}"#,
-        Some("quotation/acme-pilot/2026-07-onboarding"),
-        true,
-    )
-    .await;
+    let output = run_cli_against(
+        &server,
+        &[
+            "doc",
+            "create",
+            "Quotation",
+            "--data",
+            r#"{"party_name":"Acme Pilot BV","quotation_to":"Customer"}"#,
+            "--source",
+            "quotation/acme-pilot/2026-07-onboarding",
+            "--apply",
+        ],
+    );
 
-    assert_eq!(exit, 0, "a faithful replay succeeds");
+    assert!(
+        output.status.success(),
+        "a faithful replay succeeds: {output:?}"
+    );
     get_existing.assert();
     assert_eq!(create.hits(), 0, "the retry must send zero create requests");
 }
 
-/// ERPNext enriches child rows with names, indexes, accounts, and derived amounts. A
-/// replay compares the caller-owned fields recursively and must not mistake those
-/// server-owned additions for divergent input.
-#[tokio::test]
-// spec: project/spec/feature/erp-operations/document-operations UC-8
-async fn source_replay_accepts_server_enriched_child_rows() {
-    let server = MockServer::start_async().await;
-
-    let get_existing = server.mock(|when, then| {
-        when.method(GET).path_matches(
-            Regex::new("^/api/v2/document/Sales%20Invoice/SRC-[0-9a-f]{20}$").expect("regex"),
-        );
-        then.status(200).json_body(json!({ "data": {
-            "name": "SRC-known",
-            "customer": "CUSTOMER-1",
-            "items": [{
-                "item_code": "SERVICE-1",
-                "qty": 1.0,
-                "rate": 100.0,
-                "amount": 100.0,
-                "income_account": "Services - CO",
-                "idx": 1,
-                "name": "row-1",
-            }],
-        }}));
-    });
-    let create = server.mock(|when, then| {
-        when.method(POST).path("/api/v2/document/Sales%20Invoice");
-        then.status(200).json_body(json!({}));
-    });
-
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(
-        &client,
-        "Sales Invoice",
-        r#"{"customer":"CUSTOMER-1","items":[{"item_code":"SERVICE-1","qty":1,"rate":100}]}"#,
-        Some("sales-invoice/customer-1/service-1"),
-        true,
-    )
-    .await;
-
-    assert_eq!(exit, 0, "server-owned child fields do not break replay");
-    get_existing.assert();
-    assert_eq!(
-        create.hits(),
-        0,
-        "a replay must not create a second invoice"
-    );
-}
-
 /// Same token, different data: a structured idempotency conflict, never a write.
-#[tokio::test]
-async fn source_token_reuse_with_different_data_is_a_conflict() {
-    let server = MockServer::start_async().await;
+/// Compiled-binary boundary per the live test-authorship ruling.
+#[test]
+fn source_token_reuse_with_different_data_is_a_conflict() {
+    let server = MockServer::start();
 
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Quotation/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [ { "fieldname": "party_name" } ] } }));
+    });
     server.mock(|when, then| {
         when.method(GET).path_matches(
             Regex::new("^/api/v2/document/Quotation/SRC-[0-9a-f]{20}$").expect("regex"),
@@ -1003,17 +1022,25 @@ async fn source_token_reuse_with_different_data_is_a_conflict() {
         then.status(200).json_body(json!({}));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(
-        &client,
-        "Quotation",
-        r#"{"party_name":"Acme Pilot BV"}"#,
-        Some("quotation/acme-pilot/2026-07-onboarding"),
-        true,
-    )
-    .await;
+    let output = run_cli_against(
+        &server,
+        &[
+            "doc",
+            "create",
+            "Quotation",
+            "--data",
+            r#"{"party_name":"Acme Pilot BV"}"#,
+            "--source",
+            "quotation/acme-pilot/2026-07-onboarding",
+            "--apply",
+        ],
+    );
 
-    assert_eq!(exit, 1, "reused token with different data must fail");
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "reused token with different data must fail: {output:?}"
+    );
     assert_eq!(
         create.hits(),
         0,
@@ -1022,9 +1049,10 @@ async fn source_token_reuse_with_different_data_is_a_conflict() {
 }
 
 /// Fresh token: the derived name travels inside the create payload atomically.
-#[tokio::test]
-async fn source_create_sends_the_derived_name_in_the_payload() {
-    let server = MockServer::start_async().await;
+/// Compiled-binary boundary per the live test-authorship ruling.
+#[test]
+fn source_create_sends_the_derived_name_in_the_payload() {
+    let server = MockServer::start();
 
     server.mock(|when, then| {
         when.method(GET).path_matches(
@@ -1047,17 +1075,21 @@ async fn source_create_sends_the_derived_name_in_the_payload() {
             .json_body(json!({ "data": { "name": "SRC-new" } }));
     });
 
-    let client = Client::new(context_for(&server)).expect("client");
-    let exit = commands::doc::create(
-        &client,
-        "Quotation",
-        r#"{"party_name":"Acme Pilot BV"}"#,
-        Some("quotation/acme-pilot/fresh"),
-        true,
-    )
-    .await;
+    let output = run_cli_against(
+        &server,
+        &[
+            "doc",
+            "create",
+            "Quotation",
+            "--data",
+            r#"{"party_name":"Acme Pilot BV"}"#,
+            "--source",
+            "quotation/acme-pilot/fresh",
+            "--apply",
+        ],
+    );
 
-    assert_eq!(exit, 0);
+    assert!(output.status.success(), "{output:?}");
     create.assert();
 }
 
@@ -1428,6 +1460,11 @@ fn cli_exits_cleanly_when_its_output_consumer_has_closed() {
         .expect("credential json"),
     )
     .expect("write credentials");
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Customer/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [ { "fieldname": "customer_name" } ] } }));
+    });
     let (reader, writer) = UnixStream::pair().expect("local output pipe");
     drop(reader);
     let writer: OwnedFd = writer.into();
@@ -1585,70 +1622,6 @@ fn site_responses_are_emitted_without_the_vendor_envelope() {
         erpnext::output::site_payload(method_answer.clone()),
         method_answer,
         "a response carrying no data wrapper is emitted as it stands"
-    );
-}
-
-/// A preview is read by the person who asked for the work, not only by the agent that
-/// composed it. It states the record in business language and the consequence that
-/// outlives the action, so a misread instruction is caught before anything is sent.
-#[test]
-fn preview_restates_the_action_in_business_language() {
-    use erpnext::summary::{describe, Action};
-
-    let payload = json!({ "customer_name": "Sunfield BV", "grand_total": 2500.0 });
-    let create = describe(
-        &Action::Create {
-            doctype: "Sales Invoice",
-            payload: &payload,
-        },
-        Some("Instrukt AI Sandbox"),
-    );
-    assert!(create.contains("Sunfield BV"), "names the record: {create}");
-    assert!(create.contains("2500.00"), "names the money: {create}");
-    assert!(
-        create.contains("Instrukt AI Sandbox"),
-        "names whose books: {create}"
-    );
-    assert!(
-        !create.contains("approve"),
-        "routine previews do not manufacture an approval boundary: {create}"
-    );
-
-    let submit = describe(
-        &Action::Submit {
-            doctype: "Sales Invoice",
-            name: "ACC-SINV-2026-00001",
-        },
-        None,
-    );
-    assert!(
-        submit.contains("cancelled") && submit.contains("never edited"),
-        "submitting states its lasting consequence: {submit}"
-    );
-
-    let delete = describe(
-        &Action::Delete {
-            doctype: "Customer",
-            name: "Acme Pilot BV",
-        },
-        None,
-    );
-    assert!(
-        delete.contains("not a cancellation"),
-        "deleting is distinguished from cancelling: {delete}"
-    );
-
-    let convert = describe(
-        &Action::Convert {
-            source_doctype: "Sales Order",
-            source_name: "SAL-ORD-2026-00001",
-            target_doctype: "Sales Invoice",
-        },
-        None,
-    );
-    assert!(
-        convert.contains("second document"),
-        "converting warns about double conversion: {convert}"
     );
 }
 

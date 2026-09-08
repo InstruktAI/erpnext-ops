@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 
+use erpnext::command_syntax as syn;
 use erpnext::config::{self, Paths, PrivilegeMode};
 use erpnext::transport::Client;
 use erpnext::{commands, output};
@@ -9,16 +10,16 @@ use erpnext::{commands, output};
 /// Mutating commands preview by default: they show the exact native operation that
 /// would be sent, without sending it. `--apply` sends it and reports the site's result.
 #[derive(Parser)]
-#[command(name = "erpnext", version, about)]
+#[command(name = syn::BINARY, version, about)]
 struct Cli {
     /// Operate this company for this invocation, ignoring the persisted selection
-    #[arg(long, global = true)]
+    #[arg(long = syn::COMPANY, global = true)]
     company: Option<String>,
     /// Operate this site for this invocation, ignoring the persisted selection
-    #[arg(long, global = true)]
+    #[arg(long = syn::SITE, global = true)]
     site: Option<String>,
     /// Privilege identity for this invocation: operator (default) or admin
-    #[arg(long = "as", global = true)]
+    #[arg(long = syn::AS, global = true)]
     privilege: Option<PrivilegeMode>,
     #[command(subcommand)]
     command: Command,
@@ -52,11 +53,13 @@ enum Command {
         command: ResolveCommand,
     },
     /// Generic document operations through the Frappe v2 envelope
+    #[command(name = syn::DOC)]
     Doc {
         #[command(subcommand)]
         command: DocCommand,
     },
     /// Document lifecycle operations honoring docstatus semantics
+    #[command(name = syn::WORKFLOW)]
     Workflow {
         #[command(subcommand)]
         command: WorkflowCommand,
@@ -85,13 +88,13 @@ enum ContextCommand {
     /// Select the operating context by company scaffold or site FQDN
     Use {
         /// Site FQDN to operate (resolved to its company scaffold, fail-closed)
-        #[arg(long)]
+        #[arg(long = syn::SITE)]
         site: Option<String>,
         /// Company slug in the TeleClaude company registry
-        #[arg(long)]
+        #[arg(long = syn::COMPANY)]
         company: Option<String>,
         /// Privilege identity to persist for the selected context
-        #[arg(long = "as")]
+        #[arg(long = syn::AS)]
         privilege: Option<PrivilegeMode>,
     },
 }
@@ -199,64 +202,78 @@ enum DocCommand {
     /// Get one document by name
     Get { doctype: String, name: String },
     /// Update a document (preview by default; --apply sends it)
+    #[command(name = syn::UPDATE)]
     Update {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
         /// JSON object payload of fields to change
-        #[arg(long)]
+        #[arg(long = syn::DATA)]
         data: String,
         /// Send the native operation instead of previewing it
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Delete a document (preview by default; --apply sends it)
+    #[command(name = syn::DELETE)]
     Delete {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
         /// Send the native operation instead of previewing it
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Copy a document into a new draft (preview by default; --apply sends it)
+    #[command(name = syn::COPY)]
     Copy {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
         /// JSON object of field overrides for the copy
-        #[arg(long)]
+        #[arg(long = syn::DATA)]
         data: Option<String>,
         /// Send the native operation instead of previewing it
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Convert a document along an ERPNext chain via its native mapper
+    #[command(name = syn::MAP)]
     Map {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
         /// Native mapper method, e.g. erpnext.selling.doctype.quotation.quotation.make_sales_order
-        #[arg(long)]
+        #[arg(long = syn::VIA)]
         via: String,
         /// JSON object of native inputs passed to the mapper before it builds the target
-        #[arg(long)]
+        #[arg(long = syn::ARGS)]
         args: Option<String>,
         /// JSON object of fields the mapper does not fill
-        #[arg(long)]
+        #[arg(long = syn::DATA)]
         data: Option<String>,
         /// Send the native operation instead of previewing it
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Create a document (preview by default; --apply sends it)
+    #[command(name = syn::CREATE)]
     Create {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
         /// JSON object payload
-        #[arg(long)]
+        #[arg(long = syn::DATA)]
         data: String,
         /// Source token for exact idempotency: the document name derives from it, so
         /// a retry finds the existing document instead of creating a second one
-        #[arg(long)]
+        #[arg(long = syn::SOURCE)]
         source: Option<String>,
         /// Send the native operation instead of previewing it
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
 }
@@ -264,38 +281,51 @@ enum DocCommand {
 #[derive(Subcommand)]
 enum WorkflowCommand {
     /// Submit a draft document (preview by default)
+    #[command(name = syn::SUBMIT)]
     Submit {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Cancel a submitted document (preview by default)
+    #[command(name = syn::CANCEL)]
     Cancel {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Amend a cancelled document into a new draft (preview by default)
+    #[command(name = syn::AMEND)]
     Amend {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
         /// JSON object of field changes for the amended draft
-        #[arg(long, default_value = "{}")]
+        #[arg(long = syn::DATA, default_value = "{}")]
         data: String,
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
     /// Run a whitelisted controller method on a document (preview by default)
+    #[command(name = syn::METHOD)]
     Method {
+        #[arg(value_name = syn::DOCTYPE)]
         doctype: String,
+        #[arg(value_name = syn::NAME)]
         name: String,
+        #[arg(value_name = syn::METHOD)]
         method: String,
         /// JSON object payload for the method
-        #[arg(long)]
+        #[arg(long = syn::DATA)]
         data: Option<String>,
-        #[arg(long)]
+        #[arg(long = syn::APPLY)]
         apply: bool,
     },
 }
