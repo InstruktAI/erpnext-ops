@@ -73,8 +73,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/document-operations.md
   visibility: internal
-  superseded_by:
-  - erpnext-map-native-links
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/module-method-call
   description: Generic invocation of a whitelisted module-level Frappe or ERPNext
@@ -97,8 +95,6 @@ snippets:
   activation_trigger: null
   path: docs/project/spec/feature/erp-operations/mutation-preview.md
   visibility: internal
-  delivered_by:
-  - erpnext-preview-observed-facts
   source_project: erpnext-ops
 - id: project/spec/feature/erp-operations/operating-context
   description: "Site, company, and privilege context selection for the erpnext CLI\
