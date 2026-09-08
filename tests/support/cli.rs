@@ -1,7 +1,7 @@
 use httpmock::MockServer;
 use serde_json::{json, Value};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -77,4 +77,24 @@ pub fn run_cli_with_home(home: &Path, args: &[&str]) -> Output {
 
 pub fn json_output(bytes: &[u8]) -> Value {
     serde_json::from_slice(bytes).expect("machine-readable JSON envelope")
+}
+
+/// Execute a rendered `apply_command` string through a real POSIX shell against the
+/// just-built binary, in an isolated child-process home. This is the one place a
+/// replay invocation is proven end-to-end: the emitted string is handed to `sh -c`
+/// exactly as a human would paste it, never reconstructed by the test itself.
+/// Unused in test binaries that never replay a preview — this shared support module
+/// is compiled once per binary via `#[path]`, and not every binary calls every helper.
+#[allow(dead_code)]
+pub fn run_replay(home: &Path, apply_command: &str) -> Output {
+    let binary = PathBuf::from(env!("CARGO_BIN_EXE_erpnext"));
+    let bin_dir = binary.parent().expect("binary has a parent directory");
+    let path = format!("{}:/usr/bin:/bin", bin_dir.display());
+    Command::new("sh")
+        .arg("-c")
+        .arg(apply_command)
+        .env("HOME", home)
+        .env("PATH", path)
+        .output()
+        .expect("run replay through a real shell")
 }
