@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "error": {
+    "kind": "linkage-missing",
+    "message": "'ACC-PAY-UNLINKED' was created but references no source 'ACC-SINV-2026-00001'"
+  },
+  "data": { "created": "ACC-PAY-UNLINKED", "target_doctype": "Payment Entry" }
+}
