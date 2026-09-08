@@ -69,37 +69,19 @@ references.
 
 ### Preview
 
-<!-- planned-change:erpnext-preview-observed-facts -->
-A mutating document, workflow, or mapping command previews by default and persists nothing
-without `--apply`. Most document and workflow previews send no request; copying reads the
-native copy template and amending reads the source document. A mapping preview invokes
-the native mapper to obtain the mapped payload and persists nothing. Preview output contains:
-<!-- change:erpnext-preview-observed-facts -->
 A mutating document, workflow, or mapping command previews by default and persists nothing
 without `--apply`. Document and workflow previews read the native facts they report without
 sending the mutating operation. Mapping also invokes the native mapper to obtain the mapped
 payload. Preview output contains:
-<!-- /planned-change:erpnext-preview-observed-facts -->
 
 - `context` — site, company, and privilege mode of the invocation.
-<!-- planned:erpnext-preview-observed-facts -->
 - `context` also names whether the identity is configured or authenticated, and a command
   targeting an existing document reports that document's own company separately from the
   selected context.
-<!-- /planned:erpnext-preview-observed-facts -->
 - `operation` — the exact native request that starts apply: method, endpoint, and payload.
 - `persistence` — for a document controller method, the returned document is validated as
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
-<!-- planned-change:erpnext-preview-observed-facts -->
-- `preflight` — a statement that the unknown-field check runs against live DocType metadata
-  on apply. Create and update previews perform no metadata read.
-- `apply_command` — the apply form of the command, stated as an instruction rather than as
-  a replayable invocation.
-- `summary` — one sentence restating the action, generated from the action kind and the
-  payload alone. Its stated consequences are not verified against the site or the
-  document's state.
-<!-- change:erpnext-preview-observed-facts -->
 - `target` — for a command targeting an existing document: the document's current
   `docstatus`, its own company, and its modification marker, read from the site.
 - `schema` — for a document operation: the DocType's `is_submittable`, its fields marked
@@ -111,7 +93,6 @@ payload. Preview output contains:
 - `apply_command` — the exact replayable invocation, carrying arguments, the source token,
   and context overrides. A replayed invocation is not a replayed result: state may have
   changed and the facts are read again on apply.
-<!-- /planned-change:erpnext-preview-observed-facts -->
 
 Preview exposes what the CLI observed and will send. Consequence and reversibility are the
 agent's judgment from those facts and from the procedure it is following.
