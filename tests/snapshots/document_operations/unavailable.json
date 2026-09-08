@@ -1,0 +1,8 @@
+{
+  "ok": false,
+  "error": {
+    "kind": "linkage-unavailable",
+    "message": "'ACC-PAY-2026-00001' was created but its relationship to 'ACC-SINV-2026-00001' could not be verified: 'Payment Entry' carries no Link or Dynamic Link field capable of naming 'Sales Invoice'"
+  },
+  "data": { "created": "ACC-PAY-2026-00001", "target_doctype": "Payment Entry" }
+}

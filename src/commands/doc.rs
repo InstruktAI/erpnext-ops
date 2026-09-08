@@ -4,6 +4,8 @@ use crate::output;
 use crate::summary;
 use crate::transport::{encode_segment, Client};
 
+mod _links;
+
 /// `erpnext doc list <doctype> [--filter k=v]... [--limit n]`
 pub async fn list(client: &Client, doctype: &str, filters: &[(String, String)], limit: u32) -> i32 {
     let filter_json: Vec<Value> = filters
@@ -398,32 +400,52 @@ pub async fn map(
         Err(e) => return output::fail(e.kind(), &e.to_string(), output::EXIT_API),
     };
 
-    let created_name = created
+    // The create response and the mapper payload are text the site returned about the
+    // write, never evidence of what it persisted. Only a stored-target read-back proves
+    // the relationship, so the one thing taken from this response is a usable identifier.
+    let Some(created_name) = created
         .pointer("/data/name")
         .and_then(Value::as_str)
-        .unwrap_or_default()
-        .to_owned();
-
-    // A converted document that lost its link to the source is a broken chain, not a
-    // success: the source would stay open and bill twice.
-    let linked = created
-        .pointer("/data")
-        .map(|d| d.to_string().contains(name))
-        .unwrap_or(false);
-    if !linked {
+        .filter(|created_name| !created_name.is_empty())
+    else {
         return output::fail_with_data(
+            "shape",
+            &format!(
+                "'{via}' created a '{target_doctype}' document but the create response carries no usable name"
+            ),
+            json!({ "target_doctype": target_doctype, "created": true }),
+            output::EXIT_API,
+        );
+    };
+    let created_name = created_name.to_owned();
+
+    match _links::verify(client, doctype, name, &target_doctype, &created_name).await {
+        Ok(_links::LinkProof::Verified) => output::ok(json!({
+            "source": { "doctype": doctype, "name": name },
+            "created": { "doctype": target_doctype, "name": created_name },
+            "linked_to_source": true,
+        })),
+        Ok(_links::LinkProof::Missing) => output::fail_with_data(
             "linkage-missing",
             &format!("'{created_name}' was created but references no source '{name}'"),
             json!({ "created": created_name, "target_doctype": target_doctype }),
             output::EXIT_API,
-        );
+        ),
+        Ok(_links::LinkProof::Unavailable(reason)) => output::fail_with_data(
+            "linkage-unavailable",
+            &format!(
+                "'{created_name}' was created but its relationship to '{name}' could not be verified: {reason}"
+            ),
+            json!({ "created": created_name, "target_doctype": target_doctype }),
+            output::EXIT_API,
+        ),
+        Err(e) => output::fail_with_data(
+            e.kind(),
+            &format!("'{created_name}' was created but could not be read back to verify its source: {e}"),
+            json!({ "created": created_name, "target_doctype": target_doctype }),
+            output::EXIT_API,
+        ),
     }
-
-    output::ok(json!({
-        "source": { "doctype": doctype, "name": name },
-        "created": { "doctype": target_doctype, "name": created_name },
-        "linked_to_source": true,
-    }))
 }
 
 /// `erpnext doc update <doctype> <name> --data <json> [--apply]`

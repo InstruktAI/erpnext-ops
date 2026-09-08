@@ -1,8 +1,26 @@
 use httpmock::prelude::*;
+use httpmock::Mock;
 use serde_json::{json, Value};
 
 #[path = "support/cli.rs"]
 mod cli;
+
+/// Compare the CLI's stable public envelope against an approved snapshot file, parsed
+/// with the same `serde_json` the CLI itself uses — no snapshot engine or dependency.
+fn assert_snapshot(name: &str, actual: &Value) {
+    let path = format!(
+        "{}/tests/snapshots/document_operations/{name}.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let raw =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read snapshot {path}: {e}"));
+    let expected: Value =
+        serde_json::from_str(&raw).unwrap_or_else(|e| panic!("parse snapshot {path}: {e}"));
+    assert_eq!(
+        actual, &expected,
+        "snapshot mismatch for '{name}'; update {path} if this change is intended"
+    );
+}
 
 fn mapper_path() -> &'static str {
     "/api/method/erpnext.accounts.doctype.payment_entry.payment_entry.get_payment_entry"
@@ -22,6 +40,56 @@ fn mapper_request(extra: Value) -> Value {
     body.insert("dt".into(), json!("Sales Invoice"));
     body.insert("dn".into(), json!("ACC-SINV-2026-00001"));
     Value::Object(body)
+}
+
+/// Root metadata for the created target: a Link and a child table whose rows carry the
+/// Link/Dynamic Link pair proving (or failing to prove) the source relationship.
+fn target_meta() -> Value {
+    json!({ "data": { "fields": [
+        { "fieldname": "party", "fieldtype": "Link", "options": "Customer" },
+        { "fieldname": "references", "fieldtype": "Table", "options": "Payment Entry Reference" },
+    ]}})
+}
+
+/// A target schema with no Link or Dynamic Link field anywhere — nothing in it could ever
+/// name a source, native or otherwise.
+fn source_free_target_meta() -> Value {
+    json!({ "data": { "fields": [
+        { "fieldname": "party", "fieldtype": "Link", "options": "Customer" },
+    ]}})
+}
+
+/// Child doctype schema modeled on ERPNext's Payment Entry Reference: a Link-to-DocType
+/// discriminator paired with the Dynamic Link it governs.
+fn reference_meta() -> Value {
+    json!({ "data": { "fields": [
+        { "fieldname": "reference_doctype", "fieldtype": "Link", "options": "DocType" },
+        { "fieldname": "reference_name", "fieldtype": "Dynamic Link", "options": "reference_doctype" },
+    ]}})
+}
+
+fn mock_target_meta<'a>(server: &'a MockServer, meta: Value) -> Mock<'a> {
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Payment%20Entry/meta");
+        then.status(200).json_body(meta);
+    })
+}
+
+fn mock_reference_meta(server: &MockServer) -> Mock<'_> {
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Payment%20Entry%20Reference/meta");
+        then.status(200).json_body(reference_meta());
+    })
+}
+
+fn mock_read_back<'a>(server: &'a MockServer, name: &str, stored: Value) -> Mock<'a> {
+    let path = format!("/api/v2/document/Payment%20Entry/{name}");
+    server.mock(move |when, then| {
+        when.method(GET).path(path.clone());
+        then.status(200).json_body(json!({ "data": stored }));
+    })
 }
 
 fn map_invocation<'a>(args: Option<&'a str>, data: Option<&'a str>, apply: bool) -> Vec<&'a str> {
@@ -223,12 +291,23 @@ fn preview_and_apply_use_the_same_post_override_target() {
         when.method(POST)
             .path("/api/v2/document/Payment%20Entry")
             .json_body(preview_target.clone());
-        then.status(200).json_body(json!({ "data": {
-            "name": "ACC-PAY-2026-00001",
-            "references": [{ "reference_name": "ACC-SINV-2026-00001" }],
-        }}));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
     });
     assert_eq!(create.hits(), 0);
+    mock_target_meta(&server, target_meta());
+    mock_reference_meta(&server);
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({
+            "doctype": "Payment Entry",
+            "name": "ACC-PAY-2026-00001",
+            "references": [
+                { "reference_doctype": "Sales Invoice", "reference_name": "ACC-SINV-2026-00001" },
+            ],
+        }),
+    );
 
     let apply = map_invocation(
         Some(r#"{"reference_date":"2026-09-01"}"#),
@@ -247,7 +326,7 @@ fn preview_and_apply_use_the_same_post_override_target() {
 
 #[test]
 // spec: project/spec/feature/erp-operations/document-operations UC-9
-fn omitted_mapper_arguments_preserve_linked_and_unlinked_creation_outcomes() {
+fn stored_native_relationship_reports_verified_success() {
     let server = MockServer::start();
     let mapper = server.mock(|when, then| {
         when.method(POST)
@@ -256,45 +335,365 @@ fn omitted_mapper_arguments_preserve_linked_and_unlinked_creation_outcomes() {
         then.status(200)
             .json_body(json!({ "message": mapper_result() }));
     });
-    let linked_create = server.mock(|when, then| {
+    server.mock(|when, then| {
         when.method(POST).path("/api/v2/document/Payment%20Entry");
-        then.status(200).json_body(json!({ "data": {
-            "name": "ACC-PAY-2026-00001",
-            "references": [{ "reference_name": "ACC-SINV-2026-00001" }],
-        }}));
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
     });
-
-    let linked = cli::run_cli_against(&server, &map_invocation(None, None, true));
-    assert!(linked.status.success(), "{linked:?}");
-    assert_eq!(
-        cli::json_output(&linked.stdout).pointer("/data/linked_to_source"),
-        Some(&json!(true))
+    mock_target_meta(&server, target_meta());
+    mock_reference_meta(&server);
+    let read_back = mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({
+            "doctype": "Payment Entry",
+            "name": "ACC-PAY-2026-00001",
+            "references": [
+                { "reference_doctype": "Purchase Invoice", "reference_name": "unrelated" },
+                { "reference_doctype": "Sales Invoice", "reference_name": "ACC-SINV-2026-00001" },
+            ],
+        }),
     );
-    mapper.assert();
-    linked_create.assert();
 
-    let unlinked_server = MockServer::start();
-    unlinked_server.mock(|when, then| {
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert!(output.status.success(), "{output:?}");
+    let envelope = cli::json_output(&output.stdout);
+    assert_snapshot("verified", &envelope);
+    mapper.assert();
+    read_back.assert();
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn expressible_schema_with_no_matching_relationship_reports_linkage_missing() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
         when.method(POST)
             .path(mapper_path())
             .json_body(mapper_request(json!({})));
         then.status(200)
             .json_body(json!({ "message": mapper_result() }));
     });
-    unlinked_server.mock(|when, then| {
+    server.mock(|when, then| {
         when.method(POST).path("/api/v2/document/Payment%20Entry");
         then.status(200)
             .json_body(json!({ "data": { "name": "ACC-PAY-UNLINKED" } }));
     });
+    mock_target_meta(&server, target_meta());
+    mock_reference_meta(&server);
+    mock_read_back(
+        &server,
+        "ACC-PAY-UNLINKED",
+        json!({ "doctype": "Payment Entry", "name": "ACC-PAY-UNLINKED", "references": [] }),
+    );
 
-    let unlinked = cli::run_cli_against(&unlinked_server, &map_invocation(None, None, true));
-    assert_eq!(unlinked.status.code(), Some(1));
-    let error = cli::json_output(&unlinked.stderr);
-    assert_eq!(error.pointer("/ok"), Some(&json!(false)));
-    assert!(error
-        .pointer("/data/created")
-        .and_then(Value::as_str)
-        .is_some());
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let envelope = cli::json_output(&output.stderr);
+    assert_snapshot("missing", &envelope);
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn source_free_schema_reports_linkage_unavailable() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    mock_target_meta(&server, source_free_target_meta());
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({ "doctype": "Payment Entry", "name": "ACC-PAY-2026-00001" }),
+    );
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let envelope = cli::json_output(&output.stderr);
+    assert_snapshot("unavailable", &envelope);
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn restricted_hidden_candidate_reports_linkage_unavailable_not_missing() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Payment%20Entry/meta");
+        then.status(200).json_body(json!({ "data": { "fields": [
+            { "fieldname": "party", "fieldtype": "Link", "options": "Sales Invoice", "permlevel": 1 },
+        ]}}));
+    });
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({ "doctype": "Payment Entry", "name": "ACC-PAY-2026-00001" }),
+    );
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(
+        error.pointer("/error/kind"),
+        Some(&json!("linkage-unavailable"))
+    );
+    assert_eq!(
+        error.pointer("/data/created"),
+        Some(&json!("ACC-PAY-2026-00001"))
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn missing_create_response_name_is_a_shape_failure_before_any_read_back() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+    let get_requests = server.mock(|when, then| {
+        when.method(GET)
+            .path_matches(Regex::new(".*").expect("request matcher"));
+        then.status(200).json_body(json!({}));
+    });
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(error.pointer("/error/kind"), Some(&json!("shape")));
+    assert_eq!(
+        error.pointer("/data/target_doctype"),
+        Some(&json!("Payment Entry"))
+    );
+    assert_eq!(error.pointer("/data/created"), Some(&json!(true)));
+    assert_eq!(get_requests.hits(), 0);
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn read_back_rejection_preserves_the_created_reference() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Payment%20Entry/ACC-PAY-2026-00001");
+        then.status(404)
+            .json_body(json!({ "message": "not found" }));
+    });
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(error.pointer("/error/kind"), Some(&json!("not_found")));
+    assert_eq!(
+        error.pointer("/data/created"),
+        Some(&json!("ACC-PAY-2026-00001"))
+    );
+    assert_eq!(
+        error.pointer("/data/target_doctype"),
+        Some(&json!("Payment Entry"))
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn read_back_of_a_different_document_is_a_shape_failure() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({ "name": "ACC-PAY-OTHER" }),
+    );
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(error.pointer("/error/kind"), Some(&json!("shape")));
+    assert_eq!(
+        error.pointer("/data/created"),
+        Some(&json!("ACC-PAY-2026-00001"))
+    );
+    assert_eq!(
+        error.pointer("/data/target_doctype"),
+        Some(&json!("Payment Entry"))
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn read_back_of_a_matching_name_but_different_doctype_is_a_shape_failure() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({ "doctype": "Sales Invoice", "name": "ACC-PAY-2026-00001" }),
+    );
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(error.pointer("/error/kind"), Some(&json!("shape")));
+    assert_eq!(
+        error.pointer("/data/created"),
+        Some(&json!("ACC-PAY-2026-00001"))
+    );
+    assert_eq!(
+        error.pointer("/data/target_doctype"),
+        Some(&json!("Payment Entry"))
+    );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn malformed_root_metadata_is_a_shape_failure_via_collect_schema() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    let read_back = mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({ "doctype": "Payment Entry", "name": "ACC-PAY-2026-00001" }),
+    );
+    server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Payment%20Entry/meta");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = cli::json_output(&output.stderr);
+    assert_eq!(error.pointer("/error/kind"), Some(&json!("shape")));
+    assert_eq!(
+        error.pointer("/data/created"),
+        Some(&json!("ACC-PAY-2026-00001"))
+    );
+    read_back.assert();
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-9
+fn matched_root_link_verifies_despite_a_later_malformed_child_table() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(POST)
+            .path(mapper_path())
+            .json_body(mapper_request(json!({})));
+        then.status(200)
+            .json_body(json!({ "message": mapper_result() }));
+    });
+    server.mock(|when, then| {
+        when.method(POST).path("/api/v2/document/Payment%20Entry");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "ACC-PAY-2026-00001" } }));
+    });
+    mock_target_meta(
+        &server,
+        json!({ "data": { "fields": [
+            { "fieldname": "against", "fieldtype": "Link", "options": "Sales Invoice" },
+            { "fieldname": "items", "fieldtype": "Table", "options": "Payment Entry Reference" },
+        ]}}),
+    );
+    mock_reference_meta(&server);
+    mock_read_back(
+        &server,
+        "ACC-PAY-2026-00001",
+        json!({
+            "doctype": "Payment Entry",
+            "name": "ACC-PAY-2026-00001",
+            "against": "ACC-SINV-2026-00001",
+            "items": "not-an-array",
+        }),
+    );
+
+    let output = cli::run_cli_against(&server, &map_invocation(None, None, true));
+
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        cli::json_output(&output.stdout).pointer("/data/linked_to_source"),
+        Some(&json!(true))
+    );
 }
 
 #[test]
