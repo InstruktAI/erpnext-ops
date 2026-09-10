@@ -94,8 +94,14 @@ linked records. Close honoured follow-ups and keep the remaining ones visible th
 - If the billing trigger is unclear, record activity and follow-up instead of invoicing.
 - On a lost create or mapper response, compose `resume-from-native-state`: the invoice resolves
   through the Sales Order's native links and remaining billed quantity or amount.
+<!-- planned-change:erpnext-module-method-call -->
 - If a controller method returns a changed document but saving it fails, preserve the partial
   result, inspect the stored draft, and retry from observed state.
+<!-- change:erpnext-module-method-call -->
+- If a controller method completes but its fresh document read-back fails, treat stored state as
+  unknown. Resolve it through `resume-from-native-state` before deciding whether any further
+  operation is safe; the controller response is not a partial result to replay.
+<!-- /planned-change:erpnext-module-method-call -->
 - Correct submitted billing through cancel-and-amend and reverse dependent payments first;
   never edit a submitted invoice in place. After cancelling a partial invoice, read the Sales
   Order's per-row billed quantities back: the rows that invoice consumed are billable again
