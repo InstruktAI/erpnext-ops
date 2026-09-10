@@ -32,7 +32,9 @@ Scenario: Preview sends nothing
 Given an active site context and a dotted method path
 When the agent runs `erpnext method call <dotted-method> [--data <json>]` without `--apply`
 Then the output is a preview carrying the resolved context, the exact native request for the
-named method with the supplied object, and the apply command
+named method with the supplied object, a preflight stating that no field check applies to
+opaque method arguments, and the replayable apply command
+And the preview carries no document or DocType facts
 And no request reaches the site.
 ```
 

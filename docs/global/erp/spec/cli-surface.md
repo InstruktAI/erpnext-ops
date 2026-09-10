@@ -144,14 +144,15 @@ non-zero exit.
   is a partial failure carrying the method result, never success.
 <!-- planned:erpnext-module-method-call -->
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.
-  Its optional `--data` is an opaque JSON object for that method. The CLI previews or sends the
-  request under the selected context. Its preview contains only `context`, `operation` (the
-  dotted method and opaque payload), and `apply_command`; DocType `preflight` and document
-  `persistence` are not applicable. On apply, a native response that is a JSON object is
-  reported with its `message` value under `data`, and a method that returns nothing reports
-  `data` as null; a response that is not a JSON object is a typed failure, never success. It
-  does not interpret business state, read back records, or substitute behavior when the method
-  is unavailable.
+  Its optional `--data` is an opaque JSON object of method arguments, never document fields.
+  The CLI previews or sends the request under the selected context. Its preview carries
+  `context`, `operation` (the dotted method and opaque payload), a `preflight` that states no
+  field check applies to opaque method arguments, and `apply_command`; it reads no document
+  and no DocType, so it carries no `target`, `schema`, or `persistence`. On apply, a native
+  response that is a JSON object is reported with its `message` value under `data`, and a
+  method that returns nothing reports `data` as null; a response that is not a JSON object is
+  a typed failure, never success. It does not interpret business state, read back records, or
+  substitute behavior when the method is unavailable.
 <!-- /planned:erpnext-module-method-call -->
 - `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
