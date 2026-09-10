@@ -79,9 +79,15 @@ payload. Preview output contains:
   targeting an existing document reports that document's own company separately from the
   selected context.
 - `operation` — the exact native request that starts apply: method, endpoint, and payload.
+<!-- planned-change:erpnext-module-method-call -->
 - `persistence` — for a document controller method, the returned document is validated as
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
+<!-- change:erpnext-module-method-call -->
+- `persistence` — for a document controller method, apply invokes the controller once, then
+  reads the requested document back and reports that stored result; it sends no secondary
+  document-save request.
+<!-- /planned-change:erpnext-module-method-call -->
 - `target` — for a command targeting an existing document: the document's current
   `docstatus`, its own company, and its modification marker, read from the site.
 - `schema` — for a document operation: the DocType's `is_submittable`, its fields marked
