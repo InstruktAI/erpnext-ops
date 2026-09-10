@@ -138,10 +138,17 @@ non-zero exit.
   document back; a site that answers the request while leaving `docstatus` unchanged is
   reported as a failed transition, never as success. `workflow amend` builds the new draft
   carrying `amended_from` and applies only to a cancelled document.
+<!-- planned-change:erpnext-module-method-call -->
 - `workflow method` invokes the site's whitelisted document controller. When the controller
   returns a changed document, apply refuses a different doctype or name, saves that exact
   returned document, and reports the stored result. A controller that ran but could not save
   is a partial failure carrying the method result, never success.
+<!-- change:erpnext-module-method-call -->
+- `workflow method` invokes the site's whitelisted document controller and then reads the
+  document back. Apply reports that stored result and never sends a secondary document-save
+  request, because controller-method response documents are not a persistence instruction. A
+  controller call followed by an unreadable stored document is a typed failure, never success.
+<!-- /planned-change:erpnext-module-method-call -->
 <!-- planned:erpnext-module-method-call -->
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.
   Its optional `--data` is an opaque JSON object of method arguments, never document fields.

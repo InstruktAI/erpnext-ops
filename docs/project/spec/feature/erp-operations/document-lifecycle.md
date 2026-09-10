@@ -84,6 +84,11 @@ Given a doctype exposing a native workflow method
 When the agent runs `erpnext workflow method <doctype> <name> <method>`
 Then the method call previews the native request by default and sends it only with explicit
 `--apply`
+<!-- planned-change:erpnext-module-method-call -->
 And when the method returns the changed document, apply verifies its doctype and name, saves
 that returned document, and reports the stored result
 And a returned different document or a failed save is never reported as success.
+<!-- change:erpnext-module-method-call -->
+And apply reads the document back after the native controller call and reports that stored result
+And it sends no secondary document save request, and a failed read-back is never reported as success.
+<!-- /planned-change:erpnext-module-method-call -->
