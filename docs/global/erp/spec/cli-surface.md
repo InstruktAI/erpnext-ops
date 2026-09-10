@@ -146,8 +146,8 @@ non-zero exit.
 <!-- change:erpnext-module-method-call -->
 - `workflow method` invokes the site's whitelisted document controller and then reads the
   document back. Apply reports that stored result and never sends a secondary document-save
-  request, because controller-method response documents are not a persistence instruction. A
-  controller call followed by an unreadable stored document is a typed failure, never success.
+  request. A controller call followed by an unreadable stored document is a typed failure, never
+  success.
 <!-- /planned-change:erpnext-module-method-call -->
 <!-- planned:erpnext-module-method-call -->
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.
