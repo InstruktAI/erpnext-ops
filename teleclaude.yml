@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=schemas/teleclaude-project.schema.json
 kind: project
 company: instrukt-ai
 business:
