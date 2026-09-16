@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=schemas/teleclaude-project.schema.json
 kind: project
 company: instrukt-ai
 business:
@@ -17,11 +18,13 @@ docs:
 # docs/project/policy/test-authorship.md.
 checkpoint:
   bindings:
-    - scope:
-        include:
-          - src/**
-          - tests/**
-          - Cargo.toml
-          - Cargo.lock
-      actions:
-        - test
+  - scope:
+      include:
+      - src/**
+      - tests/**
+      - Cargo.toml
+      - Cargo.lock
+    actions:
+    - test
+agents:
+  enabled: false
