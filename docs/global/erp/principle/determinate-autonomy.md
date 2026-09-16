@@ -1,5 +1,5 @@
 ---
-description: ERP agents act autonomously whenever the correct business action is determined; they surface only missing human decision input.
+description: What makes an ERP business action determined — evidence, company configuration, party preferences, templates, ERPNext state and standard practice — and the autonomy that follows from it.
 ---
 # Determinate Autonomy — Principle
 

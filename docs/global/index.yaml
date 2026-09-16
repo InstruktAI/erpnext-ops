@@ -62,8 +62,9 @@ snippets:
   visibility: internal
   source_project: erpnext-ops
 - id: erp/principle/determinate-autonomy
-  description: ERP agents act autonomously whenever the correct business action is
-    determined; they surface only missing human decision input.
+  description: "What makes an ERP business action determined \u2014 evidence, company\
+    \ configuration, party preferences, templates, ERPNext state and standard practice\
+    \ \u2014 and the autonomy that follows from it."
   type: principle
   scope: global
   domain: erp
@@ -234,6 +235,8 @@ snippets:
     needs to track work, obligations, billing, and payment without stock-centric assumptions.
   path: docs/erp/procedure/project-work-to-invoice.md
   visibility: internal
+  superseded_by:
+  - erpnext-module-method-call
   source_project: erpnext-ops
 - id: erp/procedure/prove-native-effect
   description: "Prove a business mutation or its correction from independent native\
@@ -259,6 +262,8 @@ snippets:
     writing again would duplicate it.
   path: docs/erp/procedure/resume-from-native-state.md
   visibility: internal
+  superseded_by:
+  - erpnext-module-method-call
   source_project: erpnext-ops
 - id: erp/procedure/supplier-invoice-and-payment
   description: Pay a submitted supplier invoice through a source-linked Payment Entry
