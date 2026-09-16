@@ -7,10 +7,8 @@ __pycache__/
 AGENTS.md
 CLAUDE.md
 /dist
-docs/**/index.yaml
 
 # TeleClaude blessed defaults
-.DS_Store
 Thumbs.db
 *.swp
 *~
