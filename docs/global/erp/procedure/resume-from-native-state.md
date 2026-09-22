@@ -50,7 +50,9 @@ agent remembers running is not current state.
   mapped again.
 <!-- change:erpnext-module-method-call -->
 - The event is partly recorded: continue from the stored partial result. A
-  mapped draft is continued, not mapped again.
+  controller method whose returned document could not be persisted leaves the
+  stored draft as the point to continue from. A mapped draft is continued, not
+  mapped again.
 - The event state is unknown when a controller method completes but its fresh
   document read-back fails. Resolve the event again by its strongest identity
   and do not replay the controller method from its response document.

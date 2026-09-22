@@ -89,6 +89,12 @@ And when the method returns the changed document, apply verifies its doctype and
 that returned document, and reports the stored result
 And a returned different document or a failed save is never reported as success.
 <!-- change:erpnext-module-method-call -->
-And apply reads the document back after the native controller call and reports that stored result
-And it sends no secondary document save request, and a failed read-back is never reported as success.
+And apply invokes the native controller once
+And when the controller persisted its effect, apply sends no further write and reports the stored
+document read back after the call
+And when the controller's effect exists only in the returned document of the same doctype and
+name, apply persists that document once, never over a newer stored version, and reports the stored
+result
+And a returned different document, a persistence need that cannot be established, a rejected
+persistence, or a failed read-back is never reported as success.
 <!-- /planned-change:erpnext-module-method-call -->

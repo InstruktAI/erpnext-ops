@@ -84,9 +84,11 @@ payload. Preview output contains:
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
 <!-- change:erpnext-module-method-call -->
-- `persistence` — for a document controller method, apply invokes the controller once, then
-  reads the requested document back and reports that stored result; it sends no secondary
-  document-save request.
+- `persistence` — for a document controller method, apply invokes the controller once and
+  reports the requested document as stored afterwards. When the controller persisted its effect,
+  apply sends no further write; when the effect exists only in the returned document, apply
+  persists that document once, never over a newer stored version. The preview cannot show the
+  returned document before the site runs the method.
 <!-- /planned-change:erpnext-module-method-call -->
 - `target` — for a command targeting an existing document: the document's current
   `docstatus`, its own company, and its modification marker, read from the site.
@@ -150,10 +152,14 @@ non-zero exit.
   returned document, and reports the stored result. A controller that ran but could not save
   is a partial failure carrying the method result, never success.
 <!-- change:erpnext-module-method-call -->
-- `workflow method` invokes the site's whitelisted document controller and then reads the
-  document back. Apply reports that stored result and never sends a secondary document-save
-  request. A controller call followed by an unreadable stored document is a typed failure, never
-  success.
+- `workflow method` invokes the site's whitelisted document controller once and then reads the
+  document back. When the controller persisted its effect, apply reports that stored result
+  without a further write. When the effect exists only in the returned document, apply refuses a
+  different doctype or name, persists that returned document once through the native save, which
+  rejects a newer stored version, and reports the stored result. Which case applies is read from
+  the document's own stored state, never from the doctype or method name. A different returned
+  document, a persistence need that cannot be established, a rejected persistence, or an
+  unreadable stored document is a typed failure, never success.
 <!-- /planned-change:erpnext-module-method-call -->
 <!-- planned:erpnext-module-method-call -->
 - `method call` invokes a dotted native module method through Frappe's standard method endpoint.

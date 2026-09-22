@@ -98,6 +98,8 @@ linked records. Close honoured follow-ups and keep the remaining ones visible th
 - If a controller method returns a changed document but saving it fails, preserve the partial
   result, inspect the stored draft, and retry from observed state.
 <!-- change:erpnext-module-method-call -->
+- If a controller method's returned document cannot be persisted, inspect the stored draft and
+  retry from observed state; the controller response is not a partial result to replay.
 - If a controller method completes but its fresh document read-back fails, treat stored state as
   unknown. Resolve it through `resume-from-native-state` before deciding whether any further
   operation is safe; the controller response is not a partial result to replay.
