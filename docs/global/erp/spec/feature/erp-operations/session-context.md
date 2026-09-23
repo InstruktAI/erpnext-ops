@@ -200,7 +200,7 @@ Given an organization procedure started by an ERP event under a system principal
 And the event's configured source maps to a company with an ERP association
 When the procedure's agent invokes an ERP operation
 Then the operation runs under that company's operator identity
-And its attribution names the system execution and the source event and names no human as its origin
+And its attribution names the system execution and names no human as its origin
 ```
 
 ## Known caveats
