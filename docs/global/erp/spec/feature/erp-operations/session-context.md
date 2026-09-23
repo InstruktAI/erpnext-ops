@@ -34,7 +34,10 @@ project declares is the one whose configured ERP association supplies the site
 and accounting company. Only a company owner supplies a business. A project
 declaring a person as its owner, or declaring no owner, is an ordinary and valid
 state that carries no ERP association, so managed resolution finds no business
-there and says so; an explicit selector remains the path for such a session. The caller's organizational reach into that project —
+there and says so. No selector opens a managed path there either: reach is
+reportable only into projects a company owns, so there is none to authorize
+against. Declaring that project's owner is what makes managed ERP work available
+to a session in it. The caller's organizational reach into that project —
 an explicit assignment, or the coverage a company's administrative role carries
 over the projects that company owns — authorizes operating there. Selection
 answers which business; reach answers whether this caller may act in it. A
