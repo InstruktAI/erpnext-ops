@@ -26,6 +26,23 @@ The trail is assembled behind the CLI from ERPNext and Frappe primitives:
   Purchase Order, Project, Task, Invoice, and Payment Entry provide the objects the activity
   links to.
 
+The trail connects source input to interpretation, native work references, and
+material outcomes. Human inputs retain their source identity and time; automated
+work names its standing responsibility and triggering observation rather than
+inventing a new human instruction. A session reference identifies the agent's
+execution separately from the ERP user under which the operation ran.
+
+The current plan belongs in the work record; the trail explains its evolution.
+It preserves partial results, uncertain effects, changed instructions, and who
+holds the next contribution. A recorded completion is a business audit fact,
+not a claim that the world remains unchanged or that native history is immutable.
+Installed change tracking, permissions, and retention determine the site's
+technical history guarantees.
+
+Agents resolve the relevant source records when answering what a person asked
+within a time window and which work addressed it. Related inputs and outcomes are
+linked explicitly; temporal proximity alone does not establish fulfillment.
+
 ## Why
 
 Humans do not keep a perfect operational overview. They trust the system to remember what was
@@ -41,6 +58,8 @@ confirmed business state.
 
 ## See Also
 
+- ~/.teleclaude/docs/erp/concept/operating-state.md
+- ~/.teleclaude/docs/erp/concept/business-relationships.md
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md

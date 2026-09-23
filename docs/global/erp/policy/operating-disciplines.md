@@ -6,6 +6,42 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 
 ## Rules
 
+### Continuing work
+
+- **Operate within the standing responsibility.** On activation or resumption,
+  recover the scoped work and relevant changes before selecting the next action.
+  A fresh human request is not required for work covered by the mandate.
+- **Use native work as the plan.** Record independently delegated outcomes in
+  ERPNext Tasks and retain their references through dispatch and reassignment.
+  Current briefs name constraints, relevant records, outstanding contributions,
+  and executor references. Local reasoning does not become a competing plan.
+- **Reconcile changes before continuing affected work.** Preserve the source of a
+  correction, revise unstarted work, and notify affected executors. Establish
+  what happened in flight before repeating or correcting an effect. A sent
+  message is not proof that another agent stopped.
+- **Delegate a bounded outcome.** Supply the work reference, procedure ID and
+  fetch instruction, expected result, and assignment-specific constraints.
+  Executors load the procedure closure and choose operations within that scope.
+  Parallelism follows independent work, not the number of incoming events.
+- **Keep reports attributable to work.** Before marking a Task complete, record
+  the material outcome and evidence references. Waiting or failed attempts carry
+  their partial effects and missing contribution. The coordinator accepts a
+  complete report associated with the assignment without routine re-verification
+  or transcript inspection. A turn ending is not itself a completion report.
+- **Distinguish business and execution identity.** Preserve native work IDs and
+  references to assigned sessions. Caller identity is system-provided, not an
+  agent-authored authentication field; an ERP operator account does not identify
+  the human source of an instruction or distinguish every executing agent.
+- **Preserve waiting obligations.** Keep the expected event, attention condition,
+  and next contributor with the work. Use the configured session reminder, job,
+  or event route appropriate to its owner. Inactivity alone does not discharge a
+  worker; settle or transfer obligations before reassignment or closure.
+- **Learn within the mandate.** Retain source-backed party preferences and
+  observations. Outreach uses the company's delegated communication authority
+  and an available, appropriate channel. Owner handoffs preserve the open loop.
+
+### Native operations
+
 - **Use the CLI surface.** Agents operate ERPNext through `erpnext`. Raw transport mechanics
   are implementation detail, not the agent-facing operating path.
 - **Preview before mutation.** Mutating commands preview by default: the exact native
@@ -48,6 +84,13 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 
 ## Rationale
 
+Standing operations require continuity across messages and sessions. A shared
+current plan prevents repeated work, while a retained outcome trail preserves
+accountability when intent changes. Bounded briefs and attributable results let
+the coordinator trust workers without making transcript reading a second
+execution of every assignment. Expectations and relationship evidence distinguish
+useful attention from intrusive reminders or abandoned commitments.
+
 ERPNext is a financial system of record. A wrong invoice, duplicated record, over-broad user,
 or leaked operator secret has operational and legal consequences. The CLI is the safety layer
 that lets agents keep acting: it shows the exact operation before mutation, resolves routine
@@ -59,6 +102,16 @@ All agent operations against ERPNext sites.
 
 ## Enforcement
 
+- Work continued from an invalidated brief without reconciliation is a defect.
+- A delegated outcome with no durable work reference, or a completed item with
+  no material result recorded, is a continuity defect.
+- Treating turn completion, dispatch acceptance, or message delivery as business
+  success is a defect.
+- Routine duplicate verification of a complete worker outcome is not required;
+  missing or contradictory outcome evidence is resolved before dependent work.
+- Dropping a waiting obligation because its worker is idle is a defect.
+- Inferring outreach authority from a learned personality or response pattern is
+  a defect.
 - A business operation performed outside the CLI is a defect unless the active procedure
   explicitly authorizes project-owned implementation work.
 - A mutation applied without reviewing its preview is a defect.
@@ -83,6 +136,12 @@ None.
 
 ## See Also
 
+- ~/.teleclaude/docs/erp/principle/operational-attention.md
+- ~/.teleclaude/docs/erp/concept/operating-state.md
+- ~/.teleclaude/docs/erp/concept/business-relationships.md
+- ~/.teleclaude/docs/erp/procedure/operating-cycle.md
+- ~/.teleclaude/docs/general/procedure/ai-to-ai-operations.md
+- ~/.teleclaude/docs/general/policy/reminder.md
 - ~/.teleclaude/docs/erp/concept/operation-model.md
 - ~/.teleclaude/docs/erp/concept/multi-tenancy.md
 - ~/.teleclaude/docs/erp/principle/determinate-autonomy.md

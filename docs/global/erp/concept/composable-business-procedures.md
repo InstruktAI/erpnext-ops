@@ -19,6 +19,24 @@ The catalog has two useful procedure shapes:
   CLI operations, such as solar offer-to-installation, custom order-to-fulfillment, or project
   work-to-invoice.
 
+The catalogue is also the delegation surface. A description states the outcome
+and scope; an activation trigger states when the procedure applies. A coordinator
+selects from this metadata and dispatches the canonical snippet ID with the work
+reference, expected outcome, and relevant constraints. It uses the catalogue's
+`telec docs get <id> --closure` instruction rather than reproducing the body in
+the brief. The worker reads that closure before acting. An agent selecting work
+within its own mandate enters through the same procedure.
+
+A procedure is not necessarily an agent command. General-purpose session briefs
+can activate procedures without a dedicated command wrapper or software-development
+state machine. The agent interprets the procedure against live facts and chooses
+individual CLI operations. A CLI command expresses one operation; implementation
+requests within that operation do not make it the owner of the business sequence.
+
+ERP domain entry loads its baseline once. Its progressive index supplies the
+remaining concepts and references; its activatable catalogue supplies procedure
+descriptions and triggers. Executors expand only the knowledge their work needs.
+
 ## Why
 
 Agents already carry broad ERP and business knowledge. Over-documenting small mechanical
@@ -33,6 +51,9 @@ preview/apply loop.
 
 ## See Also
 
+- ~/.teleclaude/docs/erp/concept/operation-model.md
+- ~/.teleclaude/docs/erp/procedure/operating-cycle.md
+- ~/.teleclaude/docs/general/procedure/ai-to-ai-operations.md
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
