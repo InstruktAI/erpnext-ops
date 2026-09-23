@@ -31,7 +31,10 @@ remain with their owners; ERP code owns its native mapping and operation semanti
 Two established facts take distinct roles, and neither substitutes for the other.
 The operating project's declared owner selects the business: the company that
 project declares is the one whose configured ERP association supplies the site
-and accounting company. The caller's organizational reach into that project —
+and accounting company. Only a company owner supplies a business. A project
+declaring a person as its owner, or declaring no owner, is an ordinary and valid
+state that carries no ERP association, so managed resolution finds no business
+there and says so; an explicit selector remains the path for such a session. The caller's organizational reach into that project —
 an explicit assignment, or the coverage a company's administrative role carries
 over the projects that company owns — authorizes operating there. Selection
 answers which business; reach answers whether this caller may act in it. A
@@ -179,6 +182,16 @@ When the managed session requests a different company for its own operations
 Then that request governs the managed session's subsequent invocations
 And the selection the standalone invocation resolves from is unchanged
 And a later standalone invocation still resolves the context it selected for itself
+```
+
+#### UC-SCTX12:
+
+```gherkin
+Scenario: A project with no owning company supplies no business
+Given a managed agent session operates in a project that declares a person as its owner or declares no owner
+When the agent invokes an ERP operation naming no company or site
+Then it receives a structured context failure identifying the absent company association
+And no persisted selection supplies a business in its place
 ```
 
 ## Known caveats
