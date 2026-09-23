@@ -109,6 +109,16 @@ Then it operates under that selection's existing identity and privilege contract
 And its result does not claim managed-session provenance
 ```
 
+#### UC-SCTX7:
+
+```gherkin
+Scenario: Working location does not replace the established business context
+Given a managed agent has an established execution identity and business context
+When it invokes ERP operations from two unrelated working directories
+Then both invocations resolve the same ERP site, accounting company, permitted identity and lineage
+And neither invocation requires entering the publisher's source checkout
+```
+
 ## Known caveats
 
 - Platform roles and organizational roles remain separate. This feature does not
