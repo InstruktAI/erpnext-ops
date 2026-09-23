@@ -4,6 +4,7 @@
 @~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 @~/.teleclaude/docs/erp/spec/cli-surface.md
 @~/.teleclaude/docs/erp/spec/company-layout.md
+@~/.teleclaude/docs/erp/spec/business-events.md
 @~/.teleclaude/docs/erp/spec/feature/erp-operations/cli-availability.md
 @~/.teleclaude/docs/erp/spec/feature/erp-operations/session-context.md
 @~/.teleclaude/docs/erp/spec/feature/erp-operations/native-work-management.md

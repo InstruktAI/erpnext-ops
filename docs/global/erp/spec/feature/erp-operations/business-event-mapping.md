@@ -1,5 +1,5 @@
 ---
-description: ERP-owned translation of native work events into scoped facts delivered through TeleClaude's existing relay to the configured procedure singleton.
+description: ERP-owned mapping of the minimal business-event vocabulary from native input, work outcomes and selected record changes into the platform's scoped procedure activation.
 visibility: internal
 delivered_by:
   - erpnext-business-event-mapping
@@ -21,9 +21,11 @@ This is an integration of those owners, not an ERP-specific event bus.
 
 The first end-to-end binding is a native Task completion change. It connects the
 work item's stored result to the responsible subscribed procedure without routine
-transcript inspection. Other ERP event families extend the mapping when their
-business use requires them; this contract does not declare an exhaustive event
-topology or add an email/WhatsApp connector.
+transcript inspection. The delivered MVP covers all four events defined by
+`erp/spec/business-events`, which owns their names, meanings, selection rules,
+and payload requirements. This contract binds those observations to native ERP
+sources and the platform activation surface; it does not add a mail/chat
+connector or enumerate the whole ERP domain.
 
 | Native fact | Mapped meaning |
 | --- | --- |
@@ -107,6 +109,73 @@ Then the configuration or delivery reports the specific integration gap
 And it does not claim that the procedure was activated
 ```
 
+#### UC-BEM6:
+
+```gherkin
+Scenario: Recorded business input reaches its subscribed agent
+Given new inbound business input has been recorded with a source reference
+And an agent procedure subscribes to incoming business input in that operating context
+When the native observation passes through the configured mapping
+Then the subscribed agent receives an input-received observation with the source record reference
+And the publisher does not decide from the input's prose which business action to perform
+```
+
+#### UC-BEM7:
+
+```gherkin
+Scenario: An explicit work obstruction reaches its coordinator
+Given an agent executor has recorded an obstruction that requires a contribution beyond what it can presently resolve
+When that work report passes through the configured mapping
+Then the responsible subscribed agent receives the obstruction observation
+And it can reach the assignment, recorded partial result and required contribution through the supplied references
+```
+
+#### UC-BEM8:
+
+```gherkin
+Scenario Outline: Normal work state does not imply an obstruction
+Given the only observed condition is <condition>
+And no work obstruction has been explicitly reported
+When the ERP event mapping assesses that observation
+Then it does not emit a work-obstruction event to a subscribed agent
+
+Examples:
+  | condition |
+  | an idle agent session |
+  | an open task |
+  | a normal waiting condition |
+  | a reply that has not arrived |
+```
+
+#### UC-BEM9:
+
+```gherkin
+Scenario: Selected changes outside the agent CLI remain observable
+Given a subscribed agent follows a configured business-record change
+When a human changes that native record directly in ERPNext
+And the observation is not represented by a more specific input or work event
+Then the agent receives a record-change observation with the native reference and relevant change context
+```
+
+#### UC-BEM10:
+
+```gherkin
+Scenario: A specific observation is not emitted again as a generic change
+Given a native observation qualifies as an input or work-outcome event
+And the same observation also matches a configured generic record-change selection
+When the publisher maps that observation for subscribed agents
+Then it emits the specific observation without an additional generic record-change representation
+```
+
+#### UC-BEM11:
+
+```gherkin
+Scenario: Unselected and bookkeeping-only changes do not wake business procedures
+Given a native record save contains no selected business change
+When the ERP event mapping processes that save
+Then it emits no generic business-record-change event for a subscribed agent
+```
+
 ## Known caveats
 
 - End-to-end activation consumes TeleClaude's procedure-subscription singleton
@@ -119,9 +188,12 @@ And it does not claim that the procedure was activated
 - Event delivery requires the source site's configured webhook and the platform's
   existing ingress route. A published procedure alone supplies neither source
   connectivity nor an operating-context binding.
+- ERP mapping uses native source observation and shared platform runtime services;
+  it introduces no continuously running ERP-owned daemon.
 
 ## See Also
 
+- ~/.teleclaude/docs/erp/spec/business-events.md
 - ~/.teleclaude/docs/erp/spec/feature/erp-operations/session-context.md
 - ~/.teleclaude/docs/erp/spec/feature/erp-operations/native-work-management.md
 - ~/.teleclaude/docs/erp/principle/operational-attention.md
