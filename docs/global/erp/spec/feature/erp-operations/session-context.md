@@ -1,5 +1,5 @@
 ---
-description: Managed ERP invocations consume framework-resolved identity and operating scope, map them to configured ERP identities, and preserve attribution without agent-supplied caller fields.
+description: Managed ERP invocations consume the framework-resolved principal and company context of human-directed or event-started work, map that company to its configured ERP association, and preserve attribution without agent-supplied caller fields.
 visibility: internal
 delivered_by:
   - erpnext-session-context
@@ -21,48 +21,53 @@ remain with their owners; ERP code owns its native mapping and operation semanti
 
 | Concern | Authority | ERP integration responsibility |
 | --- | --- | --- |
-| Calling session and inherited principal | TeleClaude identity and session contracts | Consume the resolved execution identity; do not add an agent-authored caller flag |
-| Company membership, project assignment and coverage | TeleClaude organizational relationship resolution | Consume the distinct facts without inventing a default organization or equating membership with every operation's permission |
-| Operating project and its declared owner | TeleClaude context/configuration contracts | Use the established scope rather than infer it from a filesystem name |
-| ERP site and accounting Company | ERP company configuration and native metadata | Resolve the explicit association to the platform operating scope |
-| ERP operator/admin credential selection | ERP operating-context contract | Preserve privilege separation and native permissions |
+| Calling session, its principal and origin | TeleClaude identity and session contracts | Consume the resolved execution identity for human-directed and system organization work alike; add no agent-authored caller flag |
+| The session's company context | TeleClaude company resolution: membership, the selection carried through dispatch, and the company an event's source maps to | Consume the resolved company; never derive it from the working directory, the source checkout, or the project a session runs in |
+| ERP site and accounting Company | ERP company configuration and native metadata | Map the resolved company to its configured ERP association |
+| ERP operator/admin credential selection | ERP operating-context contract | Resolve the operator identity; a company context never selects the dedicated agent-admin identity by itself |
 | Business input author and executing agent | Source input and platform execution context | Keep both references distinguishable from the ERP service account |
 
-Two established facts take distinct roles, and neither substitutes for the other.
-The operating project's declared owner selects the business: the company that
-project declares is the one whose configured ERP association supplies the site
-and accounting company. Only a company owner supplies a business. A project
-declaring a person as its owner, or declaring no owner, is an ordinary and valid
-state that carries no ERP association, so managed resolution finds no business
-there and says so. No selector opens a managed path there either: reach is
-reportable only into projects a company owns, so there is none to authorize
-against. Declaring that project's owner is what makes managed ERP work available
-to a session in it. The caller's organizational reach into that project —
-an explicit assignment, or the coverage a company's administrative role carries
-over the projects that company owns — authorizes operating there. Selection
-answers which business; reach answers whether this caller may act in it. A
-company the caller belongs to that does not own the operating project supplies
-no business, and a caller whose reach does not cover the operating project
-receives a structured refusal rather than a resolved context.
+A managed invocation originates in one of two ways, and the platform establishes
+its company context in both. Human-directed work runs under the human principal it
+carries, and its company is the one that human's request established: carried
+through dispatch and inherited by delegated sessions, or automatic when the human
+belongs to exactly one company. Organization work started by an event runs under a
+system principal, and its company is the one the event's configured source maps to;
+no human identity is attributed to it. Where a session runs, which project it runs
+in, and who owns that project neither select nor restrict its company.
 
-Privilege is a separate axis from business selection. Managed resolution
-supplies the operator identity; the dedicated agent-admin identity is requested
-explicitly and evaluated through the same context and authorization boundary,
-under the privilege separation and refusal rules the standalone operating-context
-contract already establishes.
+ERP integration maps the resolved company to that company's configured ERP
+association, which supplies the site, the accounting company, and the identities.
+The company context arrives already validated: the platform checks a requested
+company against the requester's membership when it resolves the context, and ERP
+code neither re-checks, re-derives, nor defaults it. A session with no resolved
+company, or with an ambiguous one, remains valid for other work; an ERP operation
+from it receives a structured context failure that names how a company is
+established for the session.
+
+A session changes company by establishing a different context through the
+platform, not per ERP invocation. In a managed session, a selector naming the
+session's own company or a site within its association changes nothing; a selector
+naming another company, or a site outside that association, is refused with the
+same remedy and the operation does not run.
+
+Privilege is a separate axis from company selection. Managed resolution supplies
+the operator identity; the dedicated agent-admin identity is requested explicitly
+and evaluated through the same context and authorization boundary, under the
+privilege separation and refusal rules the standalone operating-context contract
+already establishes.
 
 A managed session's requested context governs that session's own invocations. It
 never rewrites a selection another session resolves from, in either direction.
 
-Explicit company/site selectors express a requested ERP context through the same
-mapping contract. They do not replace framework resolution. A managed invocation
+A managed invocation
 does not fall back to a home-wide persisted selection when its managed context is
 missing or inconsistent. Standalone terminal use follows its documented explicit
 context contract and is not labelled as a managed session.
 
-Session context is supplied automatically by the system. Its existing identity
-file is an implementation input owned by the platform, not a new format parsed
-independently in every ERP command. Shared configuration, authorization, identity,
+Session context is supplied automatically by the system and read through the
+platform's published surface; ERP code parses no platform-private state and keeps
+no resolver of its own. Shared configuration, authorization, identity,
 and error contracts are accessed through their published surfaces. Where the
 public surface is insufficient, the gap belongs to that owner rather than a local
 replacement policy.
@@ -78,7 +83,7 @@ authentication token is included in those references.
 
 ```gherkin
 Scenario: A managed agent operates in its established business context
-Given an agent session has framework-resolved lineage and an operating scope mapped to an ERP site and company
+Given an agent session has a framework-resolved principal and a company context mapped to an ERP site and company
 When the agent invokes an ERP operation without supplying caller identity
 Then the operation uses that configured native context and permitted ERP identity
 And the structured result identifies the executing context without credentials
@@ -107,20 +112,20 @@ And no persisted selection from another context substitutes for the missing mapp
 #### UC-SCTX4:
 
 ```gherkin
-Scenario: A context selector uses the shared decision boundary
-Given a managed agent session requests a different company or site for an operation
-When the CLI resolves the request
-Then the request is evaluated through the established platform context and authorization contracts and the ERP mapping
-And the agent receives the resolved context or a structured refusal
+Scenario: A context selector cannot move a managed session to another company
+Given a managed agent session with a resolved company
+When the agent names a different company, or a site outside that company's ERP association, for an operation
+Then it receives a structured refusal naming how a company is established for a session
+And the operation does not run for the named company
 ```
 
 #### UC-SCTX5:
 
 ```gherkin
 Scenario: Delegation preserves lineage and distinguishes execution
-Given an agent delegates ERP work to a child session under its established lineage
+Given an agent delegates ERP work to a child session under its established lineage and company context
 When the child performs a native operation
-Then the operation retains that lineage and the child's resolved operating scope
+Then the operation retains that lineage and runs for the company the child inherited
 And its execution attribution distinguishes the child from the parent and the ERP service account
 ```
 
@@ -146,24 +151,14 @@ Then both invocations resolve the same ERP site, accounting company, permitted i
 #### UC-SCTX8:
 
 ```gherkin
-Scenario: The operating project's declared owner selects the business
-Given a managed agent session operates in a project declaring a company as its owner
-And that company has a configured ERP association
+Scenario: The session's established company selects the business
+Given a managed agent session whose company context resolves to a company with a configured ERP association
 When the agent invokes an ERP operation naming no company or site
 Then the operation runs against the site and accounting company that association configures
-And another company the caller belongs to supplies no part of that selection
+And neither the working location nor the project the session runs in changes that selection
 ```
 
 #### UC-SCTX9:
-
-```gherkin
-Scenario: The caller's reach into the operating project authorizes the operation
-Given a managed agent session whose operating project is owned by a company with a configured ERP association
-When the agent invokes an ERP operation
-Then the operation proceeds where the caller's organizational reach covers that project
-And a caller whose reach does not cover it receives a structured refusal identifying the unmet association
-And no business request reaches the site before that refusal
-```
 
 #### UC-SCTX10:
 
@@ -190,20 +185,31 @@ And a later standalone invocation still resolves the context it selected for its
 #### UC-SCTX12:
 
 ```gherkin
-Scenario: A project with no owning company supplies no business
-Given a managed agent session operates in a project that declares a person as its owner or declares no owner
+Scenario: A session without a resolved company is told how to establish one
+Given a managed agent session whose company context is absent or ambiguous
 When the agent invokes an ERP operation naming no company or site
-Then it receives a structured context failure identifying the absent company association
+Then it receives a structured context failure naming how a company is established for the session
 And no persisted selection supplies a business in its place
+```
+
+#### UC-SCTX13:
+
+```gherkin
+Scenario: Event-started organization work runs for its source company without a human identity
+Given an organization procedure started by an ERP event under a system principal
+And the event's configured source maps to a company with an ERP association
+When the procedure's agent invokes an ERP operation
+Then the operation runs under that company's operator identity
+And its attribution names the system execution and the source event and names no human as its origin
 ```
 
 ## Known caveats
 
 - Platform roles and organizational roles remain separate. This feature does not
   introduce a new identity model or reinterpret the platform's standing roles.
-- A company relationship does not identify a unique ERP site by itself. The
-  operating association is configured and resolved independently of the caller's
-  current directory.
+- A company context identifies an ERP site only through that company's configured
+  ERP association. A company without one carries no ERP business, and an ERP
+  operation for it receives the structured context failure.
 
 ## See Also
 

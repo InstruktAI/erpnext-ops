@@ -145,12 +145,14 @@ non-zero exit.
   lineage or organizational membership, and it supplies no automatic
   lineage-to-ERP mapping guarantee.
 <!-- change:erpnext-session-context -->
-- In a managed agent session, operating context consumes TeleClaude's resolved
-  caller and operating scope through its published integration boundary. The
-  configured mapping selects the ERP site, accounting company and permitted
-  operator identity. Selectors request context within that contract; they do not
-  replace it. Unresolved managed context produces a structured failure rather
-  than falling back to another session's persisted selection.
+- In a managed agent session, operating context consumes the platform-resolved
+  principal and company context through its published surface. That context
+  arrives validated; ERP code neither re-checks nor defaults it. The configured
+  mapping selects the ERP site, accounting company and operator identity. A
+  selector naming another company, or a site outside that company's association,
+  is refused with how a company is established for the session. Unresolved company
+  context produces a structured failure rather than falling back to another
+  session's persisted selection.
 <!-- /planned-change:erpnext-session-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
