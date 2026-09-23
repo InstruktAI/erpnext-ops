@@ -6,6 +6,30 @@ description: Standing ERP responsibility, coordinator and worker scopes, activat
 
 ## What
 
+### Domain publication and operating location
+
+ERP knowledge is published by its owning repository and is discoverable from any
+agent context. The global awareness entry is small; the domain baseline and
+procedure bodies are loaded progressively when work enters ERP. Publication does
+not turn every project into an ERP project or grant access to a company's data.
+
+The publisher's source checkout is the development home, not the required working
+directory for business operations. An agent can inspect ERP state within its
+established mandate or delegate sustained work to the appropriate business
+coordinator. The platform-resolved identity and explicit business association
+determine the operating context, rather than the repository from which the
+request happened to originate. A session link is available when the human needs
+to reach that coordinator; changing conversations is not a prerequisite to asking
+for ERP work.
+
+<!-- planned:erpnext-cli-availability -->
+Supported agent execution hosts provision the ERP CLI on their normal command
+path. An agent entering the domain can discover and invoke it without entering
+the publisher checkout or building a local binary. Installation and updates use
+the established host tooling lifecycle; business credentials remain separate
+from installing the capability.
+<!-- /planned:erpnext-cli-availability -->
+
 ### Responsibility and execution
 
 An ERP coordinator holds the overview for an agreed operating context and is the
@@ -20,6 +44,12 @@ descriptions and triggers for both dispatch and self-selection; a dispatcher nee
 not load a procedure body unless its selection or scope is unclear. The executor
 loads the chosen procedure and its required reads.
 
+Business responsibility retains its established lineage and organization/project
+scope. These come from the platform's resolved context, not from choosing a role
+name or assuming that every person belongs to the same organization. Company
+membership, project assignment, ERP site, accounting Company, and ERP operator
+are distinct facts whose association is explicit in the operating configuration.
+
 Agents keep long-running sessions while their responsibilities continue. A wake,
 restart, or compaction resumes from the current work record and relevant changes.
 Session context makes continuation cheaper; it does not replace durable state.
@@ -32,6 +62,20 @@ Human input, delivered business events, due expectations, and worker outcomes
 direct attention to existing work. They are context for judgment, not a fixed
 business state machine. An event concerning work with an owner reaches that owner
 through the configured route rather than automatically creating a new worker.
+
+Self-selection applies to the self-service procedure catalogue. Work owned by a
+configured job or event route remains with that activation owner; another agent
+does not independently start a duplicate because it recognizes the same need.
+
+<!-- planned:erpnext-business-event-mapping -->
+ERP event subscriptions use the platform's procedure activation contract. A
+procedure declares event subscriptions or a self-selection trigger, never both.
+Matching events start or wake the group's singleton with the event payload. Its
+identity combines the framework-resolved lineage principal, operating scope, and
+subscription group, and survives replacement of the agent process. The event
+supplies business facts without changing that established execution context.
+Subscription-driven procedures remain outside the self-service catalogue.
+<!-- /planned:erpnext-business-event-mapping -->
 
 Concurrency follows independent actionable work and available capacity. The
 coordinator considers shared records and business dependencies before dispatch.
@@ -84,6 +128,10 @@ site provisioning; the CLI operates an already-provisioned site.
 - **Work state.** Native Tasks carry delegated outcomes; their relationships and
   available views provide the work overview. Native activity and follow-up records
   carry the business trail. A second board is not the operating authority.
+- **Integration ownership.** ERP code maps native records, operations, and event
+  meaning. TeleClaude owns its shared identity, authorization, configuration,
+  activation, and delivery primitives. Agents use the published integration
+  contracts; implementing code preserves that division of responsibility.
 - **Business flow.** Agents compose individual CLI operations and ERP procedures.
   Agent briefs orient responsibility; procedures supply applicable knowledge;
   CLI commands perform operations. The agent determines their order.

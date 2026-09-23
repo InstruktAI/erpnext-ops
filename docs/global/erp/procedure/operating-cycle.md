@@ -33,6 +33,10 @@ to continue under the same mandate.
 ### 1. Orient from the responsibility and its records
 
 Establish the operating context through the CLI and read the company mandate.
+Distinguish the platform's resolved lineage and project/company relationship from
+the ERP site's configured accounting scope and operator identity. Consult
+`erp/spec/company-layout` and the live CLI context contract; do not assume that
+platform identity automatically selects the ERP context in every implementation.
 Identify whether this invocation holds the business overview, a bounded worker
 assignment, or a scheduled job's declared scope. Retain the job's own outcome
 reporting contract when it is a job invocation.
@@ -94,11 +98,13 @@ Record a material priority change with its reason in the work trail.
 ### 5. Execute or delegate a focused outcome
 
 For delegation, activate `general/procedure/ai-to-ai-operations`. Select a suitable
-procedure from the ERP catalogue's description and activation condition; read its
+procedure from the self-service ERP catalogue's description and activation condition; read its
 body when needed to resolve scope. Send the native work reference, the canonical
 procedure ID and `telec docs get <id> --closure` instruction, expected outcome,
 business references, and constraints. Record the returned session reference with
 the assignment. Do not reproduce the procedure body or invent a command wrapper.
+For work already assigned to a configured job or event owner, route the relevant
+input to that owner rather than starting an independent execution of its procedure.
 
 Reuse an available worker when appropriate, explicitly settling its previous
 assignment. Dispatch independent work within available capacity; consider shared

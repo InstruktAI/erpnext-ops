@@ -41,6 +41,19 @@ work on that site.
 
 ## Known caveats
 
+- TeleClaude organization membership, project assignment, ERP site, accounting
+  Company, and ERP User are separate identities. A matching name or slug alone
+  does not establish their association or decide a consuming operation's authority.
+<!-- planned-change:erpnext-session-context -->
+- The CLI resolves the chosen company credential home from explicit selectors or
+  persisted selection; platform lineage is not part of that selection path.
+<!-- change:erpnext-session-context -->
+- Managed execution consumes the platform-resolved lineage and operating scope.
+  ERP integration maps that scope to the configured company credential home;
+  platform-owned identity and authorization are not re-derived in ERP code.
+  System-provided execution identity supplies attribution without an agent
+  inventing or passing caller identity in command arguments.
+<!-- /planned-change:erpnext-session-context -->
 - Bootstrap `Administrator` credentials never belong in the company credential home; they
   remain deployment secrets in itsUP. The company credential home may carry only the
   dedicated agent-admin identity used for explicit administrative operations.

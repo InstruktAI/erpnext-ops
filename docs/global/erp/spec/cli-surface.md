@@ -129,6 +129,29 @@ non-zero exit.
 
 ## Known caveats
 
+<!-- planned-change:erpnext-cli-availability -->
+- Domain publication provides documentation discovery, not CLI installation. The
+  repository's install target fetches build dependencies; it does not establish
+  a globally invocable binary on every agent execution host.
+<!-- change:erpnext-cli-availability -->
+- Supported agent execution hosts expose the CLI on the normal command path
+  independently of the current project. Help and capability discovery require no
+  ERP credentials or tenant connection. Installation and update ownership remains
+  with the host tooling lifecycle rather than individual business invocations.
+<!-- /planned-change:erpnext-cli-availability -->
+<!-- planned-change:erpnext-session-context -->
+- Operating context is selected explicitly or read from the CLI's persisted
+  selection. This resolution does not consume TeleClaude's resolved caller
+  lineage or organizational membership, and it supplies no automatic
+  lineage-to-ERP mapping guarantee.
+<!-- change:erpnext-session-context -->
+- In a managed agent session, operating context consumes TeleClaude's resolved
+  caller and operating scope through its published integration boundary. The
+  configured mapping selects the ERP site, accounting company and permitted
+  operator identity. Selectors request context within that contract; they do not
+  replace it. Unresolved managed context produces a structured failure rather
+  than falling back to another session's persisted selection.
+<!-- /planned-change:erpnext-session-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
   company-scoped agent-admin identity. The bootstrap `Administrator` identity and its

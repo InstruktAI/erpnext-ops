@@ -27,6 +27,19 @@ reference, expected outcome, and relevant constraints. It uses the catalogue's
 the brief. The worker reads that closure before acting. An agent selecting work
 within its own mandate enters through the same procedure.
 
+Catalogue selection does not supersede configured activation ownership. A worker
+can load shared procedural knowledge for its assignment without independently
+starting the job or event-driven responsibility that also uses that knowledge.
+
+<!-- planned:erpnext-business-event-mapping -->
+For automatically activated ERP procedures, event subscriptions and
+`activation_trigger` are mutually exclusive metadata. The platform starts or
+wakes the lineage-scoped group singleton for matching events. The self-service
+catalogue excludes those subscribed procedures; supporting procedures may have
+neither activation form. Event data carries the work context into execution,
+and the executor loads the procedure closure before acting.
+<!-- /planned:erpnext-business-event-mapping -->
+
 A procedure is not necessarily an agent command. General-purpose session briefs
 can activate procedures without a dedicated command wrapper or software-development
 state machine. The agent interprets the procedure against live facts and chooses

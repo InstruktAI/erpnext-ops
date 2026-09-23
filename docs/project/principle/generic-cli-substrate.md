@@ -61,6 +61,12 @@ demonstrated translation while leaving the same decisions with their owners.
 - Runtime identity is system-provided context, not an argument the agent must
   reconstruct. A command claims provenance persistence only when its implemented
   recording surface actually supplies it.
+- Shared identity, authorization, configuration, session lifecycle, and event
+  delivery are consumed through their owning platform contracts. ERP code owns
+  the mapping from that resolved context into native ERP records and operations;
+  it does not implement a parallel resolver or read another context's private
+  storage as an integration API. Missing integration is explicit rather than
+  silently replaced with local policy.
 - Dogfooding may reveal a missing primitive. It never justifies wrapping the triggering use case
   as a bespoke command.
 
@@ -75,3 +81,8 @@ demonstrated translation while leaving the same decisions with their owners.
 - **Reuse vs premature abstraction.** A new primitive follows an observed native API category,
   not an imagined future framework. The first business scenario proves the need; the vendor
   mechanism determines the abstraction.
+
+## See Also
+
+- ~/.teleclaude/docs/software-development/policy/domain-ownership.md
+- ~/.teleclaude/docs/software-development/principle/architecture-boundary-purity.md
