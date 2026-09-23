@@ -28,6 +28,26 @@ remain with their owners; ERP code owns its native mapping and operation semanti
 | ERP operator/admin credential selection | ERP operating-context contract | Preserve privilege separation and native permissions |
 | Business input author and executing agent | Source input and platform execution context | Keep both references distinguishable from the ERP service account |
 
+Two established facts take distinct roles, and neither substitutes for the other.
+The operating project's declared owner selects the business: the company that
+project declares is the one whose configured ERP association supplies the site
+and accounting company. The caller's organizational reach into that project —
+an explicit assignment, or the coverage a company's administrative role carries
+over the projects that company owns — authorizes operating there. Selection
+answers which business; reach answers whether this caller may act in it. A
+company the caller belongs to that does not own the operating project supplies
+no business, and a caller whose reach does not cover the operating project
+receives a structured refusal rather than a resolved context.
+
+Privilege is a separate axis from business selection. Managed resolution
+supplies the operator identity; the dedicated agent-admin identity is requested
+explicitly and evaluated through the same context and authorization boundary,
+under the privilege separation and refusal rules the standalone operating-context
+contract already establishes.
+
+A managed session's requested context governs that session's own invocations. It
+never rewrites a selection another session resolves from, in either direction.
+
 Explicit company/site selectors express a requested ERP context through the same
 mapping contract. They do not replace framework resolution. A managed invocation
 does not fall back to a home-wide persisted selection when its managed context is
@@ -86,7 +106,6 @@ Given a managed agent session requests a different company or site for an operat
 When the CLI resolves the request
 Then the request is evaluated through the established platform context and authorization contracts and the ERP mapping
 And the agent receives the resolved context or a structured refusal
-And the CLI does not apply an independent copy of platform identity policy
 ```
 
 #### UC-SCTX5:
@@ -116,7 +135,50 @@ Scenario: Working location does not replace the established business context
 Given a managed agent has an established execution identity and business context
 When it invokes ERP operations from two unrelated working directories
 Then both invocations resolve the same ERP site, accounting company, permitted identity and lineage
-And neither invocation requires entering the publisher's source checkout
+```
+
+#### UC-SCTX8:
+
+```gherkin
+Scenario: The operating project's declared owner selects the business
+Given a managed agent session operates in a project declaring a company as its owner
+And that company has a configured ERP association
+When the agent invokes an ERP operation naming no company or site
+Then the operation runs against the site and accounting company that association configures
+And another company the caller belongs to supplies no part of that selection
+```
+
+#### UC-SCTX9:
+
+```gherkin
+Scenario: The caller's reach into the operating project authorizes the operation
+Given a managed agent session whose operating project is owned by a company with a configured ERP association
+When the agent invokes an ERP operation
+Then the operation proceeds where the caller's organizational reach covers that project
+And a caller whose reach does not cover it receives a structured refusal identifying the unmet association
+And no business request reaches the site before that refusal
+```
+
+#### UC-SCTX10:
+
+```gherkin
+Scenario: Managed resolution takes the operator identity and escalation stays explicit
+Given a managed agent session whose resolved business has both an operator and a dedicated agent-admin identity configured
+When the agent invokes an ERP operation without requesting a privilege
+Then the operation runs under the operator identity
+And an explicit request for the dedicated agent-admin identity resolves through the same context and authorization boundary
+And the bootstrap administrator identity is refused
+```
+
+#### UC-SCTX11:
+
+```gherkin
+Scenario: A managed session's context request leaves other contexts untouched
+Given a managed agent session and a standalone terminal invocation share an operating-system home
+When the managed session requests a different company for its own operations
+Then that request governs the managed session's subsequent invocations
+And the selection the standalone invocation resolves from is unchanged
+And a later standalone invocation still resolves the context it selected for itself
 ```
 
 ## Known caveats
