@@ -216,5 +216,5 @@ And its attribution names the system execution and names no human as its origin
 - ~/.teleclaude/docs/erp/concept/operation-model.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 - ~/.teleclaude/docs/erp/spec/company-layout.md
-- ~/.teleclaude/docs/software-development/policy/domain-ownership.md
-- ~/.teleclaude/docs/software-development/principle/architecture-boundary-purity.md
+- ~/.teleclaude/docs/sdlc/policy/domain-ownership.md
+- ~/.teleclaude/docs/sdlc/principle/architecture-boundary-purity.md

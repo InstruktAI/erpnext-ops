@@ -7,8 +7,8 @@ description: This repository authors tests. Spec-bound behavior is proven by the
 ## Rules
 
 - **This repository opts into test authorship.** The corpus under `tests/` is
-  kept and grown. Every mandate of `software-development/policy/testing` and
-  `software-development/policy/rust/testing` governs here: scenario binding,
+  kept and grown. Every mandate of `sdlc/policy/testing` and
+  `sdlc/policy/rust/testing` governs here: scenario binding,
   the functional level, file organization, coverage against the scenario
   inventory, and assertion craft.
 - **The compiled binary against a mocked site is the verification surface.**
@@ -49,7 +49,7 @@ This repository only.
 ## Enforcement
 
 - Reviewers apply the tests lane and every `TQ-*` predicate of
-  `software-development/policy/quality-predicate-registry` in full.
+  `sdlc/policy/quality-predicate-registry` in full.
 - A test that enters through an internal symbol, fakes an in-process
   collaborator, or asserts string content by literal is a finding under the
   testing policy.
@@ -63,6 +63,6 @@ This repository only.
 
 ## See Also
 
-- ~/.teleclaude/docs/software-development/policy/testing.md — the opt-in default this policy declares against, and the doctrine it adopts.
-- ~/.teleclaude/docs/software-development/policy/rust/testing.md — the language idioms, colocated-unit exception, and integration-test placement.
-- ~/.teleclaude/docs/software-development/concept/functional-test-boundary.md — what counts as the real surface and the only legitimate fakes.
+- ~/.teleclaude/docs/sdlc/policy/testing.md — the opt-in default this policy declares against, and the doctrine it adopts.
+- ~/.teleclaude/docs/sdlc/policy/rust/testing.md — the language idioms, colocated-unit exception, and integration-test placement.
+- ~/.teleclaude/docs/sdlc/concept/functional-test-boundary.md — what counts as the real surface and the only legitimate fakes.

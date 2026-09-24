@@ -84,5 +84,5 @@ demonstrated translation while leaving the same decisions with their owners.
 
 ## See Also
 
-- ~/.teleclaude/docs/software-development/policy/domain-ownership.md
-- ~/.teleclaude/docs/software-development/principle/architecture-boundary-purity.md
+- ~/.teleclaude/docs/sdlc/policy/domain-ownership.md
+- ~/.teleclaude/docs/sdlc/principle/architecture-boundary-purity.md

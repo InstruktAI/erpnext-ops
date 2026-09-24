@@ -198,5 +198,5 @@ Then it emits no generic business-record-change event for a subscribed agent
 - ~/.teleclaude/docs/erp/spec/feature/erp-operations/native-work-management.md
 - ~/.teleclaude/docs/erp/principle/operational-attention.md
 - ~/.teleclaude/docs/erp/concept/operation-model.md
-- ~/.teleclaude/docs/software-development/policy/domain-ownership.md
+- ~/.teleclaude/docs/sdlc/policy/domain-ownership.md
 - https://docs.frappe.io/framework/user/en/guides/integration/webhooks

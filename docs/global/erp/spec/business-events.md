@@ -100,4 +100,4 @@ ownership remains distinct from self-service procedure selection.
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/operating-state.md
 - ~/.teleclaude/docs/erp/spec/feature/erp-operations/business-event-mapping.md
-- ~/.teleclaude/docs/software-development/policy/domain-ownership.md
+- ~/.teleclaude/docs/sdlc/policy/domain-ownership.md
