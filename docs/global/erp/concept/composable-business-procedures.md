@@ -41,7 +41,7 @@ and the executor loads the procedure closure before acting.
 <!-- /planned:erpnext-business-event-mapping -->
 
 A procedure is not necessarily an agent command. General-purpose session briefs
-can activate procedures without a dedicated command wrapper or software-development
+can activate procedures without a dedicated command wrapper or sdlc
 state machine. The agent interprets the procedure against live facts and chooses
 individual CLI operations. A CLI command expresses one operation; implementation
 requests within that operation do not make it the owner of the business sequence.
