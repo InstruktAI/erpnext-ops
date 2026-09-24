@@ -40,6 +40,14 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
   observations. Outreach uses the company's delegated communication authority
   and an available, appropriate channel. Owner handoffs preserve the open loop.
 
+### Working company
+
+- **Development and testing operate on the sandbox company.** The sandbox company is the
+  test tenant: its own site, holding no business's books. Work that exercises, develops,
+  demonstrates, or verifies ERP capability runs against it, and the agent doing that work
+  names it as the company. Business work runs against the company the human's request
+  establishes. An agent never uses a business company to try something out.
+
 ### Native operations
 
 - **Use the CLI surface.** Agents operate ERPNext through `erpnext`. Raw transport mechanics
@@ -112,6 +120,8 @@ All agent operations against ERPNext sites.
 - Dropping a waiting obligation because its worker is idle is a defect.
 - Inferring outreach authority from a learned personality or response pattern is
   a defect.
+- Development, demonstration, or verification work performed against a business company
+  rather than the sandbox company is a defect.
 - A business operation performed outside the CLI is a defect unless the active procedure
   explicitly authorizes project-owned implementation work.
 - A mutation applied without reviewing its preview is a defect.

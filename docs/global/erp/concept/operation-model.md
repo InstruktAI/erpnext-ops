@@ -13,6 +13,12 @@ agent context. The global awareness entry is small; the domain baseline and
 procedure bodies are loaded progressively when work enters ERP. Publication does
 not turn every project into an ERP project or grant access to a company's data.
 
+ERPNext sites are remote services on the shared bench. Every agent execution host
+that carries the ERP domain reaches the same sites; the company determines the site,
+and no site, company, or test tenant is bound to a computer. Which company a piece of
+work is for comes from the human's request for business work, and is the sandbox
+company for development and test work.
+
 The publisher's source checkout is the development home, not the required working
 directory for business operations. An agent can inspect ERP state within its
 established mandate or delegate sustained work to the appropriate business
