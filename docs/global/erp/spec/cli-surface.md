@@ -150,7 +150,8 @@ non-zero exit.
   arrives validated; ERP code neither re-checks nor defaults it. The configured
   mapping selects the ERP site, accounting company and operator identity. A
   selector naming another company, or a site outside that company's association,
-  is refused with how a company is established for the session. Unresolved company
+  is refused, naming that work for another company runs in a session created or
+  dispatched for it. Unresolved company
   context produces a structured failure rather than falling back to another
   session's persisted selection.
 <!-- /planned-change:erpnext-session-context -->

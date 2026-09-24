@@ -42,11 +42,12 @@ The company context arrives already validated: the platform checks a requested
 company against the requester's membership when it resolves the context, and ERP
 code neither re-checks, re-derives, nor defaults it. A session with no resolved
 company, or with an ambiguous one, remains valid for other work; an ERP operation
-from it receives a structured context failure that names how a company is
-established for the session.
+from it receives a structured context failure that names that the work runs in
+a session created or dispatched with a company.
 
-A session changes company by establishing a different context through the
-platform, not per ERP invocation. In a managed session, a selector naming the
+A session's company is fixed when it is created or dispatched, so work for a
+different company runs in a session created or dispatched for that company, not
+per ERP invocation. In a managed session, a selector naming the
 session's own company or a site within its association changes nothing; a selector
 naming another company, or a site outside that association, is refused with the
 same remedy and the operation does not run.
@@ -115,7 +116,7 @@ And no persisted selection from another context substitutes for the missing mapp
 Scenario: A context selector cannot move a managed session to another company
 Given a managed agent session with a resolved company
 When the agent names a different company, or a site outside that company's ERP association, for an operation
-Then it receives a structured refusal naming how a company is established for a session
+Then it receives a structured refusal naming that work for another company runs in a session created or dispatched for it
 And the operation does not run for the named company
 ```
 
@@ -185,10 +186,10 @@ And a later standalone invocation still resolves the context it selected for its
 #### UC-SCTX12:
 
 ```gherkin
-Scenario: A session without a resolved company is told how to establish one
+Scenario: A session without a resolved company is told how to reach one
 Given a managed agent session whose company context is absent or ambiguous
 When the agent invokes an ERP operation naming no company or site
-Then it receives a structured context failure naming how a company is established for the session
+Then it receives a structured context failure naming that the work runs in a session created or dispatched with a company
 And no persisted selection supplies a business in its place
 ```
 
