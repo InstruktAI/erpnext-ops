@@ -42,8 +42,8 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 
 ### Working company
 
-- **Development and testing operate on the sandbox company.** The sandbox company is the
-  test tenant: its own site, holding no business's books. Work that exercises, develops,
+- **Development and testing operate on the sandbox company.** The sandbox company lives on
+  the dedicated test tenant: its own site, holding no business's books. Work that exercises, develops,
   demonstrates, or verifies ERP capability runs against it, and the agent doing that work
   names it as the company. Business work runs against the company the human's request
   establishes. An agent never uses a business company to try something out.

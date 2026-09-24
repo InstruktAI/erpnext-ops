@@ -12,9 +12,9 @@ of the app processes and one MariaDB service — hosts many sites; Frappe resolv
 from the request's Host header. itsUP provisions sites (database, files, routing, DNS)
 through GitOps.
 
-The sandbox company is a tenant like any other, with its own site, reserved for
-development and testing. It is not a variant or copy of a business company, so testing
-never shares a database with business records.
+The sandbox is a dedicated test tenant: its own site, holding the sandbox company and
+reserved for development and testing. It is not a variant or copy of a business's site,
+so testing never shares a database with business records.
 
 The site is the isolation boundary. An ERPNext `Company` inside a site is a legal and
 accounting scope: a business group may operate several companies in one site with
