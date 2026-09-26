@@ -58,17 +58,21 @@ and evaluated through the same context and authorization boundary, under the
 privilege separation and refusal rules the standalone operating-context contract
 already establishes.
 
-A managed session's requested context governs that session's own invocations. It
-never rewrites a selection another session resolves from, in either direction.
+A managed session operates for the company it started with. A refused request for
+another company changes neither that context nor a selection another session
+resolves from, in either direction.
 
 A managed invocation
 does not fall back to a home-wide persisted selection when its managed context is
 missing or inconsistent. Standalone terminal use follows its documented explicit
 context contract and is not labelled as a managed session.
 
-Session context is supplied automatically by the system and read through the
-platform's published surface; ERP code parses no platform-private state and keeps
-no resolver of its own. Shared configuration, authorization, identity,
+Session context is supplied automatically by the system. The platform records a
+session's company on the session record alone and resolves it for a tool inside the
+session through its published caller-identity surface, which reports the principal,
+role and company context; the per-session identity document carries no company fact.
+ERP code reads that surface, parses no platform-private state, and keeps no resolver
+of its own. Shared configuration, authorization, identity,
 and error contracts are accessed through their published surfaces. Where the
 public surface is insufficient, the gap belongs to that owner rather than a local
 replacement policy.
@@ -94,8 +98,8 @@ And the structured result identifies the executing context without credentials
 
 ```gherkin
 Scenario: Concurrent sessions retain their own context
-Given two managed agent sessions share an operating-system home and have different established business contexts
-When one session changes its requested operating context
+Given two managed agent sessions share an operating-system home and have different established company contexts
+When one session invokes ERP operations, including one naming the other session's company
 And the other session next invokes an ERP operation
 Then the other operation retains its own framework-resolved context
 ```
@@ -175,10 +179,11 @@ And the bootstrap administrator identity is refused
 #### UC-SCTX11:
 
 ```gherkin
-Scenario: A managed session's context request leaves other contexts untouched
+Scenario: A refused company request leaves every context unchanged
 Given a managed agent session and a standalone terminal invocation share an operating-system home
-When the managed session requests a different company for its own operations
-Then that request governs the managed session's subsequent invocations
+When the managed session names a different company for an operation
+Then the request is refused
+And the managed session's next ERP operation still resolves the company it started with
 And the selection the standalone invocation resolves from is unchanged
 And a later standalone invocation still resolves the context it selected for itself
 ```
