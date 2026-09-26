@@ -27,6 +27,9 @@ without making the publisher repository its business working directory.
   authority. Native operations still use the resolved operating-context contract.
 - **Failure:** an unsupported host or failed installation/update has an explicit
   diagnostic and does not claim that the CLI is available.
+- **Freshness:** the installed tool is the delivered version. A delivered change
+  reaches it through the host tooling lifecycle without a manual step, and
+  undelivered work never replaces it.
 
 ### Use cases
 
@@ -69,6 +72,19 @@ Given an operator provisions the ERP CLI on an unsupported or failing host
 When provisioning cannot establish an invocable tool
 Then the operator receives an actionable failure
 And provisioning does not report the capability as available
+```
+
+#### UC-CLIA5:
+
+```gherkin
+Scenario: The installed capability is the delivered version
+Given an agent execution host has provisioned the supported ERP CLI
+And a change to the CLI is in progress but not yet delivered
+When an agent invokes the ERP command and inspects its version
+Then it reaches the previously delivered version
+When the change is delivered
+Then subsequent agent invocations reach the newly delivered version
+And the host received it without a manual installation step
 ```
 
 ## Known caveats
