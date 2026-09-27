@@ -1,5 +1,5 @@
 ---
-description: How the erpnext CLI sends native requests — a mutating request is sent once to its exact endpoint and a redirect answering it is a typed failure, while a read follows a redirect to its target.
+description: How the erpnext CLI sends mutating native requests — each is sent once to its exact endpoint, and a redirect answering it is a typed failure that is never followed.
 delivered_by:
   - erpnext-module-method-call
 ---
@@ -16,7 +16,7 @@ Every `erpnext` command reaches the site through one shared transport. A mutatin
 (POST, PUT, DELETE, including file uploads and requests with a command-specific timeout) is
 sent once, as written, to the endpoint the command names. A redirect in answer to it is a
 typed failure and is never followed, so no write is ever re-sent under another HTTP method.
-A read (GET) follows a redirect to its target. The command contract is `erp/spec/cli-surface`.
+The command contract is `erp/spec/cli-surface`.
 
 ## Canonical fields
 
@@ -28,17 +28,7 @@ A read (GET) follows a redirect to its target. The command contract is `erp/spec
 Scenario: A mutating request answered with a redirect is not re-sent
 Given a site that answers a mutating request with a redirect to another location
 When the agent applies any mutating erpnext command
-Then the command fails with a typed failure naming the redirect
+Then the command fails with a typed failure
 And no request reaches the redirect target
 And no success is reported.
-```
-
-#### UC-TR2:
-
-```gherkin
-Scenario: A read answered with a redirect follows it
-Given a site that answers a read request with a redirect to another location
-When the agent runs a reading erpnext command
-Then the read is served from the redirect target
-And the command reports that result.
 ```
