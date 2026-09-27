@@ -41,6 +41,7 @@ When the agent runs `erpnext activity list --reference <doctype> <name> --since 
 Then the matching records are returned in machine-readable, time-ordered form across the
 native record kinds.
 
+<!-- planned-change:erpnext-module-method-call -->
 #### UC-4
 
 Scenario: Attach evidence to a document
@@ -48,6 +49,15 @@ Given a local file relevant to a business document
 When the agent runs `erpnext evidence attach --reference <doctype> <name> --file <path>`
 Then the file is attached to the referenced document with its summary
 And the attachment is visible in the document's trail.
+<!-- change:erpnext-module-method-call -->
+#### UC-4
+
+Scenario: Attach evidence to a document
+Given a local file relevant to a business document
+When the agent runs `erpnext evidence attach --reference <doctype> <name> --file <path>`
+Then the file is attached to the referenced document with its summary
+And the attachment is visible in the document's trail.
+<!-- /planned-change:erpnext-module-method-call -->
 
 #### UC-5
 
