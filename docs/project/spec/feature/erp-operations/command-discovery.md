@@ -29,10 +29,10 @@ And it neither reads credentials nor contacts a site
 #### UC-DISC2:
 
 ```gherkin
-Scenario: Documentation inventory comes from the declared surface
-Given an agent reads the CLI command inventory rendered for a binary
-When that inventory is produced
-Then it is rendered from that binary's declared command-surface export
+Scenario: The command listing comes from the declared surface
+Given an agent reads the command listing in a binary's root help
+When that listing is produced
+Then it is rendered from the same declared command surface the binary's export describes
 And it requires no separately maintained command list
 ```
 
