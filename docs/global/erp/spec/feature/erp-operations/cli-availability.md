@@ -30,6 +30,9 @@ without making the publisher repository its business working directory.
 - **Freshness:** the installed tool is the delivered version. A delivered change
   reaches it through the host tooling lifecycle without a manual step, and
   undelivered work never replaces it.
+- **Completion:** installation makes the command's subcommands and options
+  complete in operator interactive shells. Agent shells load no completions and
+  are unaffected.
 
 ### Use cases
 
@@ -85,6 +88,16 @@ Then it reaches the previously delivered version
 When the change is delivered
 Then subsequent agent invocations reach the newly delivered version
 And the host received it without a manual installation step
+```
+
+#### UC-CLIA6:
+
+```gherkin
+Scenario: An operator's shell completes the installed command
+Given an operator on a supported host has provisioned the ERP CLI
+When the operator starts typing the ERP command in an interactive shell
+Then the shell offers the command's subcommands and options as completions
+And agent shells on the same host behave exactly as before installation
 ```
 
 ## Known caveats
