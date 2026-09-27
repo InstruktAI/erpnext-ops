@@ -8,8 +8,9 @@ delivered_by:
 ## What it is
 
 Agents discover the command surface declared by the installed binary without selecting a
-tenant. `erp/spec/cli-surface` owns the exported-inventory contract under
-`project/principle/generic-cli-substrate`.
+tenant, progressively: root help lists every command, each command's help discloses its
+detail, and `erp/spec/tools/erpnext-cli` carries the rendered listing in the ERP domain
+baseline. The surface stays generic under `project/principle/generic-cli-substrate`.
 
 ## Canonical fields
 
@@ -43,6 +44,26 @@ Given an agent requests the CLI's root help
 When the help is displayed
 Then it carries one pointer to the ERP documentation
 And per-command documentation pointers are not duplicated throughout the help
+```
+
+#### UC-DISC4:
+
+```gherkin
+Scenario: Root help lists the whole command tree
+Given an agent has the CLI binary and no configured operating context
+When the agent requests the CLI's root help
+Then every declared command in the tree is listed with its arguments and a one-line description
+And no command is reachable only by requesting a group's help first
+```
+
+#### UC-DISC5:
+
+```gherkin
+Scenario: A command's own help discloses its detail
+Given an agent has found a command in the root help listing
+When the agent requests that command's help
+Then it receives the command's full arguments, options and their meaning
+And it needs no site, credentials or selected operating context to do so
 ```
 
 ## See Also
