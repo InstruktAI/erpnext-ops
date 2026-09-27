@@ -199,6 +199,9 @@ non-zero exit.
   method that returns nothing reports `data` as null; a response that is not a JSON object is
   a typed failure, never success. It does not interpret business state, read back records, or
   substitute behavior when the method is unavailable.
+- Every mutating request is sent once, as written, to the site's exact endpoint. A redirect in
+  answer to it is a typed failure and is never followed, so no write is ever re-sent as another
+  HTTP method.
 <!-- /planned:erpnext-module-method-call -->
 - `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
