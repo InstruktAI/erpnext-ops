@@ -5,6 +5,11 @@ activation_trigger: Use before running any erpnext command with --apply.
 
 # Apply a Native Operation — Procedure
 
+## Required reads
+
+- @~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
+- @~/.teleclaude/docs/erp/procedure/prove-native-effect.md
+
 ## Goal
 
 Make every change an agent applies to ERPNext follow one loop with a closed set of
@@ -45,14 +50,13 @@ Every result is exactly one of these outcomes:
 | --- | --- | --- |
 | Success envelope | The site accepted the change | Prove the effect with `erp/procedure/prove-native-effect` before reporting it done |
 | Failure before anything was sent (invalid payload or configuration) | Nothing reached the site | Correct the input and return to step 3 |
-| Failure the site returned (authentication, permission, missing record, validation) | The site refused; nothing changed | Read current state; never work around the refusal; follow the governing procedure's decision point or carry an open loop |
+| Failure the site returned for the request itself (authentication, permission, missing record, validation) | The site refused; nothing changed | Read current state; never work around the refusal; follow the governing procedure's decision point or carry an open loop |
+| Failure reported after the site accepted part of the change (a created document whose verification failed, a follow-up save the site refused, a transition that did not take effect) | Part of the change may be stored | Read the stored state; continue from the stored partial result with `erp/procedure/resume-from-native-state`; never apply the same change again |
 | Refusal because the effect already exists | The change was made before | Read back; when the stored state matches the expected effect, treat the step as done |
 | Failure whose outcome is unknown (transport failure, unexpected response, failed read-back) | The change may or may not have landed | Apply nothing further until `erp/procedure/resume-from-native-state` has settled the state |
 | Success on an operation the governing procedure says completes in the background | Accepted, not yet done | Record the expectation, set a reminder to re-check, and never repeat the apply |
 
-A failure's `kind` and `message` identify its row. A command-specific failure that
-reports the stored effect differs from the intended one belongs to the refusal row
-when nothing changed and to the unknown row otherwise.
+A failure's `kind`, `message`, and any document reference it carries identify its row.
 
 ### 6. Record the outcome
 
