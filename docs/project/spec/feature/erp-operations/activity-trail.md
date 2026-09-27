@@ -50,13 +50,6 @@ When the agent runs `erpnext evidence attach --reference <doctype> <name> --file
 Then the file is attached to the referenced document with its summary
 And the attachment is visible in the document's trail.
 <!-- change:erpnext-module-method-call -->
-#### UC-4
-
-Scenario: Attach evidence to a document
-Given a local file relevant to a business document
-When the agent runs `erpnext evidence attach --reference <doctype> <name> --file <path>`
-Then the file is attached to the referenced document with its summary
-And the attachment is visible in the document's trail.
 <!-- /planned-change:erpnext-module-method-call -->
 
 #### UC-5
@@ -65,3 +58,17 @@ Scenario: The trail never carries credentials
 Given any activity capture or evidence attachment
 When the record is written
 Then no API key, secret, or credential material appears in the recorded content.
+
+<!-- planned:erpnext-module-method-call -->
+### Use cases
+
+#### UC-4:
+
+```gherkin
+Scenario: Attach evidence to a document
+Given a local file relevant to a business document
+When the agent runs `erpnext evidence attach --reference <doctype> <name> --file <path>`
+Then the file is attached to the referenced document with its summary
+And the attachment is visible in the document's trail.
+```
+<!-- /planned:erpnext-module-method-call -->
