@@ -100,12 +100,14 @@ persistence, or a failed read-back is never reported as success.
 <!-- /planned-change:erpnext-module-method-call -->
 
 <!-- planned:erpnext-module-method-call -->
-#### UC-8
+#### UC-8:
 
+```gherkin
 Scenario: A controller method call answered with a redirect is not re-sent
 Given a site that answers the document controller method endpoint with a redirect
 When the agent applies `erpnext workflow method <doctype> <name> <method>`
 Then the command fails with a typed failure
 And no request follows the redirect, so the controller is never run under another HTTP method
 And no document read-back or save is reported as success.
+```
 <!-- /planned:erpnext-module-method-call -->
