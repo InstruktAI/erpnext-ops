@@ -100,6 +100,8 @@ persistence, or a failed read-back is never reported as success.
 <!-- /planned-change:erpnext-module-method-call -->
 
 <!-- planned:erpnext-module-method-call -->
+### Use cases
+
 #### UC-8:
 
 ```gherkin
