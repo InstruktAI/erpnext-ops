@@ -61,10 +61,9 @@ project-owned implementation details.
 - `erpnext ops doctor`
 
 <!-- planned:erpnext-command-surface-export -->
-The complete command listing is the binary's root help, rendered from its declared
-command surface, which the binary also emits as a deterministic, credential-free,
-site-independent description. `erp/spec/tools/erpnext-cli` discloses that root help. Root help lists every command with its
-arguments and carries one pointer to that tool spec and no per-command documentation
+The command inventory above is rendered from the binary's declared command surface, which
+the binary emits as a deterministic, credential-free, site-independent description. The
+root help carries one pointer to the ERP documentation and no per-command documentation
 references.
 <!-- /planned:erpnext-command-surface-export -->
 

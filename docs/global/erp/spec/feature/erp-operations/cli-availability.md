@@ -33,9 +33,6 @@ without making the publisher repository its business working directory.
 - **Completion:** installation makes the command's subcommands and options
   complete in operator interactive shells. Agent shells load no completions and
   are unaffected.
-- **Disclosure:** the ERP domain baseline carries the installed CLI's full command
-  listing and its most-used command groups, rendered from the installed binary's
-  own help.
 
 ### Use cases
 
@@ -101,16 +98,6 @@ Given an operator on a supported host has provisioned the ERP CLI
 When the operator starts typing the ERP command in an interactive shell
 Then the shell offers the command's subcommands and options as completions
 And agent shells on the same host behave exactly as before installation
-```
-
-#### UC-CLIA7:
-
-```gherkin
-Scenario: The ERP domain discloses the installed CLI to every agent
-Given the ERP CLI is installed on the host that publishes the ERP documentation
-When an agent loads the ERP domain baseline
-Then it reads every command of the installed CLI with its arguments and description
-And that listing matches what the installed binary reports as its own help
 ```
 
 ## Known caveats
