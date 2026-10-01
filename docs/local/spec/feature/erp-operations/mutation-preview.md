@@ -7,7 +7,7 @@ description: Native facts and replayable invocations in read-only mutation previ
 
 Agents inspect observed native facts and the intended request before applying a mutation.
 The preview contract is defined by `erp/spec/cli-surface`; the CLI owns observation and
-request fidelity under `projects/erpnext-ops/principle/generic-cli-substrate`.
+request fidelity under `local/projects/erpnext-ops/principle/generic-cli-substrate`.
 
 ## Canonical fields
 

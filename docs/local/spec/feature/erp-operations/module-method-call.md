@@ -19,7 +19,7 @@ honest reporting of the native result. The method path and its JSON object are o
 CLI; ERPNext owns the method's validation, permissions, transactions, and business meaning.
 Business scenarios compose this primitive with existing generic reads in ERP procedures. The
 command contract is `erp/spec/cli-surface`; the boundary is
-`projects/erpnext-ops/principle/generic-cli-substrate`.
+`local/projects/erpnext-ops/principle/generic-cli-substrate`.
 
 ## Canonical fields
 

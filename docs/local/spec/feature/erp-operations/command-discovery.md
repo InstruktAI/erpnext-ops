@@ -9,7 +9,7 @@ delivered_by:
 
 Agents discover the command surface declared by the installed binary without selecting a
 tenant. `erp/spec/cli-surface` owns the exported-inventory contract under
-`projects/erpnext-ops/principle/generic-cli-substrate`.
+`local/projects/erpnext-ops/principle/generic-cli-substrate`.
 
 ## Canonical fields
 
