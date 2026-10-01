@@ -8,7 +8,7 @@ delivered_by:
 
 ## Required reads
 
-@docs/project/principle/generic-cli-substrate.md
+@docs/local/principle/generic-cli-substrate.md
 @~/.teleclaude/docs/erp/spec/cli-surface.md
 
 ## What it is
@@ -19,7 +19,7 @@ honest reporting of the native result. The method path and its JSON object are o
 CLI; ERPNext owns the method's validation, permissions, transactions, and business meaning.
 Business scenarios compose this primitive with existing generic reads in ERP procedures. The
 command contract is `erp/spec/cli-surface`; the boundary is
-`project/principle/generic-cli-substrate`.
+`projects/erpnext-ops/principle/generic-cli-substrate`.
 
 ## Canonical fields
 

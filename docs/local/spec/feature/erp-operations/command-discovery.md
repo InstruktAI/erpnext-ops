@@ -9,7 +9,7 @@ delivered_by:
 
 Agents discover the command surface declared by the installed binary without selecting a
 tenant. `erp/spec/cli-surface` owns the exported-inventory contract under
-`project/principle/generic-cli-substrate`.
+`projects/erpnext-ops/principle/generic-cli-substrate`.
 
 ## Canonical fields
 
@@ -48,4 +48,4 @@ And per-command documentation pointers are not duplicated throughout the help
 ## See Also
 
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
-- docs/project/principle/generic-cli-substrate.md
+- docs/local/principle/generic-cli-substrate.md
