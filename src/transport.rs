@@ -18,6 +18,8 @@ pub enum ApiError {
     Transport(String),
     #[error("unexpected response shape: {0}")]
     Shape(String),
+    #[error("site redirected mutating request (HTTP {status}) to {target}")]
+    Redirect { status: u16, target: String },
 }
 
 /// Characters percent-encoded in a URL path segment (space stays %20, never '+').
@@ -49,6 +51,7 @@ impl ApiError {
             ApiError::Rejected { .. } => "rejected",
             ApiError::Transport(_) => "transport",
             ApiError::Shape(_) => "shape",
+            ApiError::Redirect { .. } => "redirect",
         }
     }
 }
@@ -64,6 +67,7 @@ impl From<reqwest::Error> for ApiError {
 /// Thin client over the Frappe v2 REST envelope for one resolved context.
 pub struct Client {
     http: reqwest::Client,
+    write_http: reqwest::Client,
     ctx: Context,
 }
 
@@ -85,7 +89,16 @@ impl Client {
             .connect_timeout(CONNECT_TIMEOUT)
             .timeout(request_timeout)
             .build()?;
-        Ok(Client { http, ctx })
+        let write_http = reqwest::Client::builder()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .timeout(request_timeout)
+            .redirect(reqwest::redirect::Policy::none())
+            .build()?;
+        Ok(Client {
+            http,
+            write_http,
+            ctx,
+        })
     }
 
     pub fn context(&self) -> &Context {
@@ -135,13 +148,13 @@ impl Client {
 
     pub async fn post(&self, path: &str, body: &Value) -> Result<Value, ApiError> {
         let resp = self
-            .http
+            .write_http
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
             .send()
             .await?;
-        Self::read_json(resp).await
+        Self::read_write_json(resp).await
     }
 
     pub async fn post_with_timeout(
@@ -151,35 +164,35 @@ impl Client {
         timeout: std::time::Duration,
     ) -> Result<Value, ApiError> {
         let request = self
-            .http
+            .write_http
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
             .timeout(timeout)
             .build()?;
-        let resp = self.http.execute(request).await?;
-        Self::read_json(resp).await
+        let resp = self.write_http.execute(request).await?;
+        Self::read_write_json(resp).await
     }
 
     pub async fn put(&self, path: &str, body: &Value) -> Result<Value, ApiError> {
         let resp = self
-            .http
+            .write_http
             .put(self.url(path))
             .header("Authorization", self.auth_header())
             .json(body)
             .send()
             .await?;
-        Self::read_json(resp).await
+        Self::read_write_json(resp).await
     }
 
     pub async fn delete(&self, path: &str) -> Result<Value, ApiError> {
         let resp = self
-            .http
+            .write_http
             .delete(self.url(path))
             .header("Authorization", self.auth_header())
             .send()
             .await?;
-        Self::read_json(resp).await
+        Self::read_write_json(resp).await
     }
 
     /// Multipart file upload to a native method endpoint (e.g. `upload_file`), with
@@ -197,12 +210,26 @@ impl Client {
             form = form.text((*key).to_owned(), (*value).to_owned());
         }
         let resp = self
-            .http
+            .write_http
             .post(self.url(path))
             .header("Authorization", self.auth_header())
             .multipart(form)
             .send()
             .await?;
+        Self::read_write_json(resp).await
+    }
+
+    async fn read_write_json(resp: reqwest::Response) -> Result<Value, ApiError> {
+        if resp.status().is_redirection() {
+            let status = resp.status().as_u16();
+            let target = resp
+                .headers()
+                .get(reqwest::header::LOCATION)
+                .and_then(|value| value.to_str().ok())
+                .map(safe_redirect_target)
+                .unwrap_or_else(|| "unspecified target".into());
+            return Err(ApiError::Redirect { status, target });
+        }
         Self::read_json(resp).await
     }
 
@@ -227,6 +254,18 @@ impl Client {
                 message: extract_message(&body),
             }),
         }
+    }
+}
+
+fn safe_redirect_target(location: &str) -> String {
+    let parsed = reqwest::Url::parse(location).ok();
+    let path = parsed
+        .as_ref()
+        .map(reqwest::Url::path)
+        .unwrap_or_else(|| location.split(['?', '#']).next().unwrap_or(location));
+    match parsed.as_ref().and_then(reqwest::Url::host_str) {
+        Some(host) => format!("{host}{path}"),
+        None => path.to_owned(),
     }
 }
 

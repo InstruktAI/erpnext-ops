@@ -325,7 +325,7 @@ fn controller_preview_observes_without_execution() {
     });
     let method = server.mock(|when, then| {
         when.method(POST)
-            .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data/");
+            .path("/api/v2/document/Sales%20Invoice/INV-1/method/add_timesheet_data");
         then.status(200).json_body(json!({}));
     });
 
@@ -425,6 +425,47 @@ fn document_preview_reports_schema_and_unknown_keys() {
       }
     }
     "#);
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/mutation-preview UC-PRE7
+fn module_method_preview_does_not_infer_document_facts_from_opaque_payload() {
+    let server = MockServer::start();
+    let document = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/document/Bank%20Transaction/BT-TEST-1");
+        then.status(200).json_body(json!({ "data": {} }));
+    });
+    let metadata = server.mock(|when, then| {
+        when.method(GET)
+            .path("/api/v2/doctype/Bank%20Transaction/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] } }));
+    });
+
+    let output = cli::run_cli_against(
+        &server,
+        &[
+            "method",
+            "call",
+            "erpnext.accounts.doctype.bank_transaction.bank_transaction.reconcile_vouchers",
+            "--data",
+            r#"{"doctype":"Bank Transaction","name":"BT-TEST-1"}"#,
+        ],
+    );
+
+    assert!(output.status.success(), "{output:?}");
+    let envelope = cli::json_output(&output.stdout);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(true)));
+    let preview = envelope.pointer("/data").expect("preview data");
+    assert!(preview.get("target").is_none());
+    assert!(preview.get("schema").is_none());
+    assert_eq!(document.hits(), 0, "opaque methods do not read documents");
+    assert_eq!(
+        metadata.hits(),
+        0,
+        "opaque methods do not read DocType metadata"
+    );
 }
 
 #[test]

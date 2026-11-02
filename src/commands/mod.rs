@@ -4,6 +4,7 @@ pub mod doc;
 pub mod evidence;
 pub mod import;
 pub mod meta;
+pub mod method;
 pub mod ops;
 pub mod report;
 pub mod resolve;

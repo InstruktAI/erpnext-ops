@@ -32,8 +32,9 @@ pub const MAP: &str = "map";
 pub const SUBMIT: &str = "submit";
 pub const CANCEL: &str = "cancel";
 pub const AMEND: &str = "amend";
+pub const CALL: &str = "call";
 
-/// The nine mutating document/workflow subcommands that preview by default. A
+/// The ten mutating document, workflow, and native-method subcommands that preview by default. A
 /// closed type: every replay and every Clap declaration names one of these, never
 /// a bare string.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +48,7 @@ pub enum MutationCommand {
     WorkflowCancel,
     WorkflowAmend,
     WorkflowMethod,
+    MethodCall,
 }
 
 impl MutationCommand {
@@ -62,6 +64,7 @@ impl MutationCommand {
             Self::WorkflowCancel => [WORKFLOW, CANCEL],
             Self::WorkflowAmend => [WORKFLOW, AMEND],
             Self::WorkflowMethod => [WORKFLOW, METHOD],
+            Self::MethodCall => [METHOD, CALL],
         }
     }
 
@@ -78,6 +81,7 @@ impl MutationCommand {
             | Self::WorkflowCancel
             | Self::WorkflowAmend => &[DOCTYPE, NAME],
             Self::WorkflowMethod => &[DOCTYPE, NAME, METHOD],
+            Self::MethodCall => &[METHOD],
         }
     }
 }

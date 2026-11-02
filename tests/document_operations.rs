@@ -4,6 +4,7 @@ use serde_json::{json, Value};
 
 #[path = "support/cli.rs"]
 mod cli;
+use cli::{json_output, run_cli_against};
 
 /// Compare the CLI's stable public envelope against an approved snapshot file, parsed
 /// with the same `serde_json` the CLI itself uses — no snapshot engine or dependency.
@@ -852,4 +853,34 @@ fn source_replay_accepts_server_enriched_child_rows() {
         0,
         "a replay must not create a second invoice"
     );
+}
+
+#[test]
+// spec: project/spec/feature/erp-operations/document-operations UC-7
+fn document_delete_applies_one_native_delete_and_reports_success() {
+    let server = MockServer::start();
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/document/Customer/C-1");
+        then.status(200).json_body(json!({ "data": {
+            "doctype": "Customer", "name": "C-1"
+        }}));
+    });
+    server.mock(|when, then| {
+        when.method(GET).path("/api/v2/doctype/Customer/meta");
+        then.status(200)
+            .json_body(json!({ "data": { "fields": [] }}));
+    });
+    let delete = server.mock(|when, then| {
+        when.method(DELETE).path("/api/v2/document/Customer/C-1");
+        then.status(200)
+            .json_body(json!({ "data": { "name": "C-1" }}));
+    });
+
+    let output = run_cli_against(&server, &["doc", "delete", "Customer", "C-1", "--apply"]);
+
+    assert!(output.status.success(), "{output:?}");
+    let envelope = json_output(&output.stdout);
+    assert_eq!(envelope.pointer("/ok"), Some(&json!(true)));
+    assert_eq!(envelope.pointer("/data/name"), Some(&json!("C-1")));
+    assert_eq!(delete.hits(), 1);
 }

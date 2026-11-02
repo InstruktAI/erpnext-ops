@@ -23,7 +23,7 @@ fn collection_path(doctype: &str) -> String {
 
 fn method_path(doctype: &str, name: &str, method: &str) -> String {
     format!(
-        "/api/v2/document/{}/{}/method/{}/",
+        "/api/v2/document/{}/{}/method/{}",
         encode_segment(doctype),
         encode_segment(name),
         encode_segment(method)
@@ -78,6 +78,7 @@ async fn transition(client: &Client, doctype: &str, name: &str, target: i64, app
         } else {
             ReplayArgs::WorkflowSubmit { doctype, name }
         };
+        let apply_command = _preview::apply_command(client.context(), &args);
         return output::ok(
             _preview::Preview {
                 context: _preview::context_json(client.context()),
@@ -85,7 +86,7 @@ async fn transition(client: &Client, doctype: &str, name: &str, target: i64, app
                 target: Some(_preview::target_json(&doc_body)),
                 schema: Some(_preview::schema_json(&meta)),
                 preflight: _preview::no_fields_preflight_json(),
-                apply_command: _preview::apply_command(client.context(), &args),
+                apply_command,
                 idempotency: None,
                 intended_state: Some(describe(target)),
                 persistence: None,
@@ -203,6 +204,14 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
 
     if !apply {
         let requested_data = Value::Object(overrides);
+        let apply_command = _preview::apply_command(
+            client.context(),
+            &ReplayArgs::WorkflowAmend {
+                doctype,
+                name,
+                data: &requested_data,
+            },
+        );
         return output::ok(
             _preview::Preview {
                 context: _preview::context_json(client.context()),
@@ -210,14 +219,7 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
                 target: Some(_preview::target_json(&source)),
                 schema: Some(_preview::schema_json(&meta)),
                 preflight: _preview::preflight_json(doctype, &meta, &draft_map),
-                apply_command: _preview::apply_command(
-                    client.context(),
-                    &ReplayArgs::WorkflowAmend {
-                        doctype,
-                        name,
-                        data: &requested_data,
-                    },
-                ),
+                apply_command,
                 idempotency: None,
                 intended_state: Some(describe(DRAFT)),
                 persistence: None,
@@ -233,9 +235,11 @@ pub async fn amend(client: &Client, doctype: &str, name: &str, data: &str, apply
 }
 
 /// `erpnext workflow method <doctype> <name> <method> [--data <json>] [--apply]` — run a
-/// whitelisted controller method through the native method envelope. Both preview
-/// and apply read the current document and its metadata first; the method's
-/// `--data` is opaque method arguments, never checked as document fields.
+/// whitelisted controller method through the native method envelope. Preview and
+/// apply read the current document and its metadata first; apply then reports the
+/// stored result without a secondary write when the controller persisted its effect,
+/// and saves the returned document once only when the stored document stayed unchanged.
+/// The method's `--data` is opaque method arguments, never checked as document fields.
 pub async fn run_method(
     client: &Client,
     doctype: &str,
@@ -291,6 +295,15 @@ pub async fn run_method(
     if !apply {
         let doc_body = doc.pointer("/data").cloned().unwrap_or(Value::Null);
         let requested_data = if data.is_some() { Some(&payload) } else { None };
+        let apply_command = _preview::apply_command(
+            client.context(),
+            &ReplayArgs::WorkflowMethod {
+                doctype,
+                name,
+                method,
+                data: requested_data,
+            },
+        );
         return output::ok(
             _preview::Preview {
                 context: _preview::context_json(client.context()),
@@ -298,40 +311,21 @@ pub async fn run_method(
                 target: Some(_preview::target_json(&doc_body)),
                 schema: Some(_preview::schema_json(&meta)),
                 preflight: _preview::opaque_preflight_json(),
-                apply_command: _preview::apply_command(
-                    client.context(),
-                    &ReplayArgs::WorkflowMethod {
-                        doctype,
-                        name,
-                        method,
-                        data: requested_data,
-                    },
-                ),
+                apply_command,
                 idempotency: None,
                 intended_state: None,
                 persistence: Some(
-                    "when the method returns the changed document, apply saves that exact document and reports the stored result",
+                    "when the controller persisted its effect, apply sends no further write; when the effect exists only in the returned document, apply persists that document once, never over a newer stored version. The preview cannot show the returned document before the site runs the method",
                 ),
             }
             .into_json(),
         );
     }
 
-    match apply_method(client, doctype, name, method, &payload).await {
+    let initial_document = doc.pointer("/data").cloned().unwrap_or(Value::Null);
+    match apply_method(client, doctype, name, method, &payload, &initial_document).await {
         Ok(stored) => output::ok(stored),
-        Err(MethodApplyError::Request(e)) => {
-            output::fail(e.kind(), &e.to_string(), output::EXIT_API)
-        }
-        Err(MethodApplyError::Shape(message)) => output::fail("shape", &message, output::EXIT_API),
-        Err(MethodApplyError::Save {
-            error,
-            method_result,
-        }) => output::fail_with_data(
-            error.kind(),
-            &format!("controller method ran but its returned document was not saved: {error}"),
-            json!({ "method_result": method_result }),
-            output::EXIT_API,
-        ),
+        Err(error) => output::fail(error.kind(), &error.message(), output::EXIT_API),
     }
 }
 
@@ -339,30 +333,57 @@ pub async fn run_method(
 pub enum MethodApplyError {
     Request(ApiError),
     Shape(String),
-    Save {
-        error: ApiError,
-        method_result: Value,
-    },
+    ReadBack(ApiError),
+    UndeterminedPersistence,
+    RejectedPersistence(ApiError),
+}
+
+impl MethodApplyError {
+    fn kind(&self) -> &'static str {
+        match self {
+            Self::Request(error) | Self::ReadBack(error) | Self::RejectedPersistence(error) => {
+                error.kind()
+            }
+            Self::Shape(_) => "shape",
+            Self::UndeterminedPersistence => "undetermined-persistence",
+        }
+    }
+
+    fn message(&self) -> String {
+        match self {
+            Self::Request(error) => format!("controller method request failed: {error}"),
+            Self::Shape(message) => message.clone(),
+            Self::ReadBack(error) => format!("stored document read-back failed: {error}"),
+            Self::UndeterminedPersistence => {
+                "controller persistence could not be determined from stored state".into()
+            }
+            Self::RejectedPersistence(error) => {
+                format!("controller result persistence was rejected: {error}")
+            }
+        }
+    }
 }
 
 /// Apply a native document controller method and return the state the site actually
-/// stored. Kept separate from output rendering so the persistence contract is directly
-/// testable without mistaking the controller's in-memory response for stored state.
+/// stored. The pre-call document, controller response, and fresh read-back determine
+/// whether the controller already persisted its effect or the returned document still
+/// needs one native save.
 pub async fn apply_method(
     client: &Client,
     doctype: &str,
     name: &str,
     method: &str,
     payload: &Value,
+    initial_document: &Value,
 ) -> Result<Value, MethodApplyError> {
     let method_result = client
         .post(&method_path(doctype, name, method), payload)
         .await
         .map_err(MethodApplyError::Request)?;
 
-    let Some(returned_doc) = method_result.pointer("/docs/0") else {
-        return Ok(output::site_payload(method_result));
-    };
+    let returned_doc = method_result.pointer("/docs/0").ok_or_else(|| {
+        MethodApplyError::Shape("controller method response did not contain a document".into())
+    })?;
     let returned_doctype = returned_doc
         .pointer("/doctype")
         .and_then(Value::as_str)
@@ -373,19 +394,55 @@ pub async fn apply_method(
         .unwrap_or_default();
     if returned_doctype != doctype || returned_name != name {
         return Err(MethodApplyError::Shape(format!(
-                "controller method returned {returned_doctype} {returned_name}, expected {doctype} {name}"
-            )));
+            "controller method returned {returned_doctype} {returned_name}, expected {doctype} {name}"
+        )));
     }
 
-    match client
-        .put(&document_path(doctype, name), returned_doc)
+    let stored_result = client
+        .get(&document_path(doctype, name))
         .await
-    {
-        Ok(saved) => Ok(output::site_payload(saved)),
-        Err(error) => Err(MethodApplyError::Save {
-            error,
-            method_result,
+        .map_err(MethodApplyError::ReadBack)?;
+    let stored_document = match stored_result.get("data").and_then(Value::as_object) {
+        Some(document) => Value::Object(document.clone()),
+        None => {
+            return Err(MethodApplyError::ReadBack(ApiError::Shape(
+                "post-call read-back did not contain a document object".into(),
+            )))
+        }
+    };
+
+    if structurally_matches(returned_doc, &stored_document) {
+        return Ok(stored_document);
+    }
+
+    if structurally_matches(&stored_document, initial_document) {
+        return client
+            .put(&document_path(doctype, name), returned_doc)
+            .await
+            .map(output::site_payload)
+            .map_err(MethodApplyError::RejectedPersistence);
+    }
+
+    Err(MethodApplyError::UndeterminedPersistence)
+}
+
+fn structurally_matches(candidate: &Value, stored: &Value) -> bool {
+    match (candidate, stored) {
+        (Value::Object(candidate), Value::Object(stored)) => stored.iter().all(|(key, value)| {
+            candidate
+                .get(key)
+                .is_some_and(|candidate_value| structurally_matches(candidate_value, value))
         }),
+        (Value::Array(candidate), Value::Array(stored)) => {
+            candidate.len() == stored.len()
+                && candidate
+                    .iter()
+                    .zip(stored)
+                    .all(|(candidate_value, stored_value)| {
+                        structurally_matches(candidate_value, stored_value)
+                    })
+        }
+        _ => candidate == stored,
     }
 }
 

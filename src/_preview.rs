@@ -185,8 +185,8 @@ pub fn preflight_json(doctype: &str, meta: &Value, payload: &Map<String, Value>)
     }
 }
 
-/// A document-controller method's `--data` is opaque method arguments, never
-/// document fields: no unknown-field claim is made about that payload.
+/// A native method's `--data` is opaque method arguments, never document fields:
+/// no unknown-field claim is made about that payload.
 pub fn opaque_preflight_json() -> Value {
     json!({
         "checked": false,
@@ -266,6 +266,10 @@ pub enum ReplayArgs<'a> {
         method: &'a str,
         data: Option<&'a Value>,
     },
+    MethodCall {
+        method: &'a str,
+        data: Option<&'a Value>,
+    },
 }
 
 impl ReplayArgs<'_> {
@@ -280,6 +284,7 @@ impl ReplayArgs<'_> {
             Self::WorkflowCancel { .. } => MutationCommand::WorkflowCancel,
             Self::WorkflowAmend { .. } => MutationCommand::WorkflowAmend,
             Self::WorkflowMethod { .. } => MutationCommand::WorkflowMethod,
+            Self::MethodCall { .. } => MutationCommand::MethodCall,
         }
     }
 
@@ -310,6 +315,7 @@ impl ReplayArgs<'_> {
                 (command_syntax::NAME, *name),
                 (command_syntax::METHOD, *method),
             ],
+            Self::MethodCall { method, .. } => vec![(command_syntax::METHOD, *method)],
         }
     }
 
@@ -326,7 +332,7 @@ impl ReplayArgs<'_> {
 
     fn flag_values(&self) -> Vec<(&'static str, String)> {
         fn json_arg(value: &Value) -> String {
-            serde_json::to_string(value).unwrap_or_default()
+            value.to_string()
         }
 
         match self {
@@ -358,7 +364,7 @@ impl ReplayArgs<'_> {
                 }
                 flags
             }
-            Self::WorkflowMethod { data, .. } => data
+            Self::WorkflowMethod { data, .. } | Self::MethodCall { data, .. } => data
                 .map(|d| vec![(command_syntax::DATA, json_arg(d))])
                 .unwrap_or_default(),
         }

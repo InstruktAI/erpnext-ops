@@ -64,6 +64,12 @@ enum Command {
         #[command(subcommand)]
         command: WorkflowCommand,
     },
+    /// Invoke a whitelisted native module-level method
+    #[command(name = syn::METHOD)]
+    Method {
+        #[command(subcommand)]
+        command: MethodCommand,
+    },
     /// Batch import through ERPNext's native Data Import machinery
     Import {
         #[command(subcommand)]
@@ -331,6 +337,21 @@ enum WorkflowCommand {
 }
 
 #[derive(Subcommand)]
+enum MethodCommand {
+    /// Invoke a native module-level method (preview by default)
+    #[command(name = syn::CALL)]
+    Call {
+        #[arg(value_name = syn::METHOD)]
+        method: String,
+        /// JSON object payload for the method
+        #[arg(long = syn::DATA)]
+        data: Option<String>,
+        #[arg(long = syn::APPLY)]
+        apply: bool,
+    },
+}
+
+#[derive(Subcommand)]
 enum ImportCommand {
     /// Parse a CSV into an identified batch with the native template preview
     Preview {
@@ -586,6 +607,13 @@ async fn main() {
                 )
                 .await
             }
+        },
+        Command::Method { command } => match command {
+            MethodCommand::Call {
+                method,
+                data,
+                apply,
+            } => commands::method::call(&client, &method, data.as_deref(), apply).await,
         },
         Command::Import { command } => match command {
             ImportCommand::Preview { file, doctype } => {
