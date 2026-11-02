@@ -1,5 +1,5 @@
 ---
-description: Agents discover and invoke the ERP CLI from any working context on a supported execution host, without entering its source checkout or loading tenant credentials for discovery.
+description: Agents discover and invoke the ERP CLI from any working context on a host that holds its repository checkout, without entering that checkout or loading tenant credentials for discovery.
 visibility: internal
 delivered_by:
   - erpnext-cli-availability
@@ -9,27 +9,35 @@ delivered_by:
 
 ## What it is
 
-The ERP domain's operating tool is available wherever supported agents execute.
-Its publisher owns the CLI and its installation contract; host tooling owns
-provisioning and updates. Domain awareness lets an agent discover the capability
-without making the publisher repository its business working directory.
+The ERP domain's operating tool is available on every host that holds a checkout
+of its publisher repository. That checkout's install step is the whole
+provisioning path: it builds the release binary, gives it its stable code
+identity where the host's operating system requires one
+(`sdlc/procedure/macos-stable-code-signing`), places it in the user-local
+executable directory that the platform's agent shell contract puts on the command
+path, and registers shell completion. Domain awareness lets an agent discover the
+capability without making the publisher repository its business working
+directory.
 
 ## Canonical fields
 
+- **Supported host:** a host that holds a checkout of the publisher repository.
+  A host without one has no ERP CLI.
 - **Invocation:** the installed `erpnext` command is discoverable on the normal
   command path from an agent's working context.
-- **Discovery:** help, version and the declared command surface are readable
-  without selecting a company, loading business credentials, or contacting a site.
-- **Ownership:** the source repository supplies the installable artifact and
-  supported installation/update contract. The host's established tooling lifecycle
-  consumes that contract; every business session does not build its own binary.
+- **Discovery:** help and version are readable without selecting a company,
+  loading business credentials, or contacting a site.
+- **Installation:** the checkout's declared install step installs and updates the
+  tool. The platform's commit-boundary maintenance runs that step whenever the
+  checkout's main advances with changes to the tool's sources; no business session
+  builds its own binary.
 - **Business scope:** installing the tool establishes availability, not ERP
   authority. Native operations still use the resolved operating-context contract.
-- **Failure:** an unsupported host or failed installation/update has an explicit
-  diagnostic and does not claim that the CLI is available.
-- **Freshness:** the installed tool is the delivered version. A delivered change
-  reaches it through the host tooling lifecycle without a manual step, and
-  undelivered work never replaces it.
+- **Failure:** an install step that cannot establish an invocable tool fails with
+  an explicit diagnostic and does not claim that the CLI is available.
+- **Freshness:** the installed tool is the version on the checkout's main. A change
+  reaches it when that main advances, without a manual step, and work that is not
+  on main never replaces it.
 - **Completion:** installation makes the command's subcommands and options
   complete in operator interactive shells. Agent shells load no completions and
   are unaffected.
@@ -52,7 +60,7 @@ And the agent does not enter or build the source checkout to invoke it
 ```gherkin
 Scenario: Capability discovery has no business prerequisites
 Given an agent on a supported host has no selected ERP company or credentials
-When it requests the CLI's help, version or declared command surface
+When it requests the CLI's help or version
 Then it receives the requested discovery information
 And no tenant connection is required
 ```
@@ -71,7 +79,7 @@ And company credentials and existing business context are not replaced by tool i
 
 ```gherkin
 Scenario: A failed installation is observable
-Given an operator provisions the ERP CLI on an unsupported or failing host
+Given an operator provisions the ERP CLI on a host where the install step fails
 When provisioning cannot establish an invocable tool
 Then the operator receives an actionable failure
 And provisioning does not report the capability as available
@@ -82,11 +90,11 @@ And provisioning does not report the capability as available
 ```gherkin
 Scenario: The installed capability is the delivered version
 Given an agent execution host has provisioned the supported ERP CLI
-And a change to the CLI is in progress but not yet delivered
+And a change to the CLI is in progress but not yet on main
 When an agent invokes the ERP command and inspects its version
-Then it reaches the previously delivered version
-When the change is delivered
-Then subsequent agent invocations reach the newly delivered version
+Then it reaches the version already on main
+When the host's checkout of main advances to include the change
+Then subsequent agent invocations reach the new version
 And the host received it without a manual installation step
 ```
 
@@ -102,6 +110,9 @@ And agent shells on the same host behave exactly as before installation
 
 ## Known caveats
 
+- Freshness on a host follows that host's checkout. Nothing in this contract
+  pulls a checkout: a host whose checkout is not advanced keeps the version it
+  last installed until its main advances.
 - Documentation publication and binary provisioning are distinct capabilities.
 - Global availability does not select a company from the current directory or
   confer authority over a tenant.
