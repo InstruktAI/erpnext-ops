@@ -145,7 +145,6 @@ And its input, prior attempts and withdrawal reason remain traceable
 
 ## See Also
 
-- ~/.teleclaude/docs/erp/spec/feature/erp-operations/session-context.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/concept/operating-state.md

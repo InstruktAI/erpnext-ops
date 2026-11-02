@@ -24,6 +24,7 @@ project-owned implementation details.
 
 ### Commands
 
+<!-- planned-change:erpnext-session-context -->
 - Every command accepts `--company <company-slug>` or `--site <fqdn>` and
   `--as operator|admin` to operate that context and privilege for one invocation without
   changing the persisted selection. Invocation overrides default to operator authority;
@@ -32,6 +33,15 @@ project-owned implementation details.
 - `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
   at least one selector; the selection persists and credentials resolve from the company
   credential home at command time, fail-closed on unknown or ambiguous input.
+<!-- change:erpnext-session-context -->
+- Every business command names its company with `--company <company-slug>` or
+  `--site <fqdn>`, and may add `--as operator|admin`; that context and privilege apply
+  to that one invocation and no selection is stored between commands. A command naming
+  neither fails before any request. Privilege defaults to operator authority; admin
+  authority is always explicit. Credentials resolve from the named company's credential
+  home, fail-closed on unknown or ambiguous input.
+- `erpnext context show --company <company-slug>|--site <fqdn> [--as operator|admin]`
+<!-- /planned-change:erpnext-session-context -->
 - `erpnext meta show <doctype>`
 - `erpnext resolve party <query>`
 - `erpnext resolve item <query>`
@@ -145,15 +155,8 @@ non-zero exit.
   lineage or organizational membership, and it supplies no automatic
   lineage-to-ERP mapping guarantee.
 <!-- change:erpnext-session-context -->
-- In a managed agent session, operating context consumes the platform-resolved
-  principal and company context through its published surface. That context
-  arrives validated; ERP code neither re-checks nor defaults it. The configured
-  mapping selects the ERP site, accounting company and operator identity. A
-  selector naming another company, or a site outside that company's association,
-  is refused, naming that work for another company runs in a session created or
-  dispatched for it. Unresolved company
-  context produces a structured failure rather than falling back to another
-  session's persisted selection.
+- When a command runs inside a platform session, its result attributes the executing
+  session; the command never depends on that attribution being available.
 <!-- /planned-change:erpnext-session-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated

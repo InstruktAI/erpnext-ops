@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=.teleclaude/schemas/teleclaude-project.schema.json
 kind: project
 company: instrukt-ai
 business:
@@ -10,11 +11,6 @@ code:
   enabled: true
 docs:
   enabled: true
-# Checkpoint maintenance overlay. The platform base (Makefile → install,
-# docs/** → sync) is inherited. `test` is bound through a generic binding rather
-# than the conventional `code` block: that block also attaches `log-check`, and
-# this CLI ships no daemon logs for `instrukt-ai-logs` to read. See
-# docs/project/policy/test-authorship.md.
 checkpoint:
   bindings:
   - scope:
@@ -27,3 +23,6 @@ checkpoint:
     - test
 agents:
   enabled: false
+schema_version: 26
+project_name: erpnext-ops
+description: Holds the erpnext-ops cli and ERP domain knowledge
