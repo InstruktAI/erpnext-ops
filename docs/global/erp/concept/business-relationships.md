@@ -53,4 +53,3 @@ commitments. A prepared handoff preserves the owner's time and relationship role
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/procedure/relationship-follow-up.md
 - ~/.teleclaude/docs/general/concept/company-knowledge.md
-- ~/.teleclaude/docs/general/spec/tools/telec-cli.md

@@ -79,4 +79,3 @@ appropriate waiting or owner involvement under the relationship's mandate.
 
 - ~/.teleclaude/docs/erp/procedure/operating-cycle.md
 - ~/.teleclaude/docs/general/policy/reminder.md
-- ~/.teleclaude/docs/general/spec/tools/telec-cli.md
