@@ -121,4 +121,3 @@ And agent shells on the same host behave exactly as before installation
 
 - ~/.teleclaude/docs/erp/concept/operation-model.md
 - ~/.teleclaude/docs/erp/spec/cli-surface.md
-- ~/.teleclaude/docs/erp/spec/feature/erp-operations/session-context.md

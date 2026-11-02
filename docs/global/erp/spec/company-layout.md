@@ -48,13 +48,9 @@ work on that site.
 - The CLI resolves the chosen company credential home from explicit selectors or
   persisted selection; platform lineage is not part of that selection path.
 <!-- change:erpnext-session-context -->
-- Managed execution consumes the platform-resolved principal and company context,
-  whether the work is human-directed or started by an event. ERP integration maps
-  that company to its configured company credential home; platform-owned identity
-  and authorization are not re-derived in ERP code, and the company context never
-  selects the dedicated agent-admin identity by itself. System-provided execution
-  identity supplies attribution without an agent inventing or passing caller
-  identity in command arguments.
+- The CLI resolves the credential home of the company each command names, and no
+  other; no selection is stored between commands. The dedicated agent-admin identity
+  is requested per command and is never selected by naming a company alone.
 <!-- /planned-change:erpnext-session-context -->
 - Bootstrap `Administrator` credentials never belong in the company credential home; they
   remain deployment secrets in itsUP. The company credential home may carry only the
