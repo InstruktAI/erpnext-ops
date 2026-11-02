@@ -398,12 +398,10 @@ fn evaluate_dynamic_link(
                 "field '{fieldname}' names the selected source under case-insensitive comparison only"
             )),
         },
-        Some(Value::Null) | None => {
-            if permlevel_of(field) > 0 {
-                outcome.flag_unavailable(format!(
-                    "field '{fieldname}' is restricted and its value cannot be observed"
-                ));
-            }
+        Some(Value::Null) | None if permlevel_of(field) > 0 => {
+            outcome.flag_unavailable(format!(
+                "field '{fieldname}' is restricted and its value cannot be observed"
+            ));
         }
         _ => {}
     }
