@@ -44,12 +44,10 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 
 - **Development and testing operate on the sandbox company.** The sandbox company lives on
   the dedicated test tenant: its own site, holding no business's books. Work that exercises, develops,
-  demonstrates, or verifies ERP capability runs in a session whose company is the sandbox:
-  the agent routing that work selects the sandbox when it creates or dispatches the
-  session. Business work runs in a session for the company the human's request
-  establishes. A session's company is fixed when it starts, so reaching the other company
-  means dispatching work there. An agent never uses a business company to try something
-  out.
+  demonstrates, or verifies ERP capability names the sandbox company on every ERP
+  command (`--company sandbox`). Business work names the company the human's request
+  establishes. Each command names its own company, so an agent never relies on a company
+  chosen earlier, and never uses a business company to try something out.
 
 ### Native operations
 

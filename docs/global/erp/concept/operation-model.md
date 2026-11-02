@@ -17,8 +17,7 @@ ERPNext sites are remote services on the shared bench. Every agent execution hos
 that carries the ERP domain reaches the same sites; the company determines the site,
 and no site, company, or test tenant is bound to a computer. Which company a piece of
 work is for comes from the human's request for business work, and is the sandbox
-company for development and test work; it is selected when the session doing that
-work is created or dispatched.
+company for development and test work; every ERP command names it.
 
 The publisher's source checkout is the development home, not the required working
 directory for business operations. An agent can inspect ERP state within its
@@ -172,7 +171,6 @@ procedure.
 - ~/.teleclaude/docs/general/policy/reminder.md
 - ~/.teleclaude/docs/general/principle/session-lifecycle.md
 - ~/.teleclaude/docs/general/concept/company-knowledge.md
-- ~/.teleclaude/docs/general/spec/tools/telec-cli.md
 - ~/.teleclaude/docs/erp/concept/multi-tenancy.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
