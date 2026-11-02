@@ -27,6 +27,27 @@ not name, and the working directory plays no part. The command surface is govern
 
 ## Canonical fields
 
+<!-- planned:erpnext-session-context -->
+### Selection rules
+
+- A business command names its company with `--company <company-slug>` or its site
+  with `--site <fqdn>`. Naming a company resolves that company's credential home,
+  also when its site serves other configured companies; naming a site resolves the
+  one company configured for it.
+- Each of these fails before any request reaches a site, with a structured context
+  failure naming the remedy, and no stored or default choice takes its place:
+  - the command names neither a company nor a site — the failure names `--company`,
+    `--site` and the companies configured on the host;
+  - the named company has no credential home, or the named site matches no
+    configured company;
+  - the named site is served by more than one configured company — the failure
+    names those companies and `--company`.
+- When the platform reports the session a command runs in, the command's structured
+  result identifies that executing session; when it reports none, the result carries
+  no executing session and the command runs unchanged. No credential or
+  authentication token appears in either result.
+
+<!-- /planned:erpnext-session-context -->
 ### Acceptance scenarios
 
 <!-- planned-change:erpnext-session-context -->
@@ -111,36 +132,9 @@ And no default identity is guessed.
 <!-- change:erpnext-session-context -->
 #### UC-5
 
-```gherkin
-Scenario: Missing or ambiguous configuration fails closed
-Given no credentials exist for the named company or site, or the site is served by more than one configured company
-When the agent runs a command naming that company or site
-Then the command fails with a structured blocker naming the missing or ambiguous input
-And no request reaches any site
-And no default identity is guessed
-```
-
 #### UC-6
 
-```gherkin
-Scenario: A command that names no company fails before any request
-Given companies are configured on the host
-When the agent runs a business command naming neither a company nor a site
-Then the command fails with a structured context failure naming `--company`, `--site` and the configured companies
-And no request reaches any site
-And no previously chosen company is used in its place
-```
-
 #### UC-7
-
-```gherkin
-Scenario: Execution attribution is recorded and never blocks a command
-Given an agent runs a business command naming its company
-When the command completes
-Then its structured result identifies the executing session when the platform reports one
-And the command runs whether or not the platform reports one
-And no credential or authentication token appears in the result
-```
 
 <!-- /planned-change:erpnext-session-context -->
 ## Known caveats

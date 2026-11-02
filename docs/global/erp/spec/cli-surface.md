@@ -155,10 +155,8 @@ non-zero exit.
   lineage or organizational membership, and it supplies no automatic
   lineage-to-ERP mapping guarantee.
 <!-- change:erpnext-session-context -->
-- Operating context is named on every business command; the CLI stores no selection
-  between commands and never substitutes an earlier choice for a missing one. When a
-  command runs inside a platform session, its result attributes the executing session;
-  the command never depends on that attribution being available.
+- When a command runs inside a platform session, its result attributes the executing
+  session; the command never depends on that attribution being available.
 <!-- /planned-change:erpnext-session-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
