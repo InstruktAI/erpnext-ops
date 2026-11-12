@@ -69,10 +69,9 @@ changes nothing.
 Create an ERPNext user for the site's operator agent. ERPNext roles are additive, not
 hierarchical: a Manager role does not imply its User role. Grant the User role for each
 business surface the operator works (e.g. `Sales User` alongside `Sales Manager`), plus the
-dedicated `Item Manager` role for item master maintenance. Grant `Purchase Master Manager`
-and `Sales Master Manager` as well: no other business role creates price lists, item prices,
-suppliers, or the customer, supplier, and territory grouping masters. The operator must not
-carry administrator authority. Re-granting an existing role is a no-op; the step is repeatable.
+dedicated `Item Manager` role for item master maintenance and the `Purchase Master Manager`
+and `Sales Master Manager` roles for price, supplier, and grouping master maintenance. The
+operator must not carry administrator authority. Re-granting an existing role is a no-op; the step is repeatable.
 
 ### 7. Mint the operator API credentials
 
