@@ -10,8 +10,9 @@ description: Agents operate ERPNext through the MCP server Frappe ships in the f
 
 Agents operate each tenant's ERPNext site on behalf of the people of that company. The
 surface they used was this repository's `erpnext` CLI. It was built under the platform
-default of CLI-first agency, at a time when Frappe shipped no agent surface of its own, and
-no comparison with other surfaces was recorded.
+default that a CLI is the agent's primary surface and no MCP server is a default one
+(`sdlc/principle/architectural-defaults`), at a time when Frappe shipped no agent surface
+of its own, and no comparison with other surfaces was recorded.
 
 Three things changed.
 
@@ -74,8 +75,9 @@ Given up or newly owed:
   changed what needs administrative authority.
 - A report that ERPNext prepares in the background returns no rows on the first call.
 - ERPNext's bulk import tool is reserved to system administrators.
-- This domain departs from the platform's CLI-first default. Unattended work on a computer
-  needs an MCP client path that holds a stored identity.
+- This domain overrides the platform's CLI-first default with an evidenced reason
+  (`sdlc/principle/architectural-defaults`). Unattended work on a computer needs an MCP
+  client path that holds a stored identity.
 
 ## Alternatives Considered
 
