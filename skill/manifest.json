@@ -2,7 +2,7 @@
   "name": "erp",
   "title": "ERP",
   "plugin_description": "Operate a company's ERPNext through the ERPNext connector.",
-  "description": "Work in the company's ERPNext: customers, suppliers, items, leads, quotations, orders, deliveries, stock, sales and purchase invoices, payments, deposits, credit notes, refunds, overdue debt, period close, projects, tasks, notes and follow-ups. Use for any request to record, change, correct, check or answer a question about the company's business or bookkeeping, and when the user reports something a customer or supplier said, ordered, paid or received, even if ERPNext is not named.",
+  "description": "Work in the company's ERPNext: customers, suppliers, items, leads, quotations, orders, deliveries, stock, sales and purchase invoices, payments, deposits, credit notes, refunds, overdue debt, period close, projects, tasks, hours worked, material taken for a job, notes and follow-ups. Use for any request to record, change, correct, check or answer a question about the company's business or bookkeeping; when the user reports something a customer or supplier said, ordered, paid or received, or reports hours they worked or material they took; and when the user asks what you can do for them or their business, even if ERPNext is not named.",
   "inline": [
     "erp/spec/agent-surface",
     "erp/principle/determinate-autonomy",
