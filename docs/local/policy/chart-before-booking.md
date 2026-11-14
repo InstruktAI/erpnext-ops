@@ -17,11 +17,16 @@ description: Nothing is booked for a new company until the chart of accounts its
 
 ## Rationale
 
-A chart cannot be replaced once anything is booked against it. A chart that puts customers
-among liabilities or stock among expenses makes ERPNext's own balance sheet and profit
-figure wrong, and makes a period close sweep the wrong accounts, while every single booking
-still balances and looks correct. The charts ERPNext ships per country differ in quality,
-so the check is made on the site and not assumed from the country.
+A chart that puts customers among liabilities or stock among expenses makes a balance
+sheet and a profit figure drawn from it wrong, while every single booking still balances
+and looks correct. The error is cheapest to correct before anything is booked: ERPNext
+documents that its chart importer replaces a company's chart only while the company has no
+ledger entries.
+
+The check is made on the site because a shipped chart is not guaranteed to pass it. On a
+site running Frappe 16.56 with ERPNext 16.55, the chart shipped for one country placed its
+customer accounts under a liability root and its stock accounts under an expense root, and
+ERPNext refused the chart's customer account as the company's default receivable account.
 
 ## Scope
 
@@ -36,3 +41,7 @@ look for its recorded result before the first booking.
 ## Exceptions
 
 None.
+
+## See Also
+
+- https://docs.frappe.io/erpnext/chart-of-accounts-importer
