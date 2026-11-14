@@ -55,7 +55,7 @@ description: Disciplines for agents acting on ERPNext site data through the site
   serves, as the user it authenticates. `erp/spec/agent-surface` names the server operation
   that realizes each operation this doctrine speaks of.
 - **Preview before posting.** A document that posts to the books or to stock is created as a
-  draft, read back, and its ledger effect previewed before it is submitted. Submit only when
+  draft, read back, and its ledger and stock effects previewed before it is submitted. Submit only when
   the draft is correct or any remaining doubt has been resolved by evidence, configuration,
   standard ERP practice, or a human decision where one is genuinely required. A master
   record has no draft: the agent states the intended change, writes it, and reads it back.
@@ -63,9 +63,11 @@ description: Disciplines for agents acting on ERPNext site data through the site
   without the fields the document type does not have and reports no error. The agent
   composes a write from the live document type and compares the stored record with its
   intent. ERPNext remains the authority on validation, permissions, and transactions.
-- **Write against what was read.** A change to an existing record carries the modification
-  marker of the version the agent read. ERPNext then refuses the write when another party
-  changed the record in between, where an unmarked write replaces their change.
+- **Write against what was read.** A change or a submission carries the version of the
+  record the agent reviewed. ERPNext then refuses it when another party changed the record
+  in between, where an unmarked write replaces their change or submits a draft nobody
+  reviewed. A cancellation cannot carry a version: the agent reads the record immediately
+  before cancelling and cancels only the state it reviewed.
 - **Create draft-first when state is not yet determined.** New business documents are created
   as drafts while business state is incomplete or uncertain. When the business event is
   determined and standard ERP practice calls for a submitted document, the agent proceeds.
@@ -134,9 +136,8 @@ All agent operations against ERPNext sites.
   rather than the sandbox company is a defect.
 - A business operation performed outside the site's MCP server is a defect unless the active
   procedure explicitly authorizes another path.
-- A document submitted without its draft read back and, where it posts, its ledger effect
-  previewed is a defect.
-- A write composed without the live document type, or left without a read-back, is a defect.
+- Reviewers apply the native-operation rules to the record each write leaves: its read-back
+  and, for a submission, its preview.
 - Routine business work performed with administrator credentials is a defect unless the
   active procedure explicitly requires administrator authority.
 - A human interruption for a decision the agent could determine from evidence, configuration,

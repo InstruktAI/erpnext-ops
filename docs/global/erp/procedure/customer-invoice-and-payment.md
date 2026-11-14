@@ -36,15 +36,13 @@ of invoicing prematurely.
 ### 2. Resolve before creating
 
 Resolve the customer, source order or delivery, and any existing invoice for the same billing
-event. Reuse the existing document when it represents the same event. Use a source token when
-creating a series-named invoice directly so a lost response can be replayed without creating a
-second invoice.
+event. Reuse the existing document when it represents the same event. Store the outside
+reference of the billing event on the invoice, so a later search finds it.
 
 ### 3. Build and verify the draft
 
 Prefer ERPNext's native mapper when the invoice follows an order or delivery, preserving its
-row-level source links. Otherwise create the draft directly. Inspect the preview before
-applying either mutation.
+row-level source links. Otherwise create the draft directly.
 
 Read the stored draft back and verify its customer, company, source links, income accounts,
 net amount, tax rows, tax amount, and gross amount. A selected tax template does not by itself
@@ -96,7 +94,8 @@ Payment Entry merely to close a Dunning or make the invoice appear settled.
 ## Recovery
 
 - On a lost create or mapper response, compose `resume-from-native-state`: an invoice
-  resolves by its source token, a payment by its invoice link and external reference.
+  resolves by its source links and outside reference, a payment by its invoice link and
+  external reference.
 - If tax rows or totals are absent or wrong, correct the draft and re-read it before submission.
 - Correct a submitted invoice through cancel-and-amend. Reverse or cancel dependent payments
   before cancelling the invoice they settle.

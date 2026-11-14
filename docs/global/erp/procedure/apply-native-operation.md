@@ -34,28 +34,33 @@ which status it reaches, which amounts and links it carries.
 Follow `resume-from-native-state`. When the event is already recorded, continue from
 what exists instead of writing again.
 
-### 3. Draft and preview
+### 3. Establish the target and preview
 
-Read the document type's live metadata and compose the write from fields it has
-(`erp/policy/operating-disciplines`).
+Read the document type's live metadata and compose any write from fields it has
+(`erp/policy/operating-disciplines`). What precedes the write depends on the operation:
 
-For a submittable document, create it as a draft and read the stored draft back. Require
-its party, company, dates, lines, amounts, taxes and links to match the expected effect.
-When submitting it posts to the books, read its ledger preview and require the expected
-accounts and amounts. This read-back, with the ledger preview where one applies, is the
-preview the procedures speak of.
+- **Creating a document that is submitted later.** Create it as a draft and read the stored
+  draft back. Require its party, company, dates, lines, amounts, taxes and links to match
+  the expected effect.
+- **Submitting a draft.** Read the draft as stored now. When submitting posts to the books,
+  read its ledger preview and require the expected accounts and amounts. When it moves
+  stock, read its stock preview and require the expected items, warehouses and quantities.
+- **Cancelling a submitted document.** Read the document and the documents that depend on
+  it, and establish that the governing procedure's dependency order is met.
+- **Changing or deleting an existing record.** Read the record as stored now and state the
+  intended change against it.
+- **Writing a record that has no draft state.** State the target and the intended change;
+  it takes effect when written.
 
-A record without a draft state takes effect when written. State the target and the
-intended change first.
-
-When anything does not match, correct the draft or stop and resolve the mismatch before
-going on.
+The draft read-back, with the ledger and stock previews where they apply, is the preview
+the procedures speak of. When anything does not match the expected effect, correct the
+draft or stop and resolve the mismatch before going on.
 
 ### 4. Apply once
 
-Submit, cancel, write or delete once. A change to an existing record carries the
-modification marker last read (`erp/policy/operating-disciplines`). Never repeat a write
-to find out what happened.
+Write, submit, cancel or delete once. A change and a submission carry the version reviewed
+in step 3, and a cancellation follows an immediate read of the record
+(`erp/policy/operating-disciplines`). Never repeat a write to find out what happened.
 
 ### 5. Classify the result
 

@@ -26,7 +26,9 @@ procedure names the operation once and carries no tool mechanics.
 | Create a draft, or a master record | `create_document`; a submittable document created without a `docstatus` is a draft |
 | Change a draft or a master record | `update_document`, carrying the `modified` value last read |
 | Preview the ledger effect of a draft | `call_method` on `erpnext.controllers.stock_controller.show_accounting_ledger_preview` with the company, document type and document name |
-| Submit or cancel | `call_document_method` with `submit` or `cancel` |
+| Preview the stock effect of a draft | `call_method` on `erpnext.controllers.stock_controller.show_stock_ledger_preview` with the company, document type and document name |
+| Submit | `call_method` on `frappe.client.submit` with the document as reviewed, which carries its `modified` value |
+| Cancel | `call_document_method` with `cancel` |
 | Amend a cancelled document | `create_document` for a new draft whose `amended_from` names the cancelled document |
 | Map a source document to its successor | `call_method` on the native mapper with its source arguments; the mapper returns an unsaved document, which `create_document` stores |
 | Find a method and its arguments | `search_methods`, `get_method_schema`, `list_document_methods` |
@@ -41,15 +43,19 @@ Arguments of `call_method` and `call_document_method` travel in `args`.
 
 ## Known caveats
 
+Observed on Frappe 16.56 with ERPNext 16.55, as a user holding business roles and no
+administrator role. On a site with other versions, or as a user with other roles, each is
+re-established before it is relied on.
+
 - A field name the document type does not have is dropped from a create or update without
   an error.
 - A repeated create stores a second document; the server has no idempotent create.
 - An update that carries no `modified` value replaces whatever another party stored since
-  the record was read.
+  the record was read. `submit` through `call_document_method` and `cancel` accept no
+  version at all.
 - Only submittable documents have a draft state. A write to a master record takes effect
   at once.
-- A document's change history and its deleted-document record are not readable under
-  business roles.
+- A document's change history and its deleted-document record are not readable.
 - A report ERPNext prepares in the background returns no rows on the first call.
 - ERPNext's bulk import is reserved to system administrators.
 - A site that does not serve the MCP server cannot be operated under this doctrine.

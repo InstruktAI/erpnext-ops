@@ -26,9 +26,9 @@ payment, and follow-up without forcing a stock-oriented workflow.
 
 ## Steps
 
-For every mutation below, inspect its preview first and apply only after the proposed
-business effect, references, and amounts are correct. An activity record is written
-directly: it adds a trace and changes no business state.
+Every document below that is submitted is first reviewed as a draft, and submitted only
+after its business effect, references, and amounts are correct (`apply-native-operation`).
+A record without a draft state and an activity record are written directly.
 
 ### 1. Capture the work intent
 
@@ -40,8 +40,8 @@ uncertainty on the activity trail.
 Resolve the Customer and any existing Project, Quotation, or Sales Order before creating
 anything. Reuse the resolved Project when one represents the same work; otherwise create it
 with the customer and delivery dates. Create only the missing Task records with their expected
-dates. Use source tokens for series-named records so a repeated create returns the existing
-record.
+dates. Store the outside reference of the work on each record created, so a later search
+finds it.
 
 ### 3. Bind the commercial promise to the project
 

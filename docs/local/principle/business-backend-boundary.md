@@ -25,8 +25,8 @@ that knowledge has one owner and one place to change when the vendor changes.
   domain.
 - A need the platform cannot meet is raised as a platform capability in general terms,
   never met by teaching the platform about ERPNext.
-- Deploying the sites belongs to the fleet that hosts them; this project operates sites
-  that already exist.
+- This project operates sites that already exist; who provisions them is allocated in
+  `erp/concept/operation-model`.
 
 ## Tensions
 

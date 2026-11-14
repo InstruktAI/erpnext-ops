@@ -24,8 +24,8 @@ event twice or skips a step that already succeeded.
 
 ### 1. Resolve by the strongest identity the event carries
 
-Search native state before writing anything. A repeated create stores a second
-document, so the search comes first every time. A document resolves by the
+Search native state before every create (`erp/policy/operating-disciplines`). A
+document resolves by the
 outside reference of its event, stored on it when it was created: the
 customer's order number, the supplier's invoice number, the bank reference. A
 mapped document resolves through the source document's native links and
