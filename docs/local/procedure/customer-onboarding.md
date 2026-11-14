@@ -14,8 +14,8 @@ company's Claude organization.
 
 ## Preconditions
 
-- The company's slug and the name of its owner are known, and the owner's e-mail address
-  is one that receives mail.
+- The company's slug and the name of its owner are known, and the owner has confirmed the
+  e-mail address that receives their mail.
 - The company has a Claude organization with an owner.
 - The provider administers the GitHub organization that publishes the plugin.
 
@@ -62,13 +62,16 @@ catalog repository in the provider's GitHub organization, named for the company.
 the catalog file that lists the `erp` plugin from this repository at a released version,
 and the updater that moves that version to the latest release.
 
-Create the company's catalog by copying an existing one. Invite the GitHub account of the
-company's owner to it with administrator rights: Claude installs the update notification
-on the repository, which needs those rights, and the catalog affects that company alone.
+Create the company's catalog by copying an existing one. Have the owner confirm their
+GitHub account name, then invite that account to the catalog with administrator rights:
+Claude installs the update notification on the repository, which needs those rights, and
+the catalog affects that company alone.
 
 The owner then connects the catalog once, in the Claude organization's settings for
 plugins and skills: sync from GitHub, the company's catalog repository, automatic sync on,
-and the plugin's default access set to installed for everyone. Where the dialog asks for
+and the plugin's default access set to installed for everyone. Those settings are the
+organization's admin pages on the web; a person's own plugin screen, which is all the
+mobile app shows, installs for that person only. Where the dialog asks for
 the Claude GitHub App on the repository, the provider approves it in the GitHub
 organization.
 
@@ -102,6 +105,10 @@ under their own login and read it back as another.
 
 ## Recovery
 
+- **The owner finds only "add marketplace" and "upload plugin".** That is the personal
+  plugin screen. The organization-wide install is in the organization's admin settings on
+  the web. To keep working meanwhile, the owner adds this public repository there as a
+  marketplace for themselves, and removes that copy once the catalog is connected.
 - **The owner has no GitHub account and will not make one.** The owner uploads the
   released plugin file once for the organization and again for each release, or each
   person adds this public repository as a marketplace from their own plugin settings.
