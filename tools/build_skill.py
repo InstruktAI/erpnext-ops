@@ -139,7 +139,7 @@ def build(version: str, out: Path) -> None:
     )
 
     parts = [
-        f"---\nname: {manifest['name']}\ndescription: {description}\n---\n",
+        f"---\nname: {manifest['name']}\ndescription: {json.dumps(description)}\n---\n",
         f"# {manifest['title']}\n",
     ]
     parts.append((SKILL / "preamble.md").read_text().strip() + "\n")
