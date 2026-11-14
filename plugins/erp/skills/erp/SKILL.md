@@ -20,6 +20,10 @@ administrator credentials belong to the system administrator. Where a document s
 coordinators, workers, assignments or session reminders, the lasting record on this
 connection is the ERPNext Task or ToDo.
 
+A document named with an id that starts with `general/` is a policy of the platform these
+documents were written on and is not part of this skill. Where one is named, follow your
+own conduct for the matter it covers.
+
 ## Procedures
 
 Before the first write for a kind of business event, read the procedure for it. A procedure
