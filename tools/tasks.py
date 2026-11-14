@@ -11,9 +11,11 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 
 from github import Auth, Github, UnknownObjectException
+from github.Repository import Repository
 
 from tools.build_skill import ROOT, BuildError, build
 
@@ -29,6 +31,22 @@ class Task(StrEnum):
     BUILD = "build"
     TEST = "test"
     RELEASE = "release"
+
+
+@dataclass(frozen=True)
+class ReleaseSettings:
+    """What a release needs from its environment: who publishes, and to which repository."""
+
+    token: str
+    repository: str
+
+    @classmethod
+    def from_environment(cls) -> "ReleaseSettings":
+        token = os.environ.get("GH_TOKEN", "")
+        repository = os.environ.get("GITHUB_REPOSITORY", "")
+        if not token or not repository:
+            raise BuildError("a release needs GH_TOKEN and GITHUB_REPOSITORY in its environment")
+        return cls(token, repository)
 
 
 def run(*command: str) -> None:
@@ -72,16 +90,21 @@ def test() -> None:
     validate(f"dist/{PLUGIN}", ".")
 
 
+def is_released(repository: Repository, version: str) -> bool:
+    try:
+        repository.get_git_ref(f"tags/{version}")
+    except UnknownObjectException:
+        return False
+    return True
+
+
 def release(version: str) -> None:
     """Build at `version`, commit the built plugin on main, tag it and publish the release."""
     if not VERSION.match(version):
         raise BuildError(f"version must look like v1.2.3, got '{version}'")
-    repository = Github(auth=Auth.Token(os.environ["GH_TOKEN"])).get_repo(os.environ["GITHUB_REPOSITORY"])
-    try:
-        repository.get_git_ref(f"tags/{version}")
-    except UnknownObjectException:
-        pass
-    else:
+    settings = ReleaseSettings.from_environment()
+    repository = Github(auth=Auth.Token(settings.token)).get_repo(settings.repository)
+    if is_released(repository, version):
         raise BuildError(f"{version} is already released")
     lint()
     test()
