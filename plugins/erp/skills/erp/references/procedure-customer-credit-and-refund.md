@@ -1,4 +1,4 @@
-Read first, unless already read in this conversation: `references/concept-composable-business-procedures.md`, `references/procedure-confirm-business-intent.md`, `references/procedure-customer-invoice-and-payment.md`.
+Read first, unless already read in this conversation: `references/procedure-confirm-business-intent.md`, `references/procedure-customer-invoice-and-payment.md`.
 
 # Customer Credit And Refund — Procedure
 

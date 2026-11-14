@@ -1,6 +1,6 @@
 ---
 name: erp
-description: Work in the company's ERPNext: customers, suppliers, items, leads, quotations, orders, deliveries, stock, sales and purchase invoices, payments, deposits, credit notes, refunds, overdue debt, period close, projects, tasks, notes and follow-ups. Use for any request to record, change, correct, check or answer a question about the company's business or bookkeeping, and when the user reports something a customer or supplier said, ordered, paid or received, even if ERPNext is not named.
+description: "Work in the company's ERPNext: customers, suppliers, items, leads, quotations, orders, deliveries, stock, sales and purchase invoices, payments, deposits, credit notes, refunds, overdue debt, period close, projects, tasks, hours worked, material taken for a job, notes and follow-ups. Use for any request to record, change, correct, check or answer a question about the company's business or bookkeeping; when the user reports something a customer or supplier said, ordered, paid or received, or reports hours they worked or material they took; and when the user asks what you can do for them or their business, even if ERPNext is not named."
 ---
 
 # ERP
@@ -40,9 +40,13 @@ per conversation: `references/procedure-apply-native-operation.md`,
 - `references/procedure-customer-payment-difference.md`: Use when the bank amount received from a customer differs from the debt it settles because of an accepted fee or loss rather than an unexplained short payment.
 - `references/procedure-customer-receipt-allocation.md`: Use when one real customer receipt must be allocated across several submitted invoices, is partial, or exceeds the outstanding amount.
 - `references/procedure-offer-to-installation.md`: Use when a business needs to turn a lead, site discussion, or accepted proposal into tracked ERP work through installation and payment.
+- `references/procedure-orient-a-person.md`: Use when a person asks what you can do for them or their business, is new to working with you, or does not know what to ask or what comes next.
 - `references/procedure-overdue-collection.md`: Use when a submitted customer invoice is past due with a positive outstanding amount and collection must progress through native dunning and follow-up.
 - `references/procedure-project-work-to-invoice.md`: Use when a service, production, tour, or custom project business needs to track work, obligations, billing, and payment without stock-centric assumptions.
 - `references/procedure-prove-native-effect.md`: Use after applying, submitting, cancelling, or correcting any financial or stock document, before reporting the outcome or building on it.
+- `references/procedure-record-absence.md`: Use when a person says when they are away or not available, asks who is away, or wants to change or withdraw an absence they reported.
+- `references/procedure-record-material-taken.md`: Use when a person says they took, used, moved or returned material, for a job or between the warehouse and a vehicle.
+- `references/procedure-record-work-hours.md`: Use when a person says how long they worked somewhere, asks which hours are logged for them or for a job, or wants to correct hours they logged.
 - `references/procedure-relationship-follow-up.md`: When an ERP commitment awaits a customer, supplier, contact, or owner contribution and its due condition or new evidence calls for reassessment.
 - `references/procedure-resume-from-native-state.md`: Use when a create, mapper, or submit response was lost, a run is resumed after interruption, or a business event may already be recorded and writing again would duplicate it.
 - `references/procedure-supplier-invoice-and-payment.md`: Use when a submitted Purchase Invoice is approved for payment and the supplier must be paid through a source-linked Payment Entry with proven payable and bank ledger effects.
@@ -53,7 +57,6 @@ Read when the work touches it.
 
 - `references/concept-business-activity-trail.md`: The ERP activity trail is the queryable memory layer over communications, comments, tasks, events, notes, and linked business documents.
 - `references/concept-business-relationships.md`: Company mandates, explicit contact preferences, and evidenced response patterns guide follow-up, channel selection, and owner involvement.
-- `references/concept-composable-business-procedures.md`: ERP procedures are composable business safeguards, not replacements for agent intelligence or live site metadata.
 - `references/concept-operating-state.md`: Recover ERP work from native Tasks, current briefs, expectations, assignment references, and attributable outcomes without rebuilding context from transcripts.
 
 ## Surface, principles and rules

@@ -53,6 +53,5 @@ confirmed business state.
 
 - references/concept-operating-state.md
 - references/concept-business-relationships.md
-- references/concept-composable-business-procedures.md
 - this skill's SKILL.md
 - this skill's SKILL.md

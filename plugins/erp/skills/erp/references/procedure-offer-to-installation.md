@@ -1,4 +1,4 @@
-Read first, unless already read in this conversation: `references/concept-composable-business-procedures.md`, `references/concept-business-activity-trail.md`.
+Read first, unless already read in this conversation: `references/concept-business-activity-trail.md`.
 
 # From Proposal To Installation — Procedure
 

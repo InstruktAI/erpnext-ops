@@ -110,7 +110,6 @@ owns it.
 
 ## See Also
 
-- references/concept-composable-business-procedures.md
 - references/procedure-customer-invoice-and-payment.md
 - references/procedure-customer-receipt-allocation.md
 - references/procedure-resume-from-native-state.md

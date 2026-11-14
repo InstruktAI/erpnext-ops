@@ -1,4 +1,4 @@
-Read first, unless already read in this conversation: `references/concept-composable-business-procedures.md`, `references/concept-business-activity-trail.md`, `references/procedure-resume-from-native-state.md`, `references/procedure-prove-native-effect.md`.
+Read first, unless already read in this conversation: `references/concept-business-activity-trail.md`, `references/procedure-resume-from-native-state.md`, `references/procedure-prove-native-effect.md`.
 
 # Project Work To Invoice — Procedure
 

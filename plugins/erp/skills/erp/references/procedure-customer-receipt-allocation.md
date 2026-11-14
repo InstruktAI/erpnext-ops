@@ -98,7 +98,6 @@ rest.
 ## See Also
 
 - this skill's SKILL.md
-- references/concept-composable-business-procedures.md
 - references/procedure-customer-invoice-and-payment.md
 - references/procedure-customer-payment-difference.md
 - references/procedure-customer-advance-to-invoice.md

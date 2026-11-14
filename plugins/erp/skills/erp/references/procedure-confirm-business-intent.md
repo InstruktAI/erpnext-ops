@@ -74,6 +74,5 @@ owns ERPNext mechanics.
 
 ## See Also
 
-- references/concept-composable-business-procedures.md
 - references/concept-business-activity-trail.md
 - this skill's SKILL.md

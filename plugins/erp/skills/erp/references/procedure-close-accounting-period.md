@@ -1,5 +1,3 @@
-Read first, unless already read in this conversation: `references/concept-composable-business-procedures.md`.
-
 # Close Accounting Period — Procedure
 
 ## Goal

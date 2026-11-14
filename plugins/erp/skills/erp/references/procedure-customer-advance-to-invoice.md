@@ -102,7 +102,6 @@ and prove the ledger after either completion or compensation.
 ## See Also
 
 - this skill's SKILL.md
-- references/concept-composable-business-procedures.md
 - references/procedure-customer-invoice-and-payment.md
 - references/procedure-customer-credit-and-refund.md
 - references/procedure-project-work-to-invoice.md
