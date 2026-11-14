@@ -1,0 +1,61 @@
+name: image
+
+# Builds the ERPNext image the sites run, with the applications listed in
+# image/apps.json, for the ARM hosts, and publishes it on Docker Hub. The
+# deployment that uses the image lives in itsUP and is not touched here.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - image/**
+      - .github/workflows/image.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: instruktai/erpnext-hrms
+  REGISTRY_USER: morriz
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Read the pinned versions
+        run: cat image/image.env >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: frappe/frappe_docker
+          ref: ${{ env.FRAPPE_DOCKER_SHA }}
+          path: frappe_docker
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          username: ${{ env.REGISTRY_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: frappe_docker
+          file: image/Containerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          build-args: |
+            FRAPPE_BRANCH=${{ env.FRAPPE_VERSION }}
+            BUILD_TAG=${{ env.BUILD_TAG }}
+            BASE_TAG=${{ env.BASE_TAG }}
+          secret-files: |
+            apps_json=image/apps.json
