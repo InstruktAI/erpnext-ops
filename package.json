@@ -1,0 +1,8 @@
+{
+  "name": "erpnext-ops-tools",
+  "private": true,
+  "description": "Pins the Claude Code version whose plugin validator the build runs",
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "2.1.321"
+  }
+}

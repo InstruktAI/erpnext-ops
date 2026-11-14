@@ -1,20 +1,16 @@
-.PHONY: install format lint test build
+.PHONY: install format lint build test
 
-# The plugin is validated with Anthropic's own checker, which ships with Claude Code.
 install:
-	@command -v claude >/dev/null 2>&1 || npm install --global @anthropic-ai/claude-code
+	uv run --frozen python -m tools.tasks install
 
 format:
-	uvx ruff format tools
+	uv run --frozen python -m tools.tasks format
 
 lint:
-	uvx ruff check tools
-	uvx ruff format --check tools
+	uv run --frozen python -m tools.tasks lint
 
 build:
-	python3 tools/build_skill.py
+	uv run --frozen python -m tools.tasks build
 
-# Builds the plugin from the documents and validates the plugin and the marketplace file.
-test: build
-	claude plugin validate dist/erp
-	claude plugin validate .
+test:
+	uv run --frozen python -m tools.tasks test

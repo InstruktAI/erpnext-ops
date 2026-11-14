@@ -13,6 +13,7 @@ import json
 import re
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -22,9 +23,7 @@ SKILL = ROOT / "skill"
 MAX_SKILL_LINES = 500
 MAX_DESCRIPTION_CHARS = 1024
 
-DOC_REF = re.compile(
-    r"@?(?:~|/[^\s`]*?)/\.teleclaude/docs/([a-z-]+)/([a-z0-9/_-]+)\.md"
-)
+DOC_REF = re.compile(r"@?(?:~|/[^\s`]*?)/\.teleclaude/docs/([a-z-]+)/([a-z0-9/_-]+)\.md")
 PLANNED = re.compile(
     r"^<!-- planned:[a-z0-9-]+ -->\n.*?^<!-- /planned:[a-z0-9-]+ -->\n",
     re.MULTILINE | re.DOTALL,
@@ -39,13 +38,47 @@ class BuildError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class Manifest:
+    """What skill/manifest.json declares: the skill's identity and where each document goes."""
+
+    name: str
+    title: str
+    plugin_description: str
+    description: str
+    inline: tuple[str, ...]
+    exclude: tuple[str, ...]
+
+    @classmethod
+    def load(cls, path: Path) -> "Manifest":
+        raw = json.loads(path.read_text())
+        if not isinstance(raw, dict):
+            raise BuildError(f"{path.name}: expected an object")
+
+        def text(key: str) -> str:
+            value = raw.get(key)
+            if not isinstance(value, str) or not value:
+                raise BuildError(f"{path.name}: '{key}' must be a non-empty string")
+            return value
+
+        def ids(key: str) -> tuple[str, ...]:
+            value = raw.get(key)
+            if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+                raise BuildError(f"{path.name}: '{key}' must be a list of document ids")
+            return tuple(value)
+
+        return cls(
+            text("name"), text("title"), text("plugin_description"), text("description"), ids("inline"), ids("exclude")
+        )
+
+
 def read_snippet(path: Path) -> tuple[dict[str, str], str]:
     """Return a snippet's frontmatter and its body as it reads today."""
     text = path.read_text()
     match = re.match(r"---\n(.*?)\n---\n", text, re.DOTALL)
     if not match:
         raise BuildError(f"{path.relative_to(ROOT)}: no frontmatter")
-    meta = {}
+    meta: dict[str, str] = {}
     for line in match.group(1).splitlines():
         key, sep, value = line.partition(":")
         if sep and not line.startswith(" "):
@@ -68,9 +101,7 @@ def reference_name(sid: str) -> str:
 
 
 def split_required_reads(body: str) -> tuple[list[str], str]:
-    match = re.search(
-        r"^## Required reads\n(.*?)(?=^## )", body, re.MULTILINE | re.DOTALL
-    )
+    match = re.search(r"^## Required reads\n(.*?)(?=^## )", body, re.MULTILINE | re.DOTALL)
     if not match:
         return [], body
     required = [f"{domain}/{rest}" for domain, rest in DOC_REF.findall(match.group(1))]
@@ -96,16 +127,14 @@ def rewrite_links(body: str, published: set[str], inline: set[str]) -> str:
 
 
 def build(version: str, out: Path) -> None:
-    manifest = json.loads((SKILL / "manifest.json").read_text())
-    inline = list(manifest["inline"])
-    exclude = set(manifest["exclude"])
-    description = manifest["description"]
+    manifest = Manifest.load(SKILL / "manifest.json")
+    inline = list(manifest.inline)
+    exclude = set(manifest.exclude)
+    description = manifest.description
     if len(description) > MAX_DESCRIPTION_CHARS:
-        raise BuildError(
-            f"skill description is {len(description)} characters; the limit is {MAX_DESCRIPTION_CHARS}"
-        )
+        raise BuildError(f"skill description is {len(description)} characters; the limit is {MAX_DESCRIPTION_CHARS}")
 
-    snippets = {}
+    snippets: dict[str, tuple[dict[str, str], str]] = {}
     for path in sorted(DOCS.rglob("*.md")):
         if path.name.startswith("baseline") or path.stem.count("."):
             continue  # manifests, and companions that carry a snippet's pending rewrite
@@ -116,12 +145,10 @@ def build(version: str, out: Path) -> None:
 
     unknown = [sid for sid in [*inline, *exclude] if sid not in snippets]
     if unknown:
-        raise BuildError(
-            f"skill/manifest.json names documents that do not exist: {unknown}"
-        )
+        raise BuildError(f"skill/manifest.json names documents that do not exist: {unknown}")
     published = {sid for sid in snippets if sid not in exclude}
 
-    skill_dir = out / "skills" / manifest["name"]
+    skill_dir = out / "skills" / manifest.name
     references = skill_dir / "references"
     shutil.rmtree(out, ignore_errors=True)
     references.mkdir(parents=True)
@@ -129,9 +156,9 @@ def build(version: str, out: Path) -> None:
     (out / ".claude-plugin" / "plugin.json").write_text(
         json.dumps(
             {
-                "name": manifest["name"],
+                "name": manifest.name,
                 "version": version,
-                "description": manifest["plugin_description"],
+                "description": manifest.plugin_description,
             },
             indent=2,
         )
@@ -139,20 +166,16 @@ def build(version: str, out: Path) -> None:
     )
 
     parts = [
-        f"---\nname: {manifest['name']}\ndescription: {json.dumps(description)}\n---\n",
-        f"# {manifest['title']}\n",
+        f"---\nname: {manifest.name}\ndescription: {json.dumps(description)}\n---\n",
+        f"# {manifest.title}\n",
     ]
     parts.append((SKILL / "preamble.md").read_text().strip() + "\n")
     for sid in sorted(s for s in published if "/procedure/" in s):
         meta, _ = snippets[sid]
-        parts.append(
-            f"- `references/{reference_name(sid)}`: {meta.get('activation_trigger') or meta['description']}"
-        )
+        parts.append(f"- `references/{reference_name(sid)}`: {meta.get('activation_trigger') or meta['description']}")
     parts.append("\n## Background\n\nRead when the work touches it.\n")
     for sid in sorted(s for s in published if "/concept/" in s):
-        parts.append(
-            f"- `references/{reference_name(sid)}`: {snippets[sid][0]['description']}"
-        )
+        parts.append(f"- `references/{reference_name(sid)}`: {snippets[sid][0]['description']}")
     parts.append(
         "\n## Surface, principles and rules\n\nThese govern all work and are already loaded with this skill.\n"
     )
@@ -169,44 +192,26 @@ def build(version: str, out: Path) -> None:
         )
     skill_md = "\n".join(parts)
     if skill_md.count("\n") > MAX_SKILL_LINES:
-        raise BuildError(
-            f"SKILL.md is {skill_md.count(chr(10))} lines; the limit is {MAX_SKILL_LINES}"
-        )
+        raise BuildError(f"SKILL.md is {skill_md.count(chr(10))} lines; the limit is {MAX_SKILL_LINES}")
     (skill_dir / "SKILL.md").write_text(skill_md)
 
     for sid in sorted(published - set(inline)):
         required, body = split_required_reads(snippets[sid][1])
-        first = [
-            f"`references/{reference_name(r)}`"
-            for r in required
-            if r in published and r not in inline
-        ]
-        head = (
-            f"Read first, unless already read in this conversation: {', '.join(first)}.\n\n"
-            if first
-            else ""
-        )
-        (references / reference_name(sid)).write_text(
-            head + rewrite_links(body, published, set(inline))
-        )
+        first = [f"`references/{reference_name(r)}`" for r in required if r in published and r not in inline]
+        head = f"Read first, unless already read in this conversation: {', '.join(first)}.\n\n" if first else ""
+        (references / reference_name(sid)).write_text(head + rewrite_links(body, published, set(inline)))
 
-    missing = [
-        ref
-        for ref in re.findall(r"references/[a-z0-9-]+\.md", skill_md)
-        if not (skill_dir / ref).exists()
-    ]
+    missing = [ref for ref in re.findall(r"references/[a-z0-9-]+\.md", skill_md) if not (skill_dir / ref).exists()]
     if missing:
-        raise BuildError(
-            f"SKILL.md points at reference files that were not written: {sorted(set(missing))}"
-        )
+        raise BuildError(f"SKILL.md points at reference files that were not written: {sorted(set(missing))}")
     print(
-        f"built {manifest['name']} {version}: {len(published)} documents, SKILL.md {skill_md.count(chr(10))} lines, "
+        f"built {manifest.name} {version}: {len(published)} documents, SKILL.md {skill_md.count(chr(10))} lines, "
         f"{len(list(references.iterdir()))} reference files -> {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}"
     )
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--version", default="0.0.0")
     parser.add_argument("--out", type=Path, default=ROOT / "dist" / "erp")
     args = parser.parse_args()

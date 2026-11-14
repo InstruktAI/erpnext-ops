@@ -3,6 +3,7 @@
 __pycache__/
 .DS_Store
 /dist/
+node_modules/
 .teleclaude/
 AGENTS.md
 CLAUDE.md
