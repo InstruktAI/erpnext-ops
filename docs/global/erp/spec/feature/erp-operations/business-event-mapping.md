@@ -194,7 +194,6 @@ Then it emits no generic business-record-change event for a subscribed agent
 ## See Also
 
 - ~/.teleclaude/docs/erp/spec/business-events.md
-- ~/.teleclaude/docs/erp/spec/feature/erp-operations/native-work-management.md
 - ~/.teleclaude/docs/erp/principle/operational-attention.md
 - ~/.teleclaude/docs/erp/concept/operation-model.md
 - ~/.teleclaude/docs/sdlc/policy/domain-ownership.md

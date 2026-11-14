@@ -105,4 +105,3 @@ And it performs no document introspection
 - docs/local/principle/generic-cli-substrate.md
 - docs/local/spec/feature/erp-operations/document-operations.md
 - docs/local/spec/feature/erp-operations/document-lifecycle.md
-- docs/local/spec/feature/erp-operations/module-method-call.md
