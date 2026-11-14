@@ -27,7 +27,8 @@ payment, and follow-up without forcing a stock-oriented workflow.
 ## Steps
 
 Every document below that is submitted is first reviewed as a draft, and submitted only
-after its business effect, references, and amounts are correct (`apply-native-operation`).
+after its business effect, references, and amounts are correct
+(`erp/procedure/apply-native-operation`).
 A record without a draft state and an activity record are written directly.
 
 ### 1. Capture the work intent
