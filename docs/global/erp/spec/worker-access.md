@@ -15,9 +15,9 @@ worker's own login, so ERPNext enforces it whatever an agent attempts.
 
 | The worker | Reach |
 | --- | --- |
-| Reads | Staff records, everybody's hours, projects, tasks, customers with their addresses and contacts, suppliers, items, stock levels, material entries, public calendar entries |
-| Writes, own entries only | Hours: record, submit, cancel, amend, delete a draft. Material entries: record, change and delete as drafts. Calendar entries. Notes on the records they can read |
-| Is refused | Invoices, payments and the ledger; creating or changing projects and tasks; submitting a material entry; changing or deleting another person's entry |
+| Reads | Staff records, everybody's hours, projects, tasks, customers with their addresses and contacts, suppliers, items, stock levels, material entries, leave requests, public calendar entries |
+| Writes, own entries only | Hours: record, submit, cancel, amend, delete a draft. Material entries: record, change and delete as drafts. Leave requests: record and change while open. Calendar entries. Notes on the records they can read |
+| Is refused | Invoices, payments and the ledger; creating or changing projects and tasks; submitting a material entry; approving a leave request; changing or deleting another person's entry |
 
 The reach is built from three things on the site:
 
@@ -26,9 +26,10 @@ The reach is built from three things on the site:
 - **An own-entries role**, `Worker Own Entries`: the rights of the second row, granted only
   on records the person created.
 
-Linking a login to a staff record adds ERPNext's own `Employee` role. Its right on hours is
-restricted to records the person created; without that restriction it lets a worker change
-another worker's draft hours.
+Two of ERPNext's own grants are restricted to records the person created, because
+unrestricted they let one worker change another's entries: the `Employee` role, which
+linking a login to a staff record adds, on hours and on leave requests; and the right every
+desk user holds on calendar entries.
 
 ## Known caveats
 
@@ -46,3 +47,4 @@ re-established before it is relied on.
 - ~/.teleclaude/docs/erp/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erp/procedure/record-work-hours.md
 - ~/.teleclaude/docs/erp/procedure/record-material-taken.md
+- ~/.teleclaude/docs/erp/procedure/record-absence.md
