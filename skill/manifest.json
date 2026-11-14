@@ -16,6 +16,7 @@
     "erp/concept/multi-tenancy",
     "erp/procedure/operating-cycle",
     "erp/procedure/company-onboarding",
-    "erp/procedure/person-onboarding"
+    "erp/procedure/person-onboarding",
+    "erp/concept/composable-business-procedures"
   ]
 }

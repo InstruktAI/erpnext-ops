@@ -27,9 +27,9 @@ Create an ERPNext user for the person on the company's site.
 Assign only the roles and permission rules the person needs. When the site hosts multiple
 companies of the business group, scope the user to the intended company's data.
 
-A person who does the company's work on site and reports it themselves receives worker
-access: a staff record linked to their login and the two worker roles
-(`erp/spec/worker-access`).
+Where the company's own access mandate gives the people who report their work on site
+this reach, such a person receives worker access: a staff record linked to their login and
+the two worker roles (`erp/spec/worker-access`).
 
 ### 3. Send the login email
 

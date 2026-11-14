@@ -46,15 +46,14 @@ name. Say which time was used.
 ### 4. Establish that it is not recorded yet
 
 Search the person's hours for that day and job (`erp/procedure/resume-from-native-state`).
-ERPNext refuses a stretch that overlaps another of the same person; an overlap means the
-hours are already there or the times need the person's correction.
+Where the site refuses an overlapping stretch (`erp/spec/worker-access`), the hours are
+already there or the times need the person's correction.
 
 ### 5. Record and submit
 
 Record one stretch per job: the staff record, the company, the project on the record and on
 its time line, the activity, the start, the hours, and what was done in the person's words.
-Submit it (`erp/procedure/apply-native-operation`). Hours post nothing to the books, so a
-reported stretch is a determined action (`erp/principle/determinate-autonomy`).
+Submit it (`erp/procedure/apply-native-operation`).
 
 ### 6. Confirm
 

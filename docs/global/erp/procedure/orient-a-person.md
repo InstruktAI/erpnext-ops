@@ -55,6 +55,4 @@ When the person names a part, load the procedure for it and begin.
 
 ## Discipline
 
-Offer only what is ready for this company and within this person's reach. An offer of
-something that is not ready ends in a booking that has to be undone
-(`erp/policy/operating-disciplines`).
+Offer only what is ready for this company and within this person's reach.
