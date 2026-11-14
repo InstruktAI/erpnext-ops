@@ -2,11 +2,9 @@
 *.local
 __pycache__/
 .DS_Store
-/target
 .teleclaude/
 AGENTS.md
 CLAUDE.md
-/dist
 
 # TeleClaude blessed defaults
 Thumbs.db
@@ -44,7 +42,6 @@ todos.db-shm
 docs/global/*/domain-baseline-bundle.md
 publications/inbox/*
 !publications/inbox/.gitkeep
-/target/
 
 # TeleClaude blessed defaults
 _.swp

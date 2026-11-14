@@ -13,16 +13,4 @@ third-party business backend. Third-party mechanics never get plumbed into the m
 
 - @docs/local/baseline.md
 
-## Credentials
-
-Per-instance credentials live in a gitignored `.env` (`ERPNEXT_URL`, `ERPNEXT_API_KEY`,
-`ERPNEXT_API_SECRET`); see `.env.example`. One `.env` per customer instance. The token
-belongs to the dedicated `agent@instrukt.ai` (System Manager) user on that instance.
-
-## Reference
-
-- `reference/frappe-openapi-v2.json` — the generic Frappe v2 REST envelope (six operations,
-  doctype-parameterized). Reference only; the per-instance schema is read at runtime via
-  `/api/v2/doctype/{doctype}/meta`.
-
 <!-- /LOCKED_FILE -->
