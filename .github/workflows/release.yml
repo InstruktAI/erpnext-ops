@@ -1,14 +1,16 @@
 name: release
 
 # Releases the erp plugin: builds it from the documents on main at the given
-# version, lands the built plugin under plugins/ through a pull request, tags
-# the merge commit vX.Y.Z and publishes a GitHub Release with the plugin as a
-# zip.
+# version, commits the built plugin under plugins/ on main, tags that commit
+# vX.Y.Z and publishes a GitHub Release with the plugin as a zip.
 #
-# The built plugin lands through a merged pull request because a Claude
-# organization that follows this repository re-syncs when a pull request with a
-# plugin version bump is merged to the default branch
+# A Claude organization that follows this repository reads plugins/ from the
+# default branch. Its documentation names two triggers for a re-sync, a push
+# to that branch and a merged pull request carrying a version bump, and is not
+# consistent about the first
 # (support.claude.com/en/articles/13837433-manage-plugins-for-your-organization).
+# This workflow pushes, because the organization's settings do not let
+# workflows open pull requests.
 
 on:
   workflow_dispatch:
@@ -30,7 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     env:
       GH_TOKEN: ${{ github.token }}
       VERSION: ${{ inputs.version }}
@@ -69,31 +70,26 @@ jobs:
           claude plugin validate plugins/erp
           claude plugin validate .
 
-      - name: Land the built plugin through a pull request
+      - name: Commit the built plugin on main
         id: land
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          branch="release/$VERSION"
-          git switch --create "$branch"
           git add plugins/erp
           if git diff --cached --quiet; then
             echo "::error::the built plugin is identical to the released one; nothing to release"
             exit 1
           fi
           git commit --message "release(erp): $VERSION"
-          git push origin "$branch"
-          url=$(gh pr create --base main --head "$branch" --title "release(erp): $VERSION" \
-            --body "Built from the documents on main at $GITHUB_SHA by the release workflow.")
-          gh pr merge "$url" --squash --delete-branch
-          echo "sha=$(gh pr view "$url" --json mergeCommit --jq .mergeCommit.oid)" >> "$GITHUB_OUTPUT"
+          git push origin HEAD:main
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Publish the release
         env:
-          MERGE_SHA: ${{ steps.land.outputs.sha }}
+          RELEASE_SHA: ${{ steps.land.outputs.sha }}
         run: |
           set -euo pipefail
           (cd plugins && zip --quiet --recurse-paths "../erp-plugin-$VERSION.zip" erp)
-          gh release create "$VERSION" "erp-plugin-$VERSION.zip" --target "$MERGE_SHA" \
+          gh release create "$VERSION" "erp-plugin-$VERSION.zip" --target "$RELEASE_SHA" \
             --title "erp plugin $VERSION" --generate-notes
