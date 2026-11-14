@@ -77,7 +77,6 @@ Then it exposes its observations and intended native operation
 And it emits no generated business-consequence or reversibility summary
 ```
 
-<!-- planned-change:erpnext-module-method-call -->
 #### UC-PRE7:
 
 ```gherkin
@@ -87,17 +86,6 @@ When the CLI describes that invocation
 Then it carries no document or schema facts inferred from the method or its payload
 And it performs no document introspection
 ```
-<!-- change:erpnext-module-method-call -->
-#### UC-PRE7:
-
-```gherkin
-Scenario: Opaque module methods do not imply document knowledge
-Given an agent previews an available opaque module-level method
-When the CLI describes that invocation
-Then it carries no document or schema facts inferred from the method or its payload
-And it performs no document introspection
-```
-<!-- /planned-change:erpnext-module-method-call -->
 
 ## See Also
 

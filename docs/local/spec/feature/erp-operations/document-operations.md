@@ -88,7 +88,6 @@ When the agent applies the create
 Then the request is sent and the site's own validation decides the outcome.
 ```
 
-<!-- planned-change:erpnext-module-method-call -->
 #### UC-7:
 
 ```gherkin
@@ -99,18 +98,6 @@ without `--apply`
 Then each returns a preview and sends no mutating request
 And each sends the native operation only with explicit `--apply`.
 ```
-<!-- change:erpnext-module-method-call -->
-#### UC-7:
-
-```gherkin
-Scenario: Update, delete, and copy follow the same preview contract
-Given an existing document
-When the agent runs `erpnext doc update`, `erpnext doc delete`, or `erpnext doc copy`
-without `--apply`
-Then each returns a preview and sends no mutating request
-And each sends the native operation only with explicit `--apply`.
-```
-<!-- /planned-change:erpnext-module-method-call -->
 
 #### UC-8:
 

@@ -53,9 +53,6 @@ project-owned implementation details.
 - `erpnext doc delete <doctype> <name> [--apply]`
 - `erpnext doc copy <doctype> <name> [--data <json>] [--apply]`
 - `erpnext doc map <doctype> <name> --via <native-mapper> [--args <json>] [--data <json>] [--apply]`
-<!-- planned:erpnext-module-method-call -->
-- `erpnext method call <dotted-method> [--data <json>] [--apply]`
-<!-- /planned:erpnext-module-method-call -->
 - `erpnext workflow submit <doctype> <name> [--apply]`
 - `erpnext workflow cancel <doctype> <name> [--apply]`
 - `erpnext workflow amend <doctype> <name> --data <json> [--apply]`
@@ -83,17 +80,9 @@ payload. Preview output contains:
   targeting an existing document reports that document's own company separately from the
   selected context.
 - `operation` — the exact native request that starts apply: method, endpoint, and payload.
-<!-- planned-change:erpnext-module-method-call -->
 - `persistence` — for a document controller method, the returned document is validated as
   the requested record and saved as the second native step; the preview cannot show that
   payload before the site runs the method.
-<!-- change:erpnext-module-method-call -->
-- `persistence` — for a document controller method, apply invokes the controller once and
-  reports the requested document as stored afterwards. When the controller persisted its effect,
-  apply sends no further write; when the effect exists only in the returned document, apply
-  persists that document once, never over a newer stored version. The preview cannot show the
-  returned document before the site runs the method.
-<!-- /planned-change:erpnext-module-method-call -->
 - `target` — for a command targeting an existing document: the document's current
   `docstatus`, its own company, and its modification marker, read from the site.
 - `schema` — for a document operation: the DocType's `is_submittable`, its fields marked
@@ -169,36 +158,10 @@ non-zero exit.
   document back; a site that answers the request while leaving `docstatus` unchanged is
   reported as a failed transition, never as success. `workflow amend` builds the new draft
   carrying `amended_from` and applies only to a cancelled document.
-<!-- planned-change:erpnext-module-method-call -->
 - `workflow method` invokes the site's whitelisted document controller. When the controller
   returns a changed document, apply refuses a different doctype or name, saves that exact
   returned document, and reports the stored result. A controller that ran but could not save
   is a partial failure carrying the method result, never success.
-<!-- change:erpnext-module-method-call -->
-- `workflow method` invokes the site's whitelisted document controller once and then reads the
-  document back. When the controller persisted its effect, apply reports that stored result
-  without a further write. When the effect exists only in the returned document, apply refuses a
-  different doctype or name, persists that returned document once through the native save, which
-  rejects a newer stored version, and reports the stored result. Which case applies is read from
-  the document's own stored state, never from the doctype or method name. A different returned
-  document, a persistence need that cannot be established, a rejected persistence, or an
-  unreadable stored document is a typed failure, never success.
-<!-- /planned-change:erpnext-module-method-call -->
-<!-- planned:erpnext-module-method-call -->
-- `method call` invokes a dotted native module method through Frappe's standard method endpoint.
-  Its optional `--data` is an opaque JSON object of method arguments, never document fields.
-  The CLI previews or sends the request under the selected context. Its preview carries
-  `context`, `operation` (the dotted method and opaque payload), a `preflight` that states no
-  field check applies to opaque method arguments, and `apply_command`; it reads no document
-  and no DocType, so it carries no `target`, `schema`, or `persistence`. On apply, a native
-  response that is a JSON object is reported with its `message` value under `data`, and a
-  method that returns nothing reports `data` as null; a response that is not a JSON object is
-  a typed failure, never success. It does not interpret business state, read back records, or
-  substitute behavior when the method is unavailable.
-- Every mutating request is sent once, as written, to the site's exact endpoint. A redirect in
-  answer to it is a typed failure and is never followed, so no write is ever re-sent as another
-  HTTP method.
-<!-- /planned:erpnext-module-method-call -->
 - `doc map` passes the source under the native mapper argument names `source_name`, `dt`, and
   `dn`; the site binds only the names its signature declares. `--args` supplies additional
   native mapper inputs before the site builds the target document; `--data` overrides

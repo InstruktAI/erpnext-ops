@@ -84,32 +84,7 @@ Given a doctype exposing a native workflow method
 When the agent runs `erpnext workflow method <doctype> <name> <method>`
 Then the method call previews the native request by default and sends it only with explicit
 `--apply`
-<!-- planned-change:erpnext-module-method-call -->
 And when the method returns the changed document, apply verifies its doctype and name, saves
 that returned document, and reports the stored result
 And a returned different document or a failed save is never reported as success.
-<!-- change:erpnext-module-method-call -->
-And apply invokes the native controller once
-And when the controller persisted its effect, apply sends no further write and reports the stored
-document read back after the call
-And when the controller's effect exists only in the returned document of the same doctype and
-name, apply persists that document once, never over a newer stored version, and reports the stored
-result
-And a returned different document, a persistence need that cannot be established, a rejected
-persistence, or a failed read-back is never reported as success.
-<!-- /planned-change:erpnext-module-method-call -->
 
-<!-- planned:erpnext-module-method-call -->
-### Use cases
-
-#### UC-8:
-
-```gherkin
-Scenario: A controller method call answered with a redirect is not re-sent
-Given a site that answers the document controller method endpoint with a redirect
-When the agent applies `erpnext workflow method <doctype> <name> <method>`
-Then the command fails with a typed failure
-And no request follows the redirect, so the controller is never run under another HTTP method
-And no document read-back or save is reported as success.
-```
-<!-- /planned:erpnext-module-method-call -->
