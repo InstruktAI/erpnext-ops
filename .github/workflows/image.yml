@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE_NAME: instruktai/erpnext-hrms
+  IMAGE_NAME: morriz/erpnext-hrms
   REGISTRY_USER: morriz
 
 jobs:
