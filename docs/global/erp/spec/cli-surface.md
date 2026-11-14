@@ -70,12 +70,6 @@ project-owned implementation details.
 - `erpnext import apply --batch <batch-id>`
 - `erpnext ops doctor`
 
-<!-- planned:erpnext-command-surface-export -->
-The command inventory above is rendered from the binary's declared command surface, which
-the binary emits as a deterministic, credential-free, site-independent description. The
-root help carries one pointer to the ERP documentation and no per-command documentation
-references.
-<!-- /planned:erpnext-command-surface-export -->
 
 ### Preview
 
