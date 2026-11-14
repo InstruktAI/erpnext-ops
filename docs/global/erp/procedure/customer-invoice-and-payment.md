@@ -19,7 +19,7 @@ linked payment whose document state and ledger entries agree.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The customer and billed items resolve unambiguously.
 - The billing trigger, quantities, prices, currency, payment terms, and tax treatment are
   established from accepted business state or resolved as a genuine decision boundary.
@@ -43,7 +43,7 @@ second invoice.
 ### 3. Build and verify the draft
 
 Prefer ERPNext's native mapper when the invoice follows an order or delivery, preserving its
-row-level source links. Otherwise create the draft directly. Inspect the CLI preview before
+row-level source links. Otherwise create the draft directly. Inspect the preview before
 applying either mutation.
 
 Read the stored draft back and verify its customer, company, source links, income accounts,

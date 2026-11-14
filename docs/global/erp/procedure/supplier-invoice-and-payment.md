@@ -21,7 +21,7 @@ bank transfer.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The Supplier and submitted Purchase Invoice resolve unambiguously.
 - The invoice is approved for payment under the company's delegation, or the remaining payment
   decision has been confirmed through `confirm-business-intent`.

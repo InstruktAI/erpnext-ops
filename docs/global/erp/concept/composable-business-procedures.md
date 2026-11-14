@@ -1,13 +1,13 @@
 ---
-description: ERP procedures are composable business safeguards, not replacements for agent intelligence or CLI metadata.
+description: ERP procedures are composable business safeguards, not replacements for agent intelligence or live site metadata.
 ---
 # Composable Business Procedures — Concept
 
 ## What
 
 ERP procedures describe the business safeguards that matter around ERPNext operations. They
-are not tutorials for every button, field, or command. Agents use the `erpnext` CLI for
-mechanical operation, preview, metadata preflight, trace capture, and application; procedures
+are not tutorials for every button, field, or tool call. Agents work the mechanics through
+the site's own operations (`erp/spec/agent-surface`); procedures
 exist where business meaning, integrity, continuity, or decision boundaries are at stake.
 
 The catalog has two useful procedure shapes:
@@ -16,7 +16,7 @@ The catalog has two useful procedure shapes:
   business input, confirming a consequential human instruction, preserving follow-up,
   recording received goods, or posting a customer payment.
 - **Playbooks.** Larger procedures for common business outcomes, composed from atoms and
-  CLI operations, such as solar offer-to-installation, custom order-to-fulfillment, or project
+  native operations, such as solar offer-to-installation, custom order-to-fulfillment, or project
   work-to-invoice.
 
 The catalogue is also the delegation surface. A description states the outcome
@@ -43,8 +43,8 @@ and the executor loads the procedure closure before acting.
 A procedure is not necessarily an agent command. General-purpose session briefs
 can activate procedures without a dedicated command wrapper or sdlc
 state machine. The agent interprets the procedure against live facts and chooses
-individual CLI operations. A CLI command expresses one operation; implementation
-requests within that operation do not make it the owner of the business sequence.
+individual native operations. One operation expresses one change; it never owns the
+business sequence.
 
 ERP domain entry loads its baseline once. Its progressive index supplies the
 remaining concepts and references; its activatable catalogue supplies procedure
@@ -59,8 +59,8 @@ business safeguards loses the practices that keep ERP data trustworthy.
 Composable procedures keep the useful middle: they name the moments where agents must
 preserve intent, avoid premature state changes, create follow-up, or identify the missing
 decision input that blocks autonomous continuation.
-Everything else remains flexible and grounded in the live ERPNext instance through the CLI
-preview/apply loop.
+Everything else remains flexible and grounded in the live ERPNext instance through the
+draft, preview, and apply loop.
 
 ## See Also
 

@@ -22,9 +22,9 @@ Small-business owners do not want to approve routine work because it feels impor
 machine. They want the system to handle standard operations, preserve overview, and interrupt
 only when their business intent is actually needed.
 
-ERPNext already encodes many standard flows. The `erpnext` CLI adds context resolution,
-metadata preflight, preview/apply, activity capture, templates, and open-loop tracking. Those
-mechanisms exist so agents can act, not so they can manufacture approval gates.
+ERPNext already encodes many standard flows: draft before submit, native mappers, ledger
+preview, templates, activity records, and follow-ups. Those mechanisms exist so agents can
+act, not so they can manufacture approval gates.
 
 ## Implications
 

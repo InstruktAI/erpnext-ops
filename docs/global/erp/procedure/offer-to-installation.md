@@ -17,7 +17,7 @@ intent, creating premature stock truth, or skipping follow-up.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The customer, lead, opportunity, or site contact is known or can be resolved.
 - Product and service details are known enough to create a draft or activity trail.
 
@@ -25,14 +25,14 @@ intent, creating premature stock truth, or skipping follow-up.
 
 ### 1. Capture the business input
 
-Use `erpnext activity capture` to preserve the human's source input, site context, formulas,
+Record on the activity trail the human's source input, site context, formulas,
 constraints, photos, supplier remarks, or customer promises. Link the activity to the most
 specific known business object.
 
 ### 2. Resolve or create the commercial object
 
-Use `erpnext resolve` and `erpnext doc` preview to find or create the Lead, Customer,
-Opportunity, or Quotation target. Keep uncertain work in draft state.
+Resolve, or create, the Lead, Customer, Opportunity, or Quotation target. Keep uncertain
+work in draft state.
 
 ### 3. Build the proposal or quotation
 
@@ -84,6 +84,6 @@ preview/apply. Record payment when received and review open loops.
 ## Discipline
 
 The failure mode is treating an intuitive, verbal installation operation as clean ERP state too early.
-Use the CLI preview to keep stock, selling, installation, and accounting states distinct.
+Use the preview to keep stock, selling, installation, and accounting states distinct.
 Record business memory immediately; mutate financial or stock truth only when the business
 event is real.

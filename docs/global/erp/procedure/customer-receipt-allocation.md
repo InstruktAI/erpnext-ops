@@ -16,7 +16,7 @@ and any excess customer credit in an exact, resumable state.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - Receipt of the money is true and its customer, amount, currency, bank or cash account,
   posting date, and external reference are established.
 - Every target invoice is submitted, belongs to that customer and company, and has current

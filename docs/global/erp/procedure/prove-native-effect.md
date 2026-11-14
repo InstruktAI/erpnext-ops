@@ -12,8 +12,7 @@ agree on.
 
 ## Preconditions
 
-- The mutation has been applied through `erpnext` and its response, or its
-  absence, is known.
+- The mutation has been applied and its response, or its absence, is known.
 - The expected effect is stated in business terms: which document reaches which
   state, which amounts move between which accounts, which links must exist.
 

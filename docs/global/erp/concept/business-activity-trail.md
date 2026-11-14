@@ -10,11 +10,11 @@ description: The ERP activity trail is the queryable memory layer over communica
 ## What
 
 The business activity trail is the queryable memory layer over human input, agent actions,
-follow-ups, and linked ERP documents. Agents access it through `erpnext activity` and related
-CLI commands. It lets agents answer questions such as what happened last week, what is due
-tomorrow, what was said about a customer, or why a supplier commitment exists.
+follow-ups, and linked ERP documents. Agents read and write it as native records
+(`erp/spec/agent-surface`). It lets agents answer questions such as what happened last week,
+what is due tomorrow, what was said about a customer, or why a supplier commitment exists.
 
-The trail is assembled behind the CLI from ERPNext and Frappe primitives:
+The trail consists of ERPNext and Frappe primitives:
 
 - `Communication` records human interactions and messages with medium, sender, content,
   date, and optional document references.
@@ -46,8 +46,8 @@ linked explicitly; temporal proximity alone does not establish fulfillment.
 ## Why
 
 Humans do not keep a perfect operational overview. They trust the system to remember what was
-said, what was planned, what is still open, and what should happen next. The `erpnext`
-activity surface gives agents the cheap recall path needed to support that trust without
+said, what was planned, what is still open, and what should happen next. The activity
+records give agents the cheap recall path needed to support that trust without
 loading every ERP document in full.
 
 The trail also separates memory from mutation. A verbal supplier promise can be captured as
@@ -62,4 +62,4 @@ confirmed business state.
 - ~/.teleclaude/docs/erp/concept/business-relationships.md
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md

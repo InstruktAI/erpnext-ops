@@ -50,9 +50,9 @@ brief; linked activity carries material history. Existing fields and record link
 are used where they express the information. A missing structured field is not
 silently assumed to exist, and prose references do not claim referential integrity.
 
-`erpnext doc` operations maintain native work records, `erpnext activity` records
-and recalls business activity, and `erpnext evidence` attaches supporting files.
-The live CLI surface and site metadata determine available operations. This work
+Native work records, activity records, and attached files are maintained through
+the operations `erp/spec/agent-surface` names. The site's live metadata and the
+connected user's roles determine what is available. This work
 model supplies no additional command, custom DocType, automatic session-stamping
 hook, or unified event-log service.
 

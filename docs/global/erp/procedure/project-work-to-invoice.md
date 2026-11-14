@@ -19,21 +19,21 @@ payment, and follow-up without forcing a stock-oriented workflow.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The customer and service item resolve unambiguously.
 - The scope, price, delivery window, and billing trigger are known or carried as open loops.
 - The company has an income account suitable for the service being billed.
 
 ## Steps
 
-For every mutation below that exposes a CLI preview, inspect it first and apply only after
-the proposed business effect, references, and amounts are correct. Activity capture writes
-the trace directly because that additive operation has no preview gate.
+For every mutation below, inspect its preview first and apply only after the proposed
+business effect, references, and amounts are correct. An activity record is written
+directly: it adds a trace and changes no business state.
 
 ### 1. Capture the work intent
 
 Record the human source input, customer context, scope, deadline, price assumptions, and
-uncertainty with `erpnext activity capture`.
+uncertainty on the activity trail.
 
 ### 2. Resolve the business object
 
@@ -80,8 +80,8 @@ Record the payment through the native Payment Entry mapper and submit it only wh
 true. Complete Tasks when their work is complete. Read back the invoice, Timesheet, Task, and
 Project and require: zero invoice outstanding after full payment, billed Timesheet hours,
 completed Task progress, and Project sales, cost, billed amount, and margin consistent with the
-linked records. Close honoured follow-ups and keep the remaining ones visible through
-`erpnext activity open-loops`.
+linked records. Close honoured follow-ups and keep the remaining ones visible as open
+follow-ups.
 
 ## Outputs
 

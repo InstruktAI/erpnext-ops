@@ -18,7 +18,7 @@ receivable, and invoice schedule in agreement.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The submitted Sales Invoice carries the accepted Payment Terms Template and a stored payment
   schedule with the discount type, amount, validity basis, discount date, and outstanding amount.
 - The Payment Terms Template allocates payment by payment term, so ERPNext preserves the payment-

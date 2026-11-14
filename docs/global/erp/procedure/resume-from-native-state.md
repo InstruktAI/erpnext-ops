@@ -16,21 +16,21 @@ event twice or skips a step that already succeeded.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
-- The business event has at least one identity the site can be searched by: a
-  source token, an external reference, a source document and its native links,
-  or a natural key.
+- The agent is connected to the company's site.
+- The business event has at least one identity the site can be searched by: an
+  external reference, a source document and its native links, or a natural key.
 
 ## Steps
 
 ### 1. Resolve by the strongest identity the event carries
 
-Search native state before writing anything. A series-named document created
-with `--source <token>` is replayed by the same token and payload; the CLI
-returns the existing document. A receipt or payment resolves by its external
-reference. A mapped document resolves through the source document's native
-links and reference rows. A master resolves by its natural key. A lost response
-is not evidence of absence.
+Search native state before writing anything. A repeated create stores a second
+document, so the search comes first every time. A document resolves by the
+outside reference of its event, stored on it when it was created: the
+customer's order number, the supplier's invoice number, the bank reference. A
+mapped document resolves through the source document's native links and
+reference rows. A master resolves by its natural key. A lost response is not
+evidence of absence.
 
 ### 2. Read the current state, not the remembered one
 
@@ -64,9 +64,8 @@ agent remembers running is not current state.
 
 A mapper may produce a zero-value draft from a source that has nothing left to
 settle; such a draft is not evidence that a payment is due. A second conversion
-of the same source creates a second document. A changed source token to escape
-an idempotency conflict creates a parallel record. None of these is a way to
-resume.
+of the same source creates a second document. A create repeated under a changed
+reference creates a parallel record. None of these is a way to resume.
 
 ## Outputs
 

@@ -17,7 +17,7 @@ confusing configured demand, raw material availability, finished goods, and invo
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The customer or order source is known or can be resolved.
 - The product configuration, measurements, quantity, or batch details are known enough to
   record as draft commercial or activity state.
@@ -27,11 +27,11 @@ confusing configured demand, raw material availability, finished goods, and invo
 ### 1. Capture configured demand
 
 Record the customer's configuration, dimensions, quality requirements, deadline, delivery
-expectations, and source input with `erpnext activity capture` or a draft commercial document.
+expectations, and source input on the activity trail or in a draft commercial document.
 
 ### 2. Resolve master data
 
-Use `erpnext resolve` and `erpnext doc` preview to identify the Customer, Item, variant,
+Resolve the Customer, Item, variant,
 production target, or project/order document. Avoid creating duplicate customer or item
 records.
 
@@ -75,5 +75,5 @@ payment and close remaining open loops after fulfillment.
 ## Discipline
 
 The failure mode is collapsing custom intent, production work, delivered goods, and invoicing
-into one premature ERP action. Keep each business state explicit. Use the CLI preview to see
+into one premature ERP action. Keep each business state explicit. Use the preview to see
 what will become real before applying it.

@@ -18,7 +18,7 @@ approve.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The Sales Invoice is submitted, has a positive current outstanding amount, and is overdue
   according to its stored payment schedule and the company's accepted terms.
 - The customer, invoice, current receivable, prior reminders, disputes, promises, and existing

@@ -21,7 +21,7 @@ same cash twice.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The submitted Sales Order, customer, currency, project, amount received, bank or cash
   account, and external payment reference are established.
 - Receipt of the money is true. A promised deposit is an open loop, not a Payment Entry.

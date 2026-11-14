@@ -12,7 +12,7 @@ customer credit.
 
 ## Preconditions
 
-- The company context is active in `erpnext`.
+- The agent is connected to the company's site.
 - The submitted Sales Invoice and its current outstanding amount are resolved.
 - The actual bank or cash receipt and its external reference are established.
 - The difference has a proven cause and accepted business treatment, such as a bank fee borne

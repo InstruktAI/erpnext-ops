@@ -40,7 +40,7 @@ determined by the approved outcome remain autonomous.
 
 State in plain business language what changes, for whom, in which company's books, and the
 important amounts, quantities, and dates. Name uncertainty instead of filling it silently.
-Do not expose JSON, DocType names, API methods, or CLI instructions as the approval question.
+Do not expose JSON, DocType names, API methods, or tool calls as the approval question.
 
 ### 3. State the lasting consequence
 
@@ -56,7 +56,7 @@ or lasting consequence invalidates that approval and requires a new reframe.
 
 ### 5. Apply and preserve the trace
 
-After approval, apply the reviewed operation through `erpnext`. Preserve the source
+After approval, apply the reviewed operation. Preserve the source
 instruction, interpretation, approval, resulting records, and any unresolved follow-up in
 the linked activity trail.
 

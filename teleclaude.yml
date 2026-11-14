@@ -5,7 +5,7 @@ business:
   publishes:
   - slug: erp
     trigger: Operating ERPNext tenant sites, business records, or 
-      order-to-invoice workflows through the erpnext CLI
+      order-to-invoice workflows
 project_slug: erpnext-ops
 code:
   enabled: true

@@ -1,5 +1,5 @@
 ---
-description: Disciplines for agents acting on ERPNext site data through the erpnext CLI.
+description: Disciplines for agents acting on ERPNext site data through the site's MCP server.
 ---
 
 # ERP Operating Disciplines — Policy
@@ -44,30 +44,38 @@ description: Disciplines for agents acting on ERPNext site data through the erpn
 
 - **Development and testing operate on the sandbox company.** The sandbox company lives on
   the dedicated test tenant: its own site, holding no business's books. Work that exercises, develops,
-  demonstrates, or verifies ERP capability names the sandbox company on every ERP
-  command (`--company sandbox`). Business work names the company the human's request
-  establishes. Each command names its own company, so an agent never relies on a company
-  chosen earlier, and never uses a business company to try something out.
+  demonstrates, or verifies ERP capability connects to the sandbox site. Business work
+  connects to the site of the company the human's request establishes. Before a write the
+  agent establishes which site, user and company it is connected as, so it never relies on a
+  company chosen earlier, and never uses a business company to try something out.
 
 ### Native operations
 
-- **Use the CLI surface.** Agents operate ERPNext through `erpnext`. Raw transport mechanics
-  are implementation detail, not the agent-facing operating path.
-- **Preview before mutation.** Mutating commands preview by default: the exact native
-  operation that would be sent, without sending it. Apply only after the preview is clean or
-  any remaining warnings have been resolved by evidence, configuration, standard ERP
-  practice, or a human decision where one is genuinely required.
-- **Let the CLI preflight live metadata.** Create and update commands check payloads against
-  the live DocType shape before sending. Agents provide business intent and data; ERPNext
-  remains the authority on validation, permissions, and transactions.
+- **Use the site's MCP server.** Agents operate ERPNext through the MCP server the site
+  serves, as the user it authenticates. `erp/spec/agent-surface` names the server operation
+  that realizes each operation this doctrine speaks of.
+- **Preview before posting.** A document that posts to the books or to stock is created as a
+  draft, read back, and its ledger effect previewed before it is submitted. Submit only when
+  the draft is correct or any remaining doubt has been resolved by evidence, configuration,
+  standard ERP practice, or a human decision where one is genuinely required. A master
+  record has no draft: the agent states the intended change, writes it, and reads it back.
+- **Read the document type before writing and the record after.** The server stores a write
+  without the fields the document type does not have and reports no error. The agent
+  composes a write from the live document type and compares the stored record with its
+  intent. ERPNext remains the authority on validation, permissions, and transactions.
+- **Write against what was read.** A change to an existing record carries the modification
+  marker of the version the agent read. ERPNext then refuses the write when another party
+  changed the record in between, where an unmarked write replaces their change.
 - **Create draft-first when state is not yet determined.** New business documents are created
   as drafts while business state is incomplete or uncertain. When the business event is
   determined and standard ERP practice calls for a submitted document, the agent proceeds.
 - **Resolve references before writing.** Master-data and business-document creation resolves
-  likely duplicates and ambiguous references through structured resolution results. Agents
-  resolve candidates instead of creating parallel records blindly.
-- **Operate as the scoped identity.** Routine business work uses the site's operator
-  credentials. Administrator credentials are reserved for documented administrative setup.
+  likely duplicates and ambiguous references by searching native records first. A repeated
+  create stores a second record, so agents resolve candidates instead of creating parallel
+  records blindly.
+- **Operate as the scoped identity.** An agent working for a person acts under that person's
+  own ERPNext login. Unattended work uses the site's operator credentials. Administrator
+  credentials are reserved for documented administrative setup.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.
@@ -101,9 +109,10 @@ execution of every assignment. Expectations and relationship evidence distinguis
 useful attention from intrusive reminders or abandoned commitments.
 
 ERPNext is a financial system of record. A wrong invoice, duplicated record, over-broad user,
-or leaked operator secret has operational and legal consequences. The CLI is the safety layer
-that lets agents keep acting: it shows the exact operation before mutation, resolves routine
-mechanics, preserves traces, and surfaces only real decision boundaries.
+or leaked operator secret has operational and legal consequences. No tool enforces the
+sequence of read, draft, preview, submit and read back: ERPNext's own draft state and these
+rules carry it. An agent that skips a step meets no refusal, only the consequence in the
+books, which is why each step is stated as a rule.
 
 ## Scope
 
@@ -123,16 +132,17 @@ All agent operations against ERPNext sites.
   a defect.
 - Development, demonstration, or verification work performed against a business company
   rather than the sandbox company is a defect.
-- A business operation performed outside the CLI is a defect unless the active procedure
-  explicitly authorizes project-owned implementation work.
-- A mutation applied without reviewing its preview is a defect.
-- A write that bypasses CLI metadata preflight is a defect.
+- A business operation performed outside the site's MCP server is a defect unless the active
+  procedure explicitly authorizes another path.
+- A document submitted without its draft read back and, where it posts, its ledger effect
+  previewed is a defect.
+- A write composed without the live document type, or left without a read-back, is a defect.
 - Routine business work performed with administrator credentials is a defect unless the
   active procedure explicitly requires administrator authority.
 - A human interruption for a decision the agent could determine from evidence, configuration,
   party preferences, templates, ERPNext state, or standard ERP practice is a defect.
-- A submitted, cancelled, deleted, or outbound-sent document created without being visible in
-  the preview is a defect.
+- A submission, cancellation, deletion, or outbound message the agent had not established as
+  the expected effect before applying it is a defect.
 - Duplicate records traceable to a missing natural-key check are a defect.
 - A business mutation without a traceable source input is a defect when the mutation was caused
   by human instruction or informal business context.
@@ -158,4 +168,4 @@ None.
 - ~/.teleclaude/docs/erp/principle/determinate-autonomy.md
 - ~/.teleclaude/docs/erp/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md

@@ -34,7 +34,7 @@ without requiring agents to reconstruct the business from conversation alone.
 - **Healthy waiting is useful.** Waiting, contacting a party, progressing a native
   record, and involving the owner are legitimate outcomes of assessment.
 - **Intelligence owns sequence.** Agents select and compose activatable procedures;
-  the CLI performs the requested operation and ERPNext owns its business semantics.
+  the site performs the requested operation and ERPNext owns its business semantics.
 - **Trust has an accountable outcome.** The executor establishes and records its
   result. The coordinator accepts a complete, attributable work report without
   routinely repeating the executor's checks or reading its transcript.
