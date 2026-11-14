@@ -28,13 +28,6 @@ request happened to originate. A session link is available when the human needs
 to reach that coordinator; changing conversations is not a prerequisite to asking
 for ERP work.
 
-<!-- planned:erpnext-cli-availability -->
-Supported agent execution hosts provision the ERP CLI on their normal command
-path. An agent entering the domain can discover and invoke it without entering
-the publisher checkout or building a local binary. Installation and updates use
-the established host tooling lifecycle; business credentials remain separate
-from installing the capability.
-<!-- /planned:erpnext-cli-availability -->
 
 ### Responsibility and execution
 

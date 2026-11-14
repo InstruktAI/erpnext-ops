@@ -112,16 +112,9 @@ non-zero exit.
 
 ## Known caveats
 
-<!-- planned-change:erpnext-cli-availability -->
 - Domain publication provides documentation discovery, not CLI installation. The
   repository's install target fetches build dependencies; it does not establish
   a globally invocable binary on every agent execution host.
-<!-- change:erpnext-cli-availability -->
-- Supported agent execution hosts expose the CLI on the normal command path
-  independently of the current project. Help and capability discovery require no
-  ERP credentials or tenant connection. Installation and update ownership remains
-  with the host tooling lifecycle rather than individual business invocations.
-<!-- /planned-change:erpnext-cli-availability -->
 - Operating context is selected explicitly or read from the CLI's persisted
   selection. This resolution does not consume TeleClaude's resolved caller
   lineage or organizational membership, and it supplies no automatic
