@@ -31,8 +31,7 @@ ERPNext itself, such as staff administration, in the same site declaration.
 Read the chart of accounts the setup created before anything else depends on it: have
 ERPNext accept its customer and supplier accounts as the company's defaults, and read how
 it classifies customers, suppliers and stock. A chart that fails either is decided with
-the company's accountant before the first booking, because a chart cannot be replaced once
-anything is booked.
+the company's accountant before the first booking.
 
 ### 2. State how the company works and what is ready
 
@@ -55,17 +54,14 @@ and to each worker's login (`erp/spec/worker-access`).
 
 ### 4. Give the organization the plugin
 
-The plugin is published from this repository, which is public. A Claude organization
-follows only a private repository for an organization-wide install, and that repository
-may list a plugin from a public one. Each company therefore has its own small private
-catalog repository in the provider's GitHub organization, named for the company. It holds
-the catalog file that lists the `erp` plugin from this repository at a released version,
-and the updater that moves that version to the latest release.
+Each company has its own small private catalog repository in the provider's GitHub
+organization, named for the company
+(`local/projects/erpnext-ops/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog`).
+It holds the catalog file that lists the `erp` plugin from this repository at a released
+version, and the updater that moves that version to the latest release.
 
 Create the company's catalog by copying an existing one. Have the owner confirm their
-GitHub account name, then invite that account to the catalog with administrator rights:
-Claude installs the update notification on the repository, which needs those rights, and
-the catalog affects that company alone.
+GitHub account name, then invite that account to the catalog with administrator rights.
 
 The owner then connects the catalog once, in the Claude organization's settings for
 plugins and skills: sync from GitHub, the company's catalog repository, automatic sync on,
@@ -122,6 +118,7 @@ under their own login and read it back as another.
 ## See Also
 
 - docs/local/policy/model-floor.md
+- docs/local/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md
 - ~/.teleclaude/docs/erp/procedure/company-onboarding.md
 - ~/.teleclaude/docs/erp/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erp/spec/worker-access.md

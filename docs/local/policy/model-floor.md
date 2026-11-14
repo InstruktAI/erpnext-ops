@@ -1,14 +1,13 @@
 ---
-description: Work that writes to a company's ERPNext is done by a model of at least Anthropic's mid-size class; the smallest class is not used for it.
+description: Work that writes to a company's ERPNext is done by Sonnet 5.5 or a more capable model; the smallest model class is not used for it.
 ---
 
 # Model Floor — Policy
 
 ## Rules
 
-- **Work that writes to a company's ERPNext runs on a model of at least Anthropic's mid-size
-  class (Sonnet).** This holds for a person's own agent and for an agent the platform
-  dispatches.
+- **Work that writes to a company's ERPNext runs on Sonnet 5.5 or a more capable model.**
+  This holds for a person's own agent and for an agent the platform dispatches.
 - **The smallest class (Haiku) is not used for ERP work**, including reading work that
   leads to a decision about the books.
 - **The floor is set where the model is chosen.** Whoever onboards a company tells its
