@@ -8,11 +8,11 @@ business:
       order-to-invoice workflows
 project_slug: erpnext-ops
 code:
-  enabled: false
+  enabled: true
 docs:
   enabled: true
 agents:
   enabled: false
 schema_version: 26
 project_name: erpnext-ops
-description: Holds the ERP domain knowledge
+description: Holds the ERP domain knowledge and the build of its Claude plugin
