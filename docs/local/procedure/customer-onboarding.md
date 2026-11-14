@@ -31,7 +31,8 @@ ERPNext itself, such as staff administration, in the same site declaration.
 Read the chart of accounts the setup created before anything else depends on it: have
 ERPNext accept its customer and supplier accounts as the company's defaults, and read how
 it classifies customers, suppliers and stock. A chart that fails either is decided with
-the company's accountant before the first booking.
+the company's accountant before the first booking
+(`local/projects/erpnext-ops/policy/chart-before-booking`).
 
 ### 2. State how the company works and what is ready
 
@@ -55,9 +56,7 @@ and to each worker's login (`erp/spec/worker-access`).
 ### 4. Give the organization the plugin
 
 Each company has its own small private catalog repository in the provider's GitHub
-organization, named for the company
-(`local/projects/erpnext-ops/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog`).
-It holds the catalog file that lists the `erp` plugin from this repository at a released
+organization, named for the company. It holds the catalog file that lists the `erp` plugin from this repository at a released
 version, and the updater that moves that version to the latest release.
 
 Create the company's catalog by copying an existing one. Have the owner confirm their
@@ -71,7 +70,8 @@ mobile app shows, installs for that person only. Where the dialog asks for
 the Claude GitHub App on the repository, the provider approves it in the GitHub
 organization.
 
-After a release of the plugin, start each catalog's updater; it also runs daily.
+After a release of the plugin, start each catalog's updater; it also runs on its own
+schedule.
 
 ### 5. Connect ERPNext
 
@@ -118,6 +118,7 @@ under their own login and read it back as another.
 ## See Also
 
 - docs/local/policy/model-floor.md
+- docs/local/policy/chart-before-booking.md
 - docs/local/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md
 - ~/.teleclaude/docs/erp/procedure/company-onboarding.md
 - ~/.teleclaude/docs/erp/procedure/person-onboarding.md

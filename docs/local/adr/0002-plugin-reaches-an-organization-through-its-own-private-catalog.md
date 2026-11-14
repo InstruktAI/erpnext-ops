@@ -25,6 +25,8 @@ Claude's organization-wide install has rules that pull against that:
 - A person can add a public repository as a marketplace for themselves, with automatic
   sync, but that installs for that person only.
 
+These rules are Anthropic's, as documented on 2026-11-14 in the pages under See Also.
+
 ## Decision
 
 This repository stays public and is the plugin's source.
@@ -54,7 +56,7 @@ Given up or newly owed:
 - The owner administers their own catalog and could break it. It affects that company
   alone, and the provider can restore it.
 - A release reaches an organization only after the catalog's updater has run. It is
-  started after a release and runs daily.
+  started after a release and also runs on the schedule its own workflow sets.
 - The owner-side connection had not been performed when this was decided. The catalog,
   its updater and installing through it were exercised from the command line only.
 
@@ -74,3 +76,10 @@ Given up or newly owed:
   configuration the provider otherwise never uses.
 - **The owner uploads the plugin file.** Organization-wide at once and needs no GitHub,
   but every release needs another upload.
+
+## See Also
+
+- https://claude.com/docs/plugins/org-sync
+- https://claude.com/docs/plugins/admin
+- https://claude.com/docs/plugins/overview
+- https://code.claude.com/docs/en/plugins/host-marketplace
