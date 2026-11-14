@@ -1,10 +1,10 @@
 ---
-description: ERPNext native document-mapper request conventions for the CLI adapter.
+description: ERPNext native document-mapper request conventions.
 ---
 
 # ERPNext Native Document Mappers
 
-ERPNext native document mappers build target documents from source documents before the CLI can apply target-document overrides. Selling-chain mappers accept `source_name`; Payment Entry mapping accepts `dt` and `dn`. Mapper-specific inputs belong in the mapper request, while target-document field overrides apply only after the mapper response is received.
+ERPNext native document mappers build target documents from source documents; the caller stores the returned document. Selling-chain mappers accept `source_name`; Payment Entry mapping accepts `dt` and `dn`. Mapper-specific inputs belong in the mapper request, while target-document field overrides apply only after the mapper response is received.
 
 ## Sources
 

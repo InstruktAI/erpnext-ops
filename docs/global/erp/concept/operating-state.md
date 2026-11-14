@@ -86,7 +86,7 @@ contribution led to without mistaking temporal proximity for causation.
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/procedure/resume-from-native-state.md
 - ~/.teleclaude/docs/erp/procedure/prove-native-effect.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md
 - ~/.teleclaude/docs/general/concept/lineage-vs-authorship.md
 - https://docs.frappe.io/erpnext/tasks
 - https://docs.frappe.io/erpnext/project-views

@@ -71,4 +71,4 @@ draft, preview, and apply loop.
 - ~/.teleclaude/docs/erp/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/procedure/confirm-business-intent.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md

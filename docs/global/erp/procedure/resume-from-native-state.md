@@ -82,4 +82,4 @@ sent is not.
 
 - ~/.teleclaude/docs/erp/procedure/prove-native-effect.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md

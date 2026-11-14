@@ -106,24 +106,23 @@ published contracts own the mechanics:
 
 ### ERPNext operating surface
 
-Agents operate ERPNext through the `erpnext` CLI against per-tenant Frappe sites. The site
+Agents operate ERPNext through the MCP server each per-tenant Frappe site serves. The site
 is the tenant boundary; companies inside a site are legal and accounting scopes. itsUP owns
-site provisioning; the CLI operates an already-provisioned site.
+site provisioning; agents operate an already-provisioned site.
 
-- **Operating surface.** The `erpnext` CLI is the agent-facing surface for context, metadata,
-  resolution, document operations, workflows, activity trails, evidence, reports, imports, and
-  operational checks. Agents do not operate ERPNext by composing raw HTTP calls.
-- **Substrate.** The CLI wraps Frappe's v2 REST abstraction. That substrate explains the generic
-  document model, but it is not the normal instruction surface for agents.
+- **Operating surface.** The site's MCP server is the agent-facing surface for metadata,
+  resolution, document operations, native methods, activity records, and reports
+  (`erp/spec/agent-surface`). It serves an agent in the cloud and an agent on a computer
+  alike.
 - **Truth at runtime.** Field lists, mandatory flags, link targets, child tables, and custom
-  fields are read through the CLI from the live site. Memory supplies the pattern; the site
-  supplies the exact contract.
-- **Preview by default.** Mutating CLI commands show the exact context and native operation
-  that would be sent before anything is sent. Applying sends that operation and reports
-  ERPNext's result. The CLI does not simulate ERPNext.
-- **Identity.** Site administrative setup uses the site's administrator identity. Routine
-  business work uses the site's operator identity. Person access uses ERPNext users
-  permission-scoped on the site.
+  fields are read from the live site. Memory supplies the pattern; the site supplies the
+  exact contract.
+- **Draft before posting.** A document that posts is drafted, read back and previewed before
+  it is submitted (`erp/policy/operating-disciplines`). ERPNext's own draft state carries
+  this sequence; no tool enforces it.
+- **Identity.** Site administrative setup uses the site's administrator identity. An agent
+  working for a person acts under that person's own ERPNext login; unattended work uses the
+  site's operator identity. Person access uses ERPNext users permission-scoped on the site.
 - **Work state.** Native Tasks carry delegated outcomes; their relationships and
   available views provide the work overview. Native activity and follow-up records
   carry the business trail. A second board is not the operating authority.
@@ -131,9 +130,9 @@ site provisioning; the CLI operates an already-provisioned site.
   meaning. TeleClaude owns its shared identity, authorization, configuration,
   activation, and delivery primitives. Agents use the published integration
   contracts; implementing code preserves that division of responsibility.
-- **Business flow.** Agents compose individual CLI operations and ERP procedures.
+- **Business flow.** Agents compose individual native operations and ERP procedures.
   Agent briefs orient responsibility; procedures supply applicable knowledge;
-  CLI commands perform operations. The agent determines their order.
+  the site performs operations. The agent determines their order.
 - **Outward integration.** Reflecting ERP state to an external system is the job of an
   adapter — one kind of company-coupled app in the company `apps/` home
   (see `general/concept/company-knowledge`), running outside the tenant site. ERP is the
@@ -148,10 +147,9 @@ its own next work. Keeping work in ERPNext avoids competing task histories.
 
 Per-tenant sites keep operations lightweight while making tenant isolation structural in the
 system of record. ERPNext is dynamic: installed apps, custom fields, workflows, and
-permissions change the live shape of each site. The CLI absorbs that looseness into a safe
-operating surface so agents can rely on preview, metadata preflight, context resolution,
-activity capture, and structured failures instead of carrying those mechanics in every
-procedure.
+permissions change the live shape of each site. Reading the live site before each write
+absorbs that looseness: agents rely on live metadata, ERPNext's draft state, native activity
+records, and the site's own refusals instead of a fixed model of the application.
 
 ## See Also
 
@@ -169,4 +167,4 @@ procedure.
 - ~/.teleclaude/docs/erp/concept/composable-business-procedures.md
 - ~/.teleclaude/docs/erp/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erp/spec/company-layout.md
-- ~/.teleclaude/docs/erp/spec/cli-surface.md
+- ~/.teleclaude/docs/erp/spec/agent-surface.md

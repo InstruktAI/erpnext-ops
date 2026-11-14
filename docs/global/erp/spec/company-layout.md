@@ -19,15 +19,15 @@ work on that site.
   the TeleClaude company registry.
 - **Company record** — ERPNext `Company` document inside the site; a legal and accounting
   scope, not a tenancy boundary.
-- **Operator identity** — ERPNext user and API credentials on the site, used for routine
-  business operations.
+- **Operator identity** — ERPNext user and API credentials on the site, used for unattended
+  business operations. An agent working for a person uses that person's own ERPNext login.
 - **Agent-admin identity** — dedicated ERPNext user and API credentials on the site, used
   only for explicitly selected administrative operations. It is distinct from the operator
   and from the bootstrap `Administrator` identity.
 - **Company credential home** — `erpnext.json` in the TeleClaude company registry's
   per-company scaffold: the site base URL, company name, and separate operator and
   agent-admin API credentials, owner-readable only. It belongs to the company, not to a
-  human user, and is the single source the CLI resolves credentials from at command time.
+  human user, and is the single source unattended agents take the site's credentials from.
 - **Business knowledge** — company-specific operating context such as products, price lists,
   proposal templates, pipeline meaning, and tone.
 
@@ -44,8 +44,8 @@ work on that site.
 - TeleClaude organization membership, project assignment, ERP site, accounting
   Company, and ERP User are separate identities. A matching name or slug alone
   does not establish their association or decide a consuming operation's authority.
-- The CLI resolves the chosen company credential home from explicit selectors or
-  persisted selection; platform lineage is not part of that selection path.
+- An unattended agent names the company whose credential home it uses; platform lineage
+  does not select it.
 - Bootstrap `Administrator` credentials never belong in the company credential home; they
   remain deployment secrets in itsUP. The company credential home may carry only the
   dedicated agent-admin identity used for explicit administrative operations.

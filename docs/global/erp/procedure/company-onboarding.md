@@ -40,7 +40,7 @@ data. Resolve the chart of accounts through the site's native
 fragment is not a template identifier. Treat the wizard as complete only after reading back
 the Company, fiscal year, and seeded masters. The step is repeatable: a completed and
 verified wizard is skipped, and additional companies on a site are created as ordinary
-`Company` documents through the CLI's preview/apply flow.
+`Company` documents under administrator authority.
 
 ### 3. Configure the outgoing email account
 
@@ -83,7 +83,7 @@ output. Re-generation is rotation: update the credential home in the same pass.
 Record the site base URL, company name, operator API key, and operator API secret in the
 company credential home: `erpnext.json` in the company's TeleClaude registry scaffold,
 readable only by its owner. Writing it is idempotent — the entry is the single source the
-CLI resolves at command time. The bootstrap `Administrator` credential remains only in
+unattended agent takes the site's credentials from. The bootstrap `Administrator` credential remains only in
 itsUP and is never written to the company credential home.
 
 ### 9. Verify the operator identity
@@ -116,10 +116,11 @@ authentication or credential-brokering mechanism.
 
 ### 12. Verify both operating identities
 
-Run `erpnext ops doctor` once under operator authority and once with explicit admin authority.
-Each result names the live authenticated identity, selected company, privilege mode, and
-credential-separation verdict. On mismatch, missing credentials, or bootstrap
-`Administrator` authentication, onboarding fails closed before administrative work begins.
+Authenticate once with the operator credentials and once with the agent-admin credentials.
+For each, read the live authenticated user, its roles and the company it reaches. Require
+the two identities to differ and the operator to hold no administrator authority. On
+mismatch, missing credentials, or bootstrap `Administrator` authentication, onboarding fails
+closed before administrative work begins.
 
 ## Outputs
 

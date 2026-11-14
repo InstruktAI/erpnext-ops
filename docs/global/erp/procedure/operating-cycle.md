@@ -32,19 +32,19 @@ to continue under the same mandate.
 
 ### 1. Orient from the responsibility and its records
 
-Establish the operating context through the CLI and read the company mandate.
+Establish the connected site, user and company, and read the company mandate.
 Distinguish the platform's resolved lineage and project/company relationship from
 the ERP site's configured accounting scope and operator identity. Consult
-`erp/spec/company-layout` and the live CLI context contract; do not assume that
-platform identity automatically selects the ERP context in every implementation.
+`erp/spec/company-layout`; do not assume that platform identity automatically
+selects the ERP context in every implementation.
 Identify whether this invocation holds the business overview, a bounded worker
 assignment, or a scheduled job's declared scope. Retain the job's own outcome
 reporting contract when it is a job invocation.
 
 Read current native work, active assignment references, waiting obligations, and
 unresolved effects in that scope. After compaction, recover from those records;
-expand source history only where needed. Load `erp/spec/cli-surface` when command
-discovery is needed and inspect live metadata for the records being operated.
+expand source history only where needed. Load `erp/spec/agent-surface` for the
+operations available and inspect live metadata for the records being operated.
 
 ### 2. Reconcile incoming changes
 
@@ -111,9 +111,9 @@ assignment. Dispatch independent work within available capacity; consider shared
 records before parallel execution. A worker can delegate a bounded part within
 its mandate while retaining responsibility for that contribution.
 
-For execution, load the selected procedure closure and compose individual CLI
-operations. Use existing native Task, activity, and evidence operations. Inspect
-the current command surface rather than assuming specialized task commands or
+For execution, load the selected procedure closure and compose individual native
+operations. Use existing native Task, activity, and attachment records. Inspect
+the site's live metadata rather than assuming specialized task operations or
 automatic provenance hooks exist. The executor applies the native proof required
 by the relevant ERP procedure before reporting its result.
 

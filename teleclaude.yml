@@ -8,21 +8,11 @@ business:
       order-to-invoice workflows
 project_slug: erpnext-ops
 code:
-  enabled: true
+  enabled: false
 docs:
   enabled: true
-checkpoint:
-  bindings:
-  - scope:
-      include:
-      - src/**
-      - tests/**
-      - Cargo.toml
-      - Cargo.lock
-    actions:
-    - test
 agents:
   enabled: false
 schema_version: 26
 project_name: erpnext-ops
-description: Holds the erpnext-ops cli and ERP domain knowledge
+description: Holds the ERP domain knowledge
