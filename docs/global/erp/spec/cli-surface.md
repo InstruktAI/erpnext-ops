@@ -24,7 +24,6 @@ project-owned implementation details.
 
 ### Commands
 
-<!-- planned-change:erpnext-session-context -->
 - Every command accepts `--company <company-slug>` or `--site <fqdn>` and
   `--as operator|admin` to operate that context and privilege for one invocation without
   changing the persisted selection. Invocation overrides default to operator authority;
@@ -33,15 +32,6 @@ project-owned implementation details.
 - `erpnext context use [--site <fqdn>] [--company <company-slug>] [--as operator|admin]` —
   at least one selector; the selection persists and credentials resolve from the company
   credential home at command time, fail-closed on unknown or ambiguous input.
-<!-- change:erpnext-session-context -->
-- Every business command names its company with `--company <company-slug>` or
-  `--site <fqdn>`, and may add `--as operator|admin`; that context and privilege apply
-  to that one invocation and no selection is stored between commands. A command naming
-  neither fails before any request. Privilege defaults to operator authority; admin
-  authority is always explicit. Credentials resolve from the named company's credential
-  home, fail-closed on unknown or ambiguous input.
-- `erpnext context show --company <company-slug>|--site <fqdn> [--as operator|admin]`
-<!-- /planned-change:erpnext-session-context -->
 - `erpnext meta show <doctype>`
 - `erpnext resolve party <query>`
 - `erpnext resolve item <query>`
@@ -132,15 +122,10 @@ non-zero exit.
   ERP credentials or tenant connection. Installation and update ownership remains
   with the host tooling lifecycle rather than individual business invocations.
 <!-- /planned-change:erpnext-cli-availability -->
-<!-- planned-change:erpnext-session-context -->
 - Operating context is selected explicitly or read from the CLI's persisted
   selection. This resolution does not consume TeleClaude's resolved caller
   lineage or organizational membership, and it supplies no automatic
   lineage-to-ERP mapping guarantee.
-<!-- change:erpnext-session-context -->
-- When a command runs inside a platform session, its result attributes the executing
-  session; the command never depends on that attribution being available.
-<!-- /planned-change:erpnext-session-context -->
 - Routine work runs as the site operator; an operator failure never falls back to
   administrator authority. Administrative work uses an explicitly selected, dedicated
   company-scoped agent-admin identity. The bootstrap `Administrator` identity and its
