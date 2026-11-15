@@ -25,21 +25,21 @@ company's Claude organization.
 
 Create the company's site through the deployment that hosts ERPNext
 (`apps/procedure/erpnext/create-site`), then onboard the company on it
-(`erp/procedure/company-onboarding`). Declare the applications the company needs beyond
-ERPNext itself, such as staff administration, in the same site declaration.
+(`erp/procedure/company-onboarding`). Where another system carries the company's
+statutory books, choose ERPNext's standard chart of accounts for the company. Declare the
+applications the company needs beyond ERPNext itself, such as staff administration, in the
+same site declaration.
 
 Read the chart of accounts the setup created before anything else depends on it: have
 ERPNext accept its customer and supplier accounts as the company's defaults, and read how
-it classifies customers, suppliers and stock. A chart that fails either is decided with
-the company's accountant before the first booking
-(`local/projects/erpnext-ops/policy/chart-before-booking`).
+it classifies customers, suppliers and stock. A chart that fails either is replaced before
+the first booking (`local/projects/erpnext-ops/policy/chart-before-booking`).
 
 ### 2. State how the company works and what is ready
 
 Write the company's own statement: what it does, how its people work, which parts of the
 business are ready in ERPNext and which are not yet. Store it in the site setting that
-ERPNext hands to every connecting agent, and have the owner store the same text in the
-instructions of the company's Claude organization.
+ERPNext hands to every connecting agent.
 
 Create the company's getting-started project in ERPNext with one open task per step still
 ahead, in order (`erp/procedure/orient-a-person`).
@@ -108,8 +108,17 @@ under their own login and read it back as another.
 - **The owner has no GitHub account and will not make one.** The owner uploads the
   released plugin file once for the organization and again for each release, or each
   person adds this public repository as a marketplace from their own plugin settings.
-- **The owner's Claude does not mention the company.** The statement did not reach it:
-  confirm it is stored in the organization's instructions as well as on the site.
+- **The owner's Claude does not mention the company.** The statement did not reach it
+  through the connector: have the owner store the same text in the instructions of the
+  company's Claude organization.
+- **The chart fails the check after the company exists.** While the company has no ledger
+  entries, replace the chart on the site's host in one transaction, after a site backup
+  and a rehearsal on the sandbox with a throwaway company. Remove every record that points
+  at the company's accounts and then the accounts, set the company's chart and save the
+  company so that ERPNext creates the new accounts and tax templates, then have ERPNext
+  set the company's default accounts. Afterwards read the company's defaults and the
+  classification of customers, suppliers and stock, and bring the company's statement and
+  its getting-started tasks in line.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Rename the login to the right address and send a new

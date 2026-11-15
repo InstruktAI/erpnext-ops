@@ -1,5 +1,5 @@
 ---
-description: Nothing is booked for a new company until the chart of accounts its setup created has been checked and, where it fails, decided with the company's accountant.
+description: Nothing is booked for a new company until the chart of accounts its setup created has been checked and, where it fails, replaced.
 ---
 
 # Chart Before Booking — Policy
@@ -9,8 +9,10 @@ description: Nothing is booked for a new company until the chart of accounts its
 - **A new company's chart of accounts is checked before its first booking.** ERPNext
   accepts the chart's customer and supplier accounts as the company's defaults, and the
   chart classifies customers and stock as assets and suppliers as liabilities.
-- **A chart that fails the check is decided with the company's accountant**: another chart,
-  or a corrected one.
+- **A chart that fails the check is replaced before the first booking.** Where another
+  system carries the company's statutory books, the replacement is ERPNext's standard
+  chart. Where ERPNext carries them, the replacement is decided with the company's
+  accountant: another chart, or a corrected one.
 - **Until the chart is settled, nothing that posts to the books is submitted** for that
   company: no invoice, payment or stock movement. The company's statement of what is ready
   says so.
@@ -27,6 +29,12 @@ The check is made on the site because a shipped chart is not guaranteed to pass 
 site running Frappe 16.56 with ERPNext 16.55, the chart shipped for one country placed its
 customer accounts under a liability root and its stock accounts under an expense root, and
 ERPNext refused the chart's customer account as the company's default receivable account.
+
+Where another system carries the statutory books, ERPNext's books give the company its own
+view of its business, and the statutory classification stays in that other system with the
+accountant. The standard chart then needs no accounting decision: on the site above,
+ERPNext set a company's customer, supplier, stock, income and expense defaults from it,
+each under the root the check expects.
 
 ## Scope
 
