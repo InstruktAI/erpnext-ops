@@ -21,8 +21,8 @@ that knowledge has one owner and one place to change when the vendor changes.
 
 ## Implications
 
-- What an agent must know to operate ERPNext is published from this project as the `erp`
-  domain.
+- What an agent must know to operate ERPNext is published from this project as the
+  `erpnext` domain.
 - A need the platform cannot meet is raised as a platform capability in general terms,
   never met by teaching the platform about ERPNext.
 - This project operates sites that already exist; who provisions them is allocated in
