@@ -53,3 +53,8 @@ make test      # build the plugin and validate it
 ```
 
 A release is cut by running the `release` workflow with a version such as `v1.2.3`.
+
+## License
+
+GPL-3.0, see `LICENSE`. The image recipe in `image/` derives from frappe/frappe_docker,
+which is MIT licensed; its notice is in `image/LICENSE.frappe_docker`.

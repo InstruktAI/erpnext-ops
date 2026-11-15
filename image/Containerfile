@@ -2,7 +2,7 @@
 # The ERPNext image our sites run, with the HR application added.
 #
 # This is the layered recipe of frappe/frappe_docker at the commit the image
-# workflow checks out, with one change: the build and base images take their own
+# workflow checks out (MIT License, see LICENSE.frappe_docker), with one change: the build and base images take their own
 # tags. Upstream publishes no build image for the Frappe version the sites run,
 # and the sites' databases are already migrated to that version.
 
