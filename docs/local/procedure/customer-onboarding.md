@@ -8,7 +8,7 @@ activation_trigger: Use when a new company is to be onboarded, when an onboarded
 ## Goal
 
 A company's people work in the company's own ERPNext by talking to their own Claude. Each
-person acts under their own ERPNext login, the whole organization holds the `erp` plugin
+person acts under their own ERPNext login, the whole organization holds the `erpnext` plugin
 and receives its updates without anyone acting, and the provider holds no seat in the
 company's Claude organization.
 
@@ -25,7 +25,7 @@ company's Claude organization.
 
 Create the company's site through the deployment that hosts ERPNext
 (`apps/procedure/erpnext/create-site`), then onboard the company on it
-(`erp/procedure/company-onboarding`). Where another system carries the company's
+(`erpnext/procedure/company-onboarding`). Where another system carries the company's
 statutory books, choose ERPNext's standard chart of accounts for the company. Declare the
 applications the company needs beyond ERPNext itself, such as staff administration, in the
 same site declaration.
@@ -42,21 +42,21 @@ business are ready in ERPNext and which are not yet. Store it in the site settin
 ERPNext hands to every connecting agent.
 
 Create the company's getting-started project in ERPNext with one open task per step still
-ahead, in order (`erp/procedure/orient-a-person`).
+ahead, in order (`erpnext/procedure/orient-a-person`).
 
 ### 3. Give the people their logins
 
-Onboard the owner first, then the other people (`erp/procedure/person-onboarding`). Each
+Onboard the owner first, then the other people (`erpnext/procedure/person-onboarding`). Each
 receives ERPNext's own link to set a password. Set the lifetime of that link on the site
 long enough for a person who reads mail once a day.
 
 Where the company's mandate gives its workers that reach, apply worker access on the site
-and to each worker's login (`erp/spec/worker-access`).
+and to each worker's login (`erpnext/spec/worker-access`).
 
 ### 4. Give the organization the plugin
 
 Each company has its own small private catalog repository in the provider's GitHub
-organization, named for the company. It holds the catalog file that lists the `erp` plugin from this repository at a released
+organization, named for the company. It holds the catalog file that lists the `erpnext` plugin from this repository at a released
 version, and the updater that moves that version to the latest release.
 
 Create the company's catalog by copying an existing one. Have the owner confirm their
@@ -129,9 +129,9 @@ under their own login and read it back as another.
 - docs/local/policy/model-floor.md
 - docs/local/policy/chart-before-booking.md
 - docs/local/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md
-- ~/.teleclaude/docs/erp/procedure/company-onboarding.md
-- ~/.teleclaude/docs/erp/procedure/person-onboarding.md
-- ~/.teleclaude/docs/erp/spec/worker-access.md
-- ~/.teleclaude/docs/erp/procedure/orient-a-person.md
+- ~/.teleclaude/docs/erpnext/procedure/company-onboarding.md
+- ~/.teleclaude/docs/erpnext/procedure/person-onboarding.md
+- ~/.teleclaude/docs/erpnext/spec/worker-access.md
+- ~/.teleclaude/docs/erpnext/procedure/orient-a-person.md
 - https://claude.com/docs/plugins/org-sync
 - https://claude.com/docs/plugins/admin

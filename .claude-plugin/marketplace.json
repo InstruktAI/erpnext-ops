@@ -1,13 +1,13 @@
 {
-  "name": "instruktai-erp",
+  "name": "instruktai-erpnext",
   "description": "ERP operating knowledge for agents that work in a company's ERPNext",
   "owner": {
     "name": "InstruktAI"
   },
   "plugins": [
     {
-      "name": "erp",
-      "source": "./plugins/erp",
+      "name": "erpnext",
+      "source": "./plugins/erpnext",
       "description": "Operate a company's ERPNext through the ERPNext connector"
     }
   ]

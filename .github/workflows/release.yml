@@ -1,6 +1,6 @@
 name: release
 
-# Releases the erp plugin: builds it from the documents on main at the given
+# Releases the erpnext plugin: builds it from the documents on main at the given
 # version, commits the built plugin under plugins/ on main, tags that commit
 # vX.Y.Z and publishes a GitHub Release with the plugin as a zip. What the
 # release does lives in tools/tasks.py.

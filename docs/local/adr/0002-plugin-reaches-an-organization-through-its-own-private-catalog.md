@@ -32,7 +32,7 @@ These rules are Anthropic's, as documented on 2026-11-14 in the pages under See 
 This repository stays public and is the plugin's source.
 
 Each served company has its own private catalog repository in the provider's GitHub
-organization. It holds a catalog file that lists the `erp` plugin from this repository at
+organization. It holds a catalog file that lists the `erpnext` plugin from this repository at
 a released version, and an updater that moves that version to the latest release.
 
 The company's owner is invited to their catalog with administrator rights and connects it

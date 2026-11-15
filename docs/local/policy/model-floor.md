@@ -20,7 +20,7 @@ description: Work that writes to a company's ERPNext is done by Sonnet 5.5 or a 
 ## Rationale
 
 The ERP doctrine is prose a model follows; no tool enforces its sequence of reading,
-drafting, previewing and reading back (`erp/policy/operating-disciplines`). Its protection
+drafting, previewing and reading back (`erpnext/policy/operating-disciplines`). Its protection
 is therefore exactly as strong as the model's adherence to instructions it has loaded. A
 model that departs from loaded instructions under ordinary requests posts wrong bookings
 that look plausible, and more instructions do not correct a model that does not follow the
@@ -31,7 +31,7 @@ agent's own decision, so a weak first model cannot be relied on to hand the work
 
 ## Scope
 
-Every agent that works in a company's ERPNext through the `erp` domain, wherever it runs.
+Every agent that works in a company's ERPNext through the `erpnext` domain, wherever it runs.
 
 ## Enforcement
 

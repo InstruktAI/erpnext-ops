@@ -19,7 +19,7 @@ from github.Repository import Repository
 
 from tools.build_skill import ROOT, BuildError, build
 
-PLUGIN = "erp"
+PLUGIN = "erpnext"
 CLAUDE = ROOT / "node_modules" / ".bin" / "claude"
 VERSION = re.compile(r"^v\d+\.\d+\.\d+$")
 

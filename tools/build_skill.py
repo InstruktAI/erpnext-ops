@@ -1,6 +1,6 @@
-"""Build the `erp` Claude plugin from the published ERP documents.
+"""Build the `erpnext` Claude plugin from the published ERPNext documents.
 
-The documents under docs/global/erp are the only source of doctrine. This script renders
+The documents under docs/global/erpnext are the only source of doctrine. This script renders
 them into one skill: the surface spec, principles and policy inline, procedures and
 concepts as reference files that load on demand. skill/manifest.json says which documents
 go where; skill/preamble.md is the skill's own packaging text.
@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCS = ROOT / "docs" / "global" / "erp"
+DOCS = ROOT / "docs" / "global" / "erpnext"
 SKILL = ROOT / "skill"
 
 MAX_SKILL_LINES = 500
@@ -92,7 +92,7 @@ def read_snippet(path: Path) -> tuple[dict[str, str], str]:
 
 
 def snippet_id(path: Path) -> str:
-    return "erp/" + path.relative_to(DOCS).with_suffix("").as_posix()
+    return "erpnext/" + path.relative_to(DOCS).with_suffix("").as_posix()
 
 
 def reference_name(sid: str) -> str:
@@ -123,7 +123,7 @@ def rewrite_links(body: str, published: set[str], inline: set[str]) -> str:
                 continue
         lines.append(line)
     text = "\n".join(lines) + "\n"
-    return re.sub(r"`erp/procedure/([a-z0-9-]+)`", r"`\1`", text)
+    return re.sub(r"`erpnext/procedure/([a-z0-9-]+)`", r"`\1`", text)
 
 
 def build(version: str, out: Path) -> None:
@@ -213,7 +213,7 @@ def build(version: str, out: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--version", default="0.0.0")
-    parser.add_argument("--out", type=Path, default=ROOT / "dist" / "erp")
+    parser.add_argument("--out", type=Path, default=ROOT / "dist" / "erpnext")
     args = parser.parse_args()
     try:
         build(args.version, args.out.resolve())

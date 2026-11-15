@@ -3,7 +3,7 @@ kind: project
 company: instrukt-ai
 business:
   publishes:
-  - slug: erp
+  - slug: erpnext
     trigger: Operating ERPNext tenant sites, business records, or 
       order-to-invoice workflows
 project_slug: erpnext-ops
@@ -15,4 +15,4 @@ agents:
   enabled: false
 schema_version: 26
 project_name: erpnext-ops
-description: Holds the ERP domain knowledge and the build of its Claude plugin
+description: Holds the ERPNext domain knowledge and the build of its Claude plugin

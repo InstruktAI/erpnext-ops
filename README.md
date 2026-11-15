@@ -11,11 +11,11 @@ operating knowledge in this repository.
 
 | Path | What it is |
 | --- | --- |
-| `docs/global/erp/` | The operating knowledge: principles, rules, and procedures for the things a business does. Invoices and payments, credit notes and refunds, overdue debt, period close, work hours, material taken for a job, absence, getting a person started. |
+| `docs/global/erpnext/` | The operating knowledge: principles, rules, and procedures for the things a business does. Invoices and payments, credit notes and refunds, overdue debt, period close, work hours, material taken for a job, absence, getting a person started. |
 | `docs/local/` | How this project itself works: how a new company is onboarded, and which models may do this work. |
 | `skill/` | What goes into the plugin and how: which documents load at once and which on demand. |
 | `tools/` | The builder that turns the documents into a Claude plugin, and the release tasks. |
-| `plugins/erp/` | The released plugin, built by CI. Not edited by hand. |
+| `plugins/erpnext/` | The released plugin, built by CI. Not edited by hand. |
 | `image/` | The ERPNext image the sites run, with the staff-administration application added. |
 
 ## How it fits together
@@ -35,7 +35,7 @@ operating knowledge in this repository.
 ## Use the plugin
 
 In Claude, open Customize, then Plugins, then Add, then Add marketplace, and enter
-`InstruktAI/erpnext-ops`. Install the `erp` plugin that appears.
+`InstruktAI/erpnext-ops`. Install the `erpnext` plugin that appears.
 
 The plugin needs a connector to an ERPNext site that serves the MCP server: add the site's
 `/api/v2/mcp` address as a custom connector and sign in.

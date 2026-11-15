@@ -26,7 +26,7 @@ that knowledge has one owner and one place to change when the vendor changes.
 - A need the platform cannot meet is raised as a platform capability in general terms,
   never met by teaching the platform about ERPNext.
 - This project operates sites that already exist; who provisions them is allocated in
-  `erp/concept/operation-model`.
+  `erpnext/concept/operation-model`.
 
 ## Tensions
 
