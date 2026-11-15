@@ -29,7 +29,7 @@ what exists instead of writing again.
 ### 3. Establish the target and preview
 
 Read the document type's live metadata and compose any write from fields it has
-(`erp/policy/operating-disciplines`). What precedes the write depends on the operation:
+(`erpnext/policy/operating-disciplines`). What precedes the write depends on the operation:
 
 - **Creating a document that is submitted later.** Create it as a draft and read the stored
   draft back. Require its party, company, dates, lines, amounts, taxes and links to match
@@ -52,7 +52,7 @@ draft or stop and resolve the mismatch before going on.
 
 Write, submit, cancel or delete once. A change and a submission carry the version reviewed
 in step 3, and a cancellation follows an immediate read of the record
-(`erp/policy/operating-disciplines`). Never repeat a write to find out what happened.
+(`erpnext/policy/operating-disciplines`). Never repeat a write to find out what happened.
 
 ### 5. Classify the result
 

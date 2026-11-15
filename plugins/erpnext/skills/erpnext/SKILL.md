@@ -1,9 +1,9 @@
 ---
-name: erp
+name: erpnext
 description: "Work in the company's ERPNext: customers, suppliers, items, leads, quotations, orders, deliveries, stock, sales and purchase invoices, payments, deposits, credit notes, refunds, overdue debt, period close, projects, tasks, hours worked, material taken for a job, notes and follow-ups. Use for any request to record, change, correct, check or answer a question about the company's business or bookkeeping; when the user reports something a customer or supplier said, ordered, paid or received, or reports hours they worked or material they took; and when the user asks what you can do for them or their business, even if ERPNext is not named."
 ---
 
-# ERP
+# ERPNext
 
 ## How you work here
 
@@ -349,7 +349,7 @@ without requiring agents to reconstruct the business from conversation alone.
 ##### Native operations
 
 - **Use the site's MCP server.** Agents operate ERPNext through the MCP server the site
-  serves, as the user it authenticates. `erp/spec/agent-surface` names the server operation
+  serves, as the user it authenticates. `erpnext/spec/agent-surface` names the server operation
   that realizes each operation this doctrine speaks of.
 - **Preview before posting.** A document that posts to the books or to stock is created as a
   draft, read back, and its ledger and stock effects previewed before it is submitted. Submit only when

@@ -25,7 +25,7 @@ appropriate waiting or owner involvement under the relationship's mandate.
    condition, perform outreach within the delegated class, or prepare an owner
    handoff. Use `confirm-business-intent` when the remaining business
    decision is the human's. Apply the existing freeform/templated communication
-   boundary from `erp/principle/determinate-autonomy`.
+   boundary from `erpnext/principle/determinate-autonomy`.
 4. For outreach, establish the intended recipient and a configured delivery
    surface appropriate to their preferences. Load that surface's contract.
    Request the specific missing information respectfully using the relevant

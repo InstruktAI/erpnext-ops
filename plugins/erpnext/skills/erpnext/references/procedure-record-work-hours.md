@@ -39,7 +39,7 @@ name. Say which time was used.
 ### 4. Establish that it is not recorded yet
 
 Search the person's hours for that day and job (`resume-from-native-state`).
-Where the site refuses an overlapping stretch (`erp/spec/worker-access`), the hours are
+Where the site refuses an overlapping stretch (`erpnext/spec/worker-access`), the hours are
 already there or the times need the person's correction.
 
 ### 5. Record and submit
@@ -67,7 +67,7 @@ job on a day) is answered from the submitted records and names any drafts separa
 
 - ERPNext refuses the record for lack of permission: the person's login has no worker
   access or no staff record; hand it to the company's administrator
-  (`erp/spec/worker-access`).
+  (`erpnext/spec/worker-access`).
 - ERPNext refuses an overlap: read the existing stretch, tell the person what is already
   recorded, and record only what is missing.
 

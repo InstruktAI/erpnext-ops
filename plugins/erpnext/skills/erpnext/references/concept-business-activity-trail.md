@@ -4,7 +4,7 @@
 
 The business activity trail is the queryable memory layer over human input, agent actions,
 follow-ups, and linked ERP documents. Agents read and write it as native records
-(`erp/spec/agent-surface`). It lets agents answer questions such as what happened last week,
+(`erpnext/spec/agent-surface`). It lets agents answer questions such as what happened last week,
 what is due tomorrow, what was said about a customer, or why a supplier commitment exists.
 
 The trail consists of ERPNext and Frappe primitives:

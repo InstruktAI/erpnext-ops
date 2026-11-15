@@ -18,7 +18,7 @@ event twice or skips a step that already succeeded.
 
 ### 1. Resolve by the strongest identity the event carries
 
-Search native state before every create (`erp/policy/operating-disciplines`). A
+Search native state before every create (`erpnext/policy/operating-disciplines`). A
 document resolves by the
 outside reference of its event, stored on it when it was created: the
 customer's order number, the supplier's invoice number, the bank reference. A

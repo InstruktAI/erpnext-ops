@@ -46,7 +46,7 @@ are used where they express the information. A missing structured field is not
 silently assumed to exist, and prose references do not claim referential integrity.
 
 Native work records, activity records, and attached files are maintained through
-the operations `erp/spec/agent-surface` names. The site's live metadata and the
+the operations `erpnext/spec/agent-surface` names. The site's live metadata and the
 connected user's roles determine what is available. This work
 model supplies no additional command, custom DocType, automatic session-stamping
 hook, or unified event-log service.

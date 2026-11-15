@@ -58,7 +58,7 @@ and the ledger preview show the expected effect.
 - The person corrects their own draft; a submitted movement is corrected by a person who
   administers stock.
 - ERPNext refuses for lack of permission: hand it to the company's administrator
-  (`erp/spec/worker-access`).
+  (`erpnext/spec/worker-access`).
 
 ## See Also
 
