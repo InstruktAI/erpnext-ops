@@ -41,7 +41,7 @@ Write the company's own statement: what it does, how its people work, which part
 business are ready in ERPNext and which are not yet. Store it in the site setting that
 ERPNext hands to every connecting agent. End the statement with where it is kept, the
 agent instructions field of the site's system settings, and with who changes it: the
-company's owner and organizer, through their own Claude
+provider, on a wish that a person's own Claude records as a to-do assigned to the provider
 (`general/principle/priming`).
 
 Create the company's getting-started project in ERPNext with one open task per step still
