@@ -53,9 +53,9 @@ Onboard the owner first, then the other people (`erpnext/procedure/person-onboar
 receives ERPNext's own link to set a password. Set the lifetime of that link on the site
 long enough for a person who reads mail once a day.
 
-Apply owner access on the site and give the owner and the organizer its roles
-(`erpnext/spec/owner-access`). The administrator role stays with the provider's own login
-and the administrative agent login (`erpnext/policy/operating-disciplines`).
+Give the owner and the organizer owner access (`erpnext/spec/owner-access`). The
+administrator role stays with the provider's own login and the administrative agent login
+(`erpnext/principle/business-and-system`).
 
 Where the company's mandate gives its workers that reach, apply worker access on the site
 and to each worker's login (`erpnext/spec/worker-access`).
