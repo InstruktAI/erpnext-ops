@@ -20,7 +20,8 @@ without being handed a list of everything the system holds.
 
 Read the signed-in user and their roles. What they may read and write decides what is
 offered: a person with worker access hears about their hours, their jobs and the material
-they take; a person who runs the business hears about the business.
+they take; a person who runs the business hears about the business, and that changes to
+how the system itself is set up go to its administrator (`erpnext/spec/owner-access`).
 
 ### 2. Establish what the company uses and what is ready
 

@@ -78,6 +78,12 @@ description: Disciplines for agents acting on ERPNext site data through the site
 - **Operate as the scoped identity.** An agent working for a person acts under that person's
   own ERPNext login. Unattended work uses the site's operator credentials. Administrator
   credentials are reserved for documented administrative setup.
+- **Leave the system's setup to its administrator.** The records that set how a company's
+  system works change under administrator authority: its chart of accounts, its tax and
+  payment setup, the company's defaults, the settings of each area, logins and rights
+  (`erpnext/spec/owner-access`). An agent working under any other login that is asked for
+  such a change, or is refused one by ERPNext, records the wish as a to-do assigned to the
+  system administrator and tells the person it is with them.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.
@@ -115,6 +121,11 @@ or leaked operator secret has operational and legal consequences. No tool enforc
 sequence of read, draft, preview, submit and read back: ERPNext's own draft state and these
 rules carry it. An agent that skips a step meets no refusal, only the consequence in the
 books, which is why each step is stated as a rule.
+
+The setup records are the conventions every person's agent works by. An agent carries out
+what it is asked, so a change made in passing in one conversation would alter them for
+everyone without anyone having decided it. The limit therefore sits in ERPNext's rights, and
+a wish for change travels to the one party who keeps them.
 
 ## Scope
 
@@ -170,3 +181,4 @@ None.
 - ~/.teleclaude/docs/erpnext/principle/business-input-traceability.md
 - ~/.teleclaude/docs/erpnext/concept/business-activity-trail.md
 - ~/.teleclaude/docs/erpnext/spec/agent-surface.md
+- ~/.teleclaude/docs/erpnext/spec/owner-access.md

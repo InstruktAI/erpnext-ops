@@ -9,8 +9,9 @@ description: What the login of a company's owner or organizer reaches on the com
 The reach of the people who run a company in its ERPNext: its owner and its organizer.
 They carry the daily business in full and organize it as they see fit. The records that
 set how the system itself works are written by the system administrator, who keeps the
-site, and read by everyone else. The reach is produced by ERPNext roles and rights on the
-person's own login, so ERPNext enforces it whatever an agent attempts.
+site, and read by everyone else (`erpnext/policy/operating-disciplines`). The reach is
+produced by ERPNext roles and rights on the person's own login, so ERPNext enforces it
+whatever an agent attempts.
 
 ## Canonical fields
 
@@ -28,9 +29,6 @@ The reach is built from two things on the site:
   rights to write, create, delete and import belong to `System Manager` alone, and every
   other role keeps reading it.
 
-A wish to change one of these records goes to the system administrator as a to-do assigned
-to them in the same system, with the wording wanted.
-
 ## Known caveats
 
 Observed on Frappe 16.56 with ERPNext 16.55 and its HR application 16.53. On a site with
@@ -47,5 +45,6 @@ other versions each is re-established before it is relied on.
 
 ## See Also
 
+- ~/.teleclaude/docs/erpnext/policy/operating-disciplines.md
 - ~/.teleclaude/docs/erpnext/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md

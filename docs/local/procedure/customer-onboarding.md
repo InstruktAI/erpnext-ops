@@ -55,8 +55,7 @@ long enough for a person who reads mail once a day.
 
 Apply owner access on the site and give the owner and the organizer its roles
 (`erpnext/spec/owner-access`). The administrator role stays with the provider's own login
-and the administrative agent login, so that the conventions every person's agent works by
-change in one place (`general/principle/trust-and-guardrails`).
+and the administrative agent login (`erpnext/policy/operating-disciplines`).
 
 Where the company's mandate gives its workers that reach, apply worker access on the site
 and to each worker's login (`erpnext/spec/worker-access`).
