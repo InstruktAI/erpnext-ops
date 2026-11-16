@@ -31,6 +31,9 @@ Where the company's own access mandate gives the people who report their work on
 this reach, such a person receives worker access: a staff record linked to their login and
 the two worker roles (`erpnext/spec/worker-access`).
 
+The company's owner and its organizer receive owner access: the business roles without the
+administrator role (`erpnext/spec/owner-access`).
+
 ### 3. Send the login email
 
 Trigger ERPNext's welcome or password-reset email so the person can set credentials and sign
@@ -65,3 +68,5 @@ not send passwords or secrets through chat.
 
 - ~/.teleclaude/docs/erpnext/concept/multi-tenancy.md
 - ~/.teleclaude/docs/erpnext/procedure/company-onboarding.md
+- ~/.teleclaude/docs/erpnext/spec/worker-access.md
+- ~/.teleclaude/docs/erpnext/spec/owner-access.md

@@ -53,6 +53,11 @@ Onboard the owner first, then the other people (`erpnext/procedure/person-onboar
 receives ERPNext's own link to set a password. Set the lifetime of that link on the site
 long enough for a person who reads mail once a day.
 
+Apply owner access on the site and give the owner and the organizer its roles
+(`erpnext/spec/owner-access`). The administrator role stays with the provider's own login
+and the administrative agent login, so that the conventions every person's agent works by
+change in one place (`general/principle/trust-and-guardrails`).
+
 Where the company's mandate gives its workers that reach, apply worker access on the site
 and to each worker's login (`erpnext/spec/worker-access`).
 
@@ -135,6 +140,7 @@ under their own login and read it back as another.
 - ~/.teleclaude/docs/erpnext/procedure/company-onboarding.md
 - ~/.teleclaude/docs/erpnext/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md
+- ~/.teleclaude/docs/erpnext/spec/owner-access.md
 - ~/.teleclaude/docs/erpnext/procedure/orient-a-person.md
 - https://claude.com/docs/plugins/org-sync
 - https://claude.com/docs/plugins/admin

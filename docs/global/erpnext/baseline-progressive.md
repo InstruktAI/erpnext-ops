@@ -4,6 +4,7 @@
 @~/.teleclaude/docs/erpnext/concept/composable-business-procedures.md
 @~/.teleclaude/docs/erpnext/spec/agent-surface.md
 @~/.teleclaude/docs/erpnext/spec/worker-access.md
+@~/.teleclaude/docs/erpnext/spec/owner-access.md
 @~/.teleclaude/docs/erpnext/spec/company-layout.md
 @~/.teleclaude/docs/erpnext/spec/business-events.md
 @~/.teleclaude/docs/erpnext/spec/feature/erp-operations/business-event-mapping.md
