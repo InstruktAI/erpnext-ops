@@ -36,7 +36,8 @@ Ask who should be called if something happens to them: the name, the phone numbe
 that person is related. Where the company works on location, also ask whether there is
 anything about their health that their colleagues should be able to tell a medic, such as an
 allergy, a condition or their blood type, and take only what the person wants their
-colleagues to know (`erpnext/spec/worker-access`).
+colleagues to know. Offer to record a few lines about themselves for their colleagues
+(`erpnext/spec/worker-access`).
 
 ### 3. Add the staff record
 
@@ -45,27 +46,28 @@ Create the staff record for the company with what steps 1 and 2 gave, and read i
 ### 4. Create the login from the staff record
 
 Create the person's login from the staff record with ERPNext's own method for it
-(`erpnext/spec/owner-access`). ERPNext sends the person its mail with a link to set a
-password.
+(`erpnext/spec/owner-access`), and read back that the staff record names the login.
 
 ### 5. Confirm
 
-Tell the owner or organizer that the person is added, that the mail with the link is on its
-way to the address given, and what the person can do once signed in: log their hours, the
-material they take and when they are away.
+Tell the owner or organizer that the person is added and what the person can do once signed
+in: log their hours, the material they take and when they are away. Say that ERPNext mails
+the person a link to set a password when it creates a login, that this login cannot see
+whether that mail went out, and that the person confirms receiving it.
 
 ## Outputs
 
 - A staff record for the person, linked to their own login.
-- ERPNext's mail with the link to set a password, sent to the person.
+- The owner or organizer knows the person still has to confirm the mail with the link.
 
 ## Recovery
 
 - **ERPNext refuses to create the login.** The login asking does not hold owner access, or
   a login with that address exists. Read which, and continue from the existing login or
   record the wish for the system administrator (`erpnext/policy/operating-disciplines`).
-- **The mail did not arrive.** The person asks for a new link on the site's sign-in page
-  with their address.
+- **The mail did not arrive.** Where the site lets people sign in with a password, its
+  sign-in page offers a new link for the person's address. Otherwise the wish for a new
+  link goes to the system administrator.
 - **The person leaves the company.** Mark their staff record as left; ERPNext switches
   their login off (`erpnext/spec/owner-access`).
 
@@ -75,3 +77,5 @@ material they take and when they are away.
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md
 - ~/.teleclaude/docs/erpnext/procedure/resume-from-native-state.md
 - ~/.teleclaude/docs/erpnext/policy/operating-disciplines.md
+- https://github.com/frappe/frappe/blob/v16.56.0/frappe/core/doctype/user/user.py
+- https://github.com/frappe/frappe/blob/v16.56.0/frappe/www/login.html
