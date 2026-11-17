@@ -28,8 +28,9 @@ Assign only the roles and permission rules the person needs. When the site hosts
 companies of the business group, scope the user to the intended company's data.
 
 Where the company's own access mandate gives the people who report their work on site
-this reach, such a person receives worker access: a staff record linked to their login and
-the two worker roles (`erpnext/spec/worker-access`).
+this reach, such a person receives worker access. The company's owner or organizer adds the
+person's staff record and creates the login from it; that login holds worker access without
+anything further being assigned (`erpnext/spec/worker-access`).
 
 The company's owner and its organizer receive owner access: the business roles without the
 administrator role (`erpnext/spec/owner-access`).

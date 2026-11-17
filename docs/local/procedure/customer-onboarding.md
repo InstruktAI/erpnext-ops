@@ -116,23 +116,25 @@ where the organization's settings offer the choice
 
 ### 9. Prove the access
 
-Create one test login with owner access and, where the company has workers, two with worker
-access, each with a staff record. Under each login make the attempts below and compare the
+Create one test login with owner access. Where the company has workers, have that login add
+two staff records and create their logins. Under each login make the attempts below and compare the
 outcome with the table. Remove the test logins and everything they created. An outcome that
 differs is corrected and the test repeated before any person of the company starts.
 
 | Login | Attempt | Outcome |
 | --- | --- | --- |
-| Owner | Add a customer, a material, a stock location and a project | Allowed |
+| Owner | Add a customer, a material with a value, a stock location and a project | Allowed |
 | Owner | Change a setting of a business area and add a tax category | Allowed |
 | Owner | Change the company's statement in the system settings | Refused |
-| Owner | Give a login a role | Refused |
+| Owner | Add a staff record and create its login | Allowed |
+| Owner | Give a login a role, or change another person's login | Refused |
 | Worker | Record and submit own hours on a project | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
 | Worker | Change or cancel another worker's hours, or change another worker's draft | Refused |
 | Worker | Submit a material entry | Refused |
 | Worker | Read an invoice, a payment or a ledger entry | Refused |
+| Worker | Read a record about another person, such as their attendance | Refused |
 | Worker | Create a project or a task | Refused |
 
 ### 10. Check with the owner

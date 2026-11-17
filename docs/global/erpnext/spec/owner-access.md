@@ -16,10 +16,14 @@ ERPNext roles on the person's own login, so ERPNext enforces it whatever an agen
 | The owner or organizer | Reach |
 | --- | --- |
 | Runs and configures | Customers, suppliers, materials with their groups and variants, price lists, stock locations, stock movements and counts, projects and tasks, hours, staff records, leave and its approval, departments, job titles, holiday lists, quotations, orders, invoices and payments, notes and to-dos; the company record, the chart of accounts, cost centres, tax and payment setup, and the settings of each business area |
-| Is refused | System-wide settings, among them the company's own statement; roles and rights; custom fields, workflows and print layouts; e-mail accounts and integrations; bulk import |
+| Adds and removes people | Adds a staff record and creates the person's login from it; the person receives ERPNext's mail to set a password and holds worker access (`erpnext/spec/worker-access`). Marks a staff record as left, which switches that person's login off |
+| Is refused | System-wide settings, among them the company's own statement; giving a login a role; changing another person's login; custom fields, workflows and print layouts; e-mail accounts and integrations; bulk import |
 
-The reach is built from one thing on the site: the login holds the user and manager roles
-of each business area and does not hold `System Manager`.
+The reach is built from two things on the site: the login holds the user and manager roles
+of each business area and does not hold `System Manager`; and `HR Manager` may read and
+create the login record type at the first permission level, which is what ERPNext's own
+method for creating a login from a staff record,
+`erpnext.setup.doctype.employee.employee.create_user`, needs.
 
 | The login holds |
 | --- |
@@ -30,9 +34,8 @@ of each business area and does not hold `System Manager`.
 Observed on Frappe 16.56 with ERPNext 16.55 and its HR application 16.53. On a site with
 other versions each is re-established before it is relied on.
 
-- The rights shipped for the login record type give only `System Manager` the right to
-  create one. A login with owner access adds a staff record and asks the system
-  administrator for the person's login.
+- A login created from a staff record holds only the roles ERPNext gives it. A login with
+  owner access is created by the system administrator.
 - Daily work that posts to the books goes through under this reach: a login with it
   submitted and cancelled a stock movement and drafted an invoice with a tax template.
 
