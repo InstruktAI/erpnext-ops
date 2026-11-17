@@ -65,9 +65,10 @@ whether that mail went out, and that the person confirms receiving it.
 - **ERPNext refuses to create the login.** The login asking does not hold owner access, or
   a login with that address exists. Read which, and continue from the existing login or
   record the wish for the system administrator (`erpnext/policy/operating-disciplines`).
-- **The mail did not arrive.** Where the site lets people sign in with a password, its
-  sign-in page offers a new link for the person's address. Otherwise the wish for a new
-  link goes to the system administrator.
+- **The mail did not arrive.** Where the site lets people sign in with a password, tell the
+  person to request a new link for their address on the site's sign-in page. Otherwise
+  record the wish for a new link for the system administrator
+  (`erpnext/policy/operating-disciplines`).
 - **The person leaves the company.** Mark their staff record as left; ERPNext switches
   their login off (`erpnext/spec/owner-access`).
 
