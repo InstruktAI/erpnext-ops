@@ -83,9 +83,11 @@ those roles from the site at that moment; never choose them. The roles ERPNext a
 itself are not given, and ERPNext withholds the staff roles from a login that has no staff
 record.
 
-With those roles the login may do whatever a role on the site allows. Two kinds of refusal
-remain and are expected: what ERPNext grants to its built-in Administrator login alone, and
-what it grants only to the owner of a record, such as another person's reminder.
+With those roles the login may do whatever one of its roles allows. Three kinds of refusal
+remain and are expected: what ERPNext grants to its built-in Administrator login alone, what
+it grants only to the owner of a record, such as another person's reminder, and what it
+grants only to a staff role withheld from this login. An act that no permission rule of the
+site allows to any role is refused to this login as to every other.
 
 The roles are those of the moment they were given, and nothing on the site renews them.
 Whoever installs an application on the site, or adds or enables a role, by whatever path,
@@ -153,7 +155,7 @@ nothing.
 | Owner | Change the company's statement in the system settings | Refused |
 | Owner | Give a login a role, or change another person's login | Refused |
 | Owner | Add a field to a form, a workflow or an integration, or start a bulk import | Refused |
-| Provider | For every kind of record, compare what the roles of the provider's own login allow with what the site's permission rules allow to any role, and list each difference with the kind of record, the action and why | Every difference is one of the two expected kinds of step 5; none is unexplained |
+| Provider | For every kind of record, compare what the roles of the provider's own login allow with what the site's permission rules allow to any role, and list each difference with the kind of record, the action and why | Every difference is one of the expected kinds of step 5; none is unexplained |
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
@@ -205,8 +207,8 @@ under their own login and read it back as another.
 - **The provider's own login is refused something.** Read which permission rule allows the
   act. Where a role the login does not hold allows it, give the login its roles again
   (step 5) and repeat the provider's row of the closing test. Where only the built-in
-  Administrator login or the record's owner is allowed, the refusal is one of the two
-  expected kinds of step 5.
+  Administrator login, the record's owner or a withheld staff role is allowed, or no rule
+  allows the act to any role, the refusal is expected (step 5).
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Rename the login to the right address and send a new
