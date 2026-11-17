@@ -40,9 +40,12 @@ Ask the provider these questions and take the answers as the company's facts.
 
 | Fact | What it leads to |
 | --- | --- |
+| Name, slug, owner, organizer | The site's name and the company on it (step 3); the two logins with owner access (step 5) |
+| Country | The country, currency and formats the site is set up with (step 3) |
 | Has workers | Staff administration is declared for the site; worker access is applied (`erpnext/spec/worker-access`) |
-| Workers' reach | The reach of worker access as that spec states it; a company that wants another reach has it recorded in its facts and applied in place of the spec's table |
-| Works on location | Projects carry a place field; the place is part of a folder's name (`erpnext/policy/documents-convention`) |
+| Workers' reach | The reach worker access states. A company that needs another reach waits until that reach is specified as its own kind of access, with its rights table and the outcomes its acceptance expects |
+| Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`) |
+| Messaging | Recorded as a fact; nothing is set up from it |
 | Document storage, document mapping | Customers and projects carry a link field to their documents folder; the outcome of the document mapping is recorded (`erpnext/policy/documents-convention`) |
 | Legal invoicing in another system | ERPNext's standard chart of accounts; invoices and payments stay closed in the company's statement until how the two systems work together is settled |
 | Legal invoicing in ERPNext | The chart is decided with the company's accountant (`local/projects/erpnext-ops/policy/chart-before-booking`) |
@@ -116,23 +119,26 @@ where the organization's settings offer the choice
 
 ### 9. Prove the access
 
-Create one test login with owner access. Where the company has workers, have that login add
-two staff records and create their logins. Under each login make the attempts below and compare the
-outcome with the table. Remove the test logins and everything they created. An outcome that
-differs is corrected and the test repeated before any person of the company starts.
+Accept the site's access on the site itself (`erpnext/policy/operating-disciplines`). Create
+one test login with owner access. Where the company has workers, have that login add two
+staff records and create their logins. Under each login make the attempts below and compare
+the outcome with the table. Remove the test logins and everything they created. An outcome
+that differs is corrected and the test repeated before any person of the company starts.
 
 | Login | Attempt | Outcome |
 | --- | --- | --- |
 | Owner | Add a customer, a material with a value, a stock location and a project | Allowed |
 | Owner | Change a setting of a business area and add a tax category | Allowed |
-| Owner | Change the company's statement in the system settings | Refused |
 | Owner | Add a staff record and create its login | Allowed |
+| Owner | Change the company's statement in the system settings | Refused |
 | Owner | Give a login a role, or change another person's login | Refused |
-| Worker | Record and submit own hours on a project | Allowed |
+| Owner | Add a field to a form, a workflow or an integration, or start a bulk import | Refused |
+| Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
-| Worker | Change or cancel another worker's hours, or change another worker's draft | Refused |
-| Worker | Submit a material entry | Refused |
+| Worker | Add a calendar entry and record a leave request; another worker reads the leave request | Allowed |
+| Worker | Change, cancel or delete another worker's hours, draft, calendar entry or leave request | Refused |
+| Worker | Submit a material entry, or approve own leave request | Refused |
 | Worker | Read an invoice, a payment or a ledger entry | Refused |
 | Worker | Read a record about another person, such as their attendance | Refused |
 | Worker | Create a project or a task | Refused |

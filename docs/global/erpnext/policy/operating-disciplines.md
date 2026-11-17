@@ -48,6 +48,10 @@ description: Disciplines for agents acting on ERPNext site data through the site
   connects to the site of the company the human's request establishes. Before a write the
   agent establishes which site, user and company it is connected as, so it never relies on a
   company chosen earlier, and never uses a business company to try something out.
+- **A site's own access is accepted on that site.** Whether a company's site holds the
+  access its specifications state is established on that site, before its people start,
+  with test logins and test records that are named as tests and removed afterwards. The
+  acceptance makes no attempt that posts to the books.
 
 ### Documents
 
@@ -133,6 +137,10 @@ books, which is why each step is stated as a rule.
 Where the line between a company's business and its system runs, and why ERPNext holds it,
 is stated in `erpnext/principle/business-and-system`.
 
+The rights of a site exist on that site alone, so that they were applied as specified can
+be shown nowhere else. What the sandbox shows is that the specified rights produce the
+specified reach.
+
 ## Scope
 
 All agent operations against ERPNext sites.
@@ -150,7 +158,8 @@ All agent operations against ERPNext sites.
 - Inferring outreach authority from a learned personality or response pattern is
   a defect.
 - Development, demonstration, or verification work performed against a business company
-  rather than the sandbox company is a defect.
+  rather than the sandbox company is a defect; the acceptance of a site's own access is the
+  one verification made there.
 - A business operation performed outside the site's MCP server is a defect unless the active
   procedure explicitly authorizes another path.
 - Reviewers apply the native-operation rules to the record each write leaves: its read-back
