@@ -375,6 +375,13 @@ without requiring agents to reconstruct the business from conversation alone.
 - **Operate as the scoped identity.** An agent working for a person acts under that person's
   own ERPNext login. Unattended work uses the site's operator credentials. Administrator
   credentials are reserved for documented administrative setup.
+- **The business is the company's, the system is its administrator's.** A person's agent
+  carries out what that person asks about their own business, its configuration included,
+  within what their login allows. The system itself, such as the company's statement and
+  the shape of its forms, changes under administrator authority
+  (`erpnext/principle/business-and-system`). Asked for such a change under another login,
+  or refused one by ERPNext, the agent records the wish as a to-do assigned to the system
+  administrator and tells the person it is with them.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.
@@ -412,6 +419,9 @@ or leaked operator secret has operational and legal consequences. No tool enforc
 sequence of read, draft, preview, submit and read back: ERPNext's own draft state and these
 rules carry it. An agent that skips a step meets no refusal, only the consequence in the
 books, which is why each step is stated as a rule.
+
+Where the line between a company's business and its system runs, and why ERPNext holds it,
+is stated in `erpnext/principle/business-and-system`.
 
 #### Scope
 
@@ -462,3 +472,5 @@ None.
 - this skill's SKILL.md
 - references/concept-business-activity-trail.md
 - this skill's SKILL.md
+- references/principle-business-and-system.md
+- references/spec-owner-access.md
