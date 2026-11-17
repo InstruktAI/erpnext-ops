@@ -30,7 +30,6 @@ Ask the provider these questions and take the answers as the company's facts.
 | What is the company called, who owns it, who organizes its work, and which e-mail address receives each one's mail? | Name, slug, owner, organizer |
 | In which country does it operate? | Country |
 | Does it have people who do its work and report it themselves? | Has workers |
-| Do its workers read everything about people and jobs, or only their own work? | Workers' reach |
 | Does it work on location? | Works on location |
 | Which document storage does it use, and does it already have a structure there? | Document storage, document mapping |
 | Which messaging app do its people use? | Messaging |
@@ -43,8 +42,7 @@ Ask the provider these questions and take the answers as the company's facts.
 | Name, slug, owner, organizer | The site's name and the company on it (step 3); the two logins with owner access (step 5) |
 | Country | The country, currency and formats the site is set up with (step 3) |
 | Has workers | Staff administration is declared for the site; worker access is applied (`erpnext/spec/worker-access`) |
-| Workers' reach | The reach worker access states. A company that needs another reach waits until that reach is specified as its own kind of access, with its rights table and the outcomes its acceptance expects |
-| Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`) |
+| Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`); each new person is asked what their colleagues should be able to tell a medic (`erpnext/procedure/person-onboarding`) |
 | Messaging | Recorded as a fact; nothing is set up from it |
 | Document storage, document mapping | Customers and projects carry a link field to their documents folder; the outcome of the document mapping is recorded (`erpnext/policy/documents-convention`) |
 | Legal invoicing in another system | ERPNext's standard chart of accounts; invoices and payments stay closed in the company's statement until how the two systems work together is settled |
@@ -136,8 +134,8 @@ that differs is corrected and the test repeated before any person of the company
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
-| Worker | Read a colleague's staff record and a material | Shown, without the birth date and without the material's value |
-| Owner | Read the same staff record and material | Shown with both |
+| Worker | Read a colleague's staff record, a material and a leave request | Shown with the birthday, the emergency contact, the health details and the reason; without the bank details and without the material's value |
+| Owner | Read the same staff record and material | Shown with the bank details and the value |
 | Worker | Add a calendar entry and record a leave request; another worker reads the leave request | Allowed |
 | Worker | Change, cancel or delete another worker's hours, draft, calendar entry or leave request | Refused |
 | Worker | Submit a material entry, or approve own leave request | Refused |

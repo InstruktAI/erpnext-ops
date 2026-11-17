@@ -43,8 +43,7 @@ Search the person's leave requests and calendar entries for an overlapping perio
 Record the leave request and leave it open: a person who approves leave decides it. Record
 a calendar entry as public, covering the whole period.
 
-On a leave request, leave the reason empty unless the person asks for it to be recorded:
-colleagues read it (`erpnext/spec/worker-access`).
+Record the reason as the person gives it; colleagues read it (`erpnext/spec/worker-access`).
 
 ### 5. Confirm
 

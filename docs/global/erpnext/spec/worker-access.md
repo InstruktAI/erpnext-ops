@@ -7,15 +7,27 @@ description: What a worker's own login reaches on a company's ERPNext site — r
 ## What it is
 
 The reach of a person who does the company's work on site and reports it themselves: their
-hours, the material they take, when they are away. A worker reads what concerns people and
-jobs and writes only their own entries. The reach is produced by ERPNext roles on the
+hours, the material they take, when they are away. People who work together are shown what
+working together takes:
+
+- **To do the work:** who their colleagues are and how to reach them, the jobs, the
+  customers and where they are, who is on site, the hours, the material taken, and when
+  someone is away and why.
+- **To help each other on site:** each colleague's emergency contact, blood group and
+  health details.
+- **To be a team:** each colleague's birthday and short biography.
+
+What serves none of these is not shown to them. A person's pay, bank details, identity
+documents, home address and contract are between that person and those who run the
+business. The business's prices, costs, margins and rates are for those who run it. A
+worker writes only their own entries. The reach is produced by ERPNext roles on the
 worker's own login, so ERPNext enforces it whatever an agent attempts.
 
 ## Canonical fields
 
 | The worker | Reach |
 | --- | --- |
-| Reads | Staff records, everybody's hours, projects, tasks, customers with their addresses and contacts, suppliers, items, stock levels, material entries, leave requests, public calendar entries; each without its money, and staff records without the person's private details |
+| Reads | Staff records, everybody's hours, projects, tasks, customers with their addresses and contacts, suppliers, items, stock levels, material entries, leave requests, public calendar entries with their reasons; each without its money, and staff records without what is between the person and those who run the business |
 | Writes, own entries only | Hours: record, submit, cancel, amend, delete a draft. Material entries: record, change and delete as drafts. Leave requests: record and change while open. Calendar entries. Notes on the records they can read |
 | Is refused | Invoices, payments and the ledger; creating or changing projects and tasks; submitting a material entry; approving a leave request; changing or deleting another person's entry; reading or recording the records about one person that staff administration and payroll keep, such as attendance, expense claims and salary slips |
 
@@ -54,12 +66,12 @@ reads: every currency field; every number or percentage field whose name names a
 amount, a price, a cost, a value, a margin, billing, credit, a salary, a payment, a budget, a
 discount or a commission, other than an exchange or conversion rate; a line table that holds
 such a field, as a whole, or its fields where the table belongs to that record type alone;
-the private details of a staff record; and the gender of a customer, a supplier or a contact.
-On the observed versions that gives:
+and, on a staff record, what is between the person and those who run the business. On the
+observed versions that gives:
 
 | Record type | Fields at that level |
 | --- | --- |
-| Staff record (Employee) | `gender`, `date_of_birth`, `date_of_joining`, `create_user_permission`, `create_user_automatically`, `employee_number`, `personal_email`, `prefered_contact_email`, `prefered_email`, `unsubscribed`, `current_address`, `current_accommodation_type`, `permanent_address`, `permanent_accommodation_type`, `person_to_be_contacted`, `emergency_phone_number`, `relation`, `attendance_device_id`, `ctc`, `salary_currency`, `salary_mode`, `bank_name`, `bank_ac_no`, `iban`, `marital_status`, `family_background`, `blood_group`, `health_details`, `passport_number`, `valid_upto`, `date_of_issue`, `place_of_issue`, `bio`, `education`, `external_work_history`, `internal_work_history`, `scheduled_confirmation_date`, `final_confirmation_date`, `contract_end_date`, `notice_number_of_days`, `date_of_retirement`, `resignation_letter_date`, `relieving_date`, `held_on`, `new_workplace`, `leave_encashed`, `encashment_date`, `reason_for_leaving`, `feedback`, `employee_advance_account`, `employment_type`, `expense_approver`, `grade`, `health_insurance_no`, `health_insurance_provider`, `job_applicant`, `job_offer`, `leave_approver`, `payroll_cost_center`, `shift_request_approver` |
+| Staff record (Employee) | `create_user_permission`, `create_user_automatically`, `personal_email`, `prefered_contact_email`, `prefered_email`, `unsubscribed`, `current_address`, `current_accommodation_type`, `permanent_address`, `permanent_accommodation_type`, `attendance_device_id`, `ctc`, `salary_currency`, `salary_mode`, `bank_name`, `bank_ac_no`, `iban`, `marital_status`, `family_background`, `passport_number`, `valid_upto`, `date_of_issue`, `place_of_issue`, `education`, `external_work_history`, `internal_work_history`, `scheduled_confirmation_date`, `final_confirmation_date`, `contract_end_date`, `notice_number_of_days`, `date_of_retirement`, `resignation_letter_date`, `relieving_date`, `held_on`, `new_workplace`, `leave_encashed`, `encashment_date`, `reason_for_leaving`, `feedback`, `employee_advance_account`, `employment_type`, `grade`, `health_insurance_no`, `health_insurance_provider`, `job_applicant`, `job_offer`, `payroll_cost_center` |
 | Material (Item) | `standard_rate`, `over_billing_allowance`, `taxes`, `valuation_rate`, `last_purchase_rate`, `max_discount` |
 | Stock level (Bin) | `valuation_rate`, `stock_value` |
 | Project | `estimated_costing`, `total_costing_amount`, `total_purchase_cost`, `total_sales_amount`, `total_billable_amount`, `total_billed_amount`, `total_consumed_material_cost`, `gross_margin`, `per_gross_margin`, `total_expense_claim` |
@@ -69,9 +81,7 @@ On the observed versions that gives:
 | Hours (Timesheet) | `total_billable_amount`, `total_costing_amount`, `base_total_billable_amount`, `base_total_costing_amount`, `total_billed_hours`, `total_billed_amount`, `base_total_billed_amount`, `per_billed` |
 | Material entry, each line (Stock Entry Detail) | `basic_rate`, `customer_provided_item_cost`, `additional_cost`, `landed_cost_voucher_amount`, `valuation_rate`, `basic_amount`, `amount` |
 | Material entry (Stock Entry) | `total_outgoing_value`, `total_incoming_value`, `value_difference`, `additional_costs`, `total_additional_costs`, `total_amount` |
-| Customer | `gender`, `credit_limits`, `sales_team`, `default_commission_rate` |
-| Supplier | `gender` |
-| Contact | `gender` |
+| Customer | `credit_limits`, `sales_team`, `default_commission_rate` |
 
 ## Known caveats
 
@@ -88,8 +98,6 @@ re-established before it is relied on.
   because the right sits on the role all such logins hold.
 - Customers' and suppliers' addresses and contacts are shown in full: they are where the
   work is done and who to reach.
-- The reason on a leave request is shown to everyone who reads leave requests, because the
-  person who records the request has to be able to write it.
 - A field a login does not read comes back as zero when it is an amount and as empty
   otherwise. Under a worker's login a zero amount means not shown.
 - The amounts behind those fields are still kept: hours a worker submitted carried their
