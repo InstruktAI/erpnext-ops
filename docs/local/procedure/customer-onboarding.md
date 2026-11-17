@@ -77,11 +77,20 @@ Onboard the owner and the organizer with owner access (`erpnext/spec/owner-acces
 `erpnext/procedure/person-onboarding`). The administrator role stays with the provider's
 own login and the administrative agent login (`erpnext/principle/business-and-system`).
 
-The provider's own login holds every role the site has. Give them as every role that exists
-on the site at that moment, never as a chosen set, and give them again after an application
-is installed on the site or a role is added to it. ERPNext itself withholds the staff roles
-from a login that has no staff record. What stays refused after that is what ERPNext
-reserves to its built-in Administrator login.
+Create the provider's own login on the site under the provider's one address, the same on
+every site, and give it every enabled role of the site that can be given to a login. Read
+those roles from the site at that moment; never choose them. The roles ERPNext assigns by
+itself are not given, and ERPNext withholds the staff roles from a login that has no staff
+record.
+
+With those roles the login may do whatever a role on the site allows. Two kinds of refusal
+remain and are expected: what ERPNext grants to its built-in Administrator login alone, and
+what it grants only to the owner of a record, such as another person's reminder.
+
+The roles are those of the moment they were given, and nothing on the site renews them.
+Whoever installs an application on the site, or adds or enables a role, by whatever path,
+gives the provider's login its roles again and repeats the provider's row of the closing
+test before that work is finished.
 
 Each person receives ERPNext's own link to set a password. Set the lifetime of that link on
 the site long enough for a person who reads mail once a day.
@@ -133,6 +142,8 @@ one test login with owner access. Where the company has workers, have that login
 staff records and create their logins. Under each login make the attempts below and compare
 the outcome with the table. Remove the test logins and everything they created. An outcome
 that differs is corrected and the test repeated before any person of the company starts.
+The provider's row is read from the site's permission rules, changes nothing and creates
+nothing.
 
 | Login | Attempt | Outcome |
 | --- | --- | --- |
@@ -142,7 +153,7 @@ that differs is corrected and the test repeated before any person of the company
 | Owner | Change the company's statement in the system settings | Refused |
 | Owner | Give a login a role, or change another person's login | Refused |
 | Owner | Add a field to a form, a workflow or an integration, or start a bulk import | Refused |
-| Provider | List the kinds of record the provider's own login cannot read, change, add or remove while some role on the site can | Only what ERPNext reserves to its built-in Administrator login |
+| Provider | For every kind of record, compare what the roles of the provider's own login allow with what the site's permission rules allow to any role, and list each difference with the kind of record, the action and why | Every difference is one of the two expected kinds of step 5; none is unexplained |
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
@@ -191,8 +202,11 @@ under their own login and read it back as another.
   set the company's default accounts. Afterwards read the company's defaults and the
   classification of customers, suppliers and stock, and bring the company's statement and
   its getting-started tasks in line.
-- **The provider's own login is refused something.** Give it every role the site has again
-  (step 5) and repeat the provider's row of the closing test.
+- **The provider's own login is refused something.** Read which permission rule allows the
+  act. Where a role the login does not hold allows it, give the login its roles again
+  (step 5) and repeat the provider's row of the closing test. Where only the built-in
+  Administrator login or the record's owner is allowed, the refusal is one of the two
+  expected kinds of step 5.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Rename the login to the right address and send a new
