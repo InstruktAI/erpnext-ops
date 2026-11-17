@@ -83,11 +83,16 @@ those roles from the site at that moment; never choose them. The roles ERPNext a
 itself are not given, and ERPNext withholds the staff roles from a login that has no staff
 record.
 
-With those roles the login may do whatever one of its roles allows. Three kinds of refusal
-remain and are expected: what ERPNext grants to its built-in Administrator login alone, what
-it grants only to the owner of a record, such as another person's reminder, and what it
-grants only to a staff role withheld from this login. An act that no permission rule of the
-site allows to any role is refused to this login as to every other.
+With those roles the login holds every right that a permission rule of the site gives to a
+role it can hold. The comparison of step 9 still shows differences of three kinds, and they
+are expected: a rule for the built-in Administrator login alone, a rule that holds only for
+the owner of a record, such as another person's reminder, and a rule for a staff role
+withheld from this login.
+
+A difference in the rules is not yet a refusal, and a rule is not yet a right. ERPNext
+decides some acts by a check of their own, which allows an act without a rule, as for
+exporting and importing under the administrator role, or refuses it despite one, as for a
+notification addressed to someone else.
 
 The roles are those of the moment they were given, and nothing on the site renews them.
 Whoever installs an application on the site, or adds or enables a role, by whatever path,
@@ -204,11 +209,12 @@ under their own login and read it back as another.
   set the company's default accounts. Afterwards read the company's defaults and the
   classification of customers, suppliers and stock, and bring the company's statement and
   its getting-started tasks in line.
-- **The provider's own login is refused something.** Read which permission rule allows the
-  act. Where a role the login does not hold allows it, give the login its roles again
-  (step 5) and repeat the provider's row of the closing test. Where only the built-in
-  Administrator login, the record's owner or a withheld staff role is allowed, or no rule
-  allows the act to any role, the refusal is expected (step 5).
+- **The provider's own login is refused something.** Read which check refused the act.
+  Where a permission rule gives the right to a role the login does not hold, give the login
+  its roles again (step 5) and repeat the provider's row of the closing test. Where the
+  rule is of an expected kind of step 5, or the act's own check refuses it whatever roles
+  the login holds, no role changes the outcome; report the act with the check that refused
+  it.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Rename the login to the right address and send a new
