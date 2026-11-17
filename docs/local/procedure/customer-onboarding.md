@@ -1,6 +1,6 @@
 ---
-description: Bring a new company from nothing to its people working in their own ERPNext through their own Claude — site, company, people, the plugin for the whole organization, the connector, and the first check with the owner.
-activation_trigger: Use when a new company is to be onboarded, when an onboarded company adds people or needs the plugin or the connector set up, or to find where a step of an onboarding stands.
+description: Add a company — the intake the provider answers, what each answer leads to, the setup of site, access, skill and connector, and the closing test that proves the access before the company's people start.
+activation_trigger: Use when the provider wants to add a company, when an onboarded company's setup is to be brought in line with this procedure, or to find where a step of an onboarding stands.
 ---
 
 # Customer Onboarding — Procedure
@@ -10,65 +10,84 @@ activation_trigger: Use when a new company is to be onboarded, when an onboarded
 A company's people work in the company's own ERPNext by talking to their own Claude. Each
 person acts under their own ERPNext login, the whole organization holds the `erpnext` plugin
 and receives its updates without anyone acting, and the provider holds no seat in the
-company's Claude organization.
+company's Claude organization. What the company is and uses is on record as its facts, and
+its access has been proven by test.
 
 ## Preconditions
 
-- The company's slug and the name of its owner are known, and the owner has confirmed the
-  e-mail address that receives their mail.
+- The provider is present to answer the intake.
 - The company has a Claude organization with an owner.
 - The provider administers the GitHub organization that publishes the plugin.
 
 ## Steps
 
-### 1. Create the site and onboard the company
+### 1. Take the intake
+
+Ask the provider these questions and take the answers as the company's facts.
+
+| Question | Fact |
+| --- | --- |
+| What is the company called, who owns it, who organizes its work, and which e-mail address receives each one's mail? | Name, slug, owner, organizer |
+| In which country does it operate? | Country |
+| Does it have people who do its work and report it themselves? | Has workers |
+| Do its workers read everything about people and jobs, or only their own work? | Workers' reach |
+| Does it work on location? | Works on location |
+| Which document storage does it use, and does it already have a structure there? | Document storage, document mapping |
+| Which messaging app do its people use? | Messaging |
+| Which system issues its legal invoices and carries its statutory books? | Legal invoicing |
+
+### 2. Set up what each answer leads to
+
+| Fact | What it leads to |
+| --- | --- |
+| Has workers | Staff administration is declared for the site; worker access is applied (`erpnext/spec/worker-access`) |
+| Workers' reach | The reach of worker access as that spec states it; a company that wants another reach has it recorded in its facts and applied in place of the spec's table |
+| Works on location | Projects carry a place field; the place is part of a folder's name (`erpnext/policy/documents-convention`) |
+| Document storage, document mapping | Customers and projects carry a link field to their documents folder; the outcome of the document mapping is recorded (`erpnext/policy/documents-convention`) |
+| Legal invoicing in another system | ERPNext's standard chart of accounts; invoices and payments stay closed in the company's statement until how the two systems work together is settled |
+| Legal invoicing in ERPNext | The chart is decided with the company's accountant (`local/projects/erpnext-ops/policy/chart-before-booking`) |
+
+### 3. Create the site and the company
 
 Create the company's site through the deployment that hosts ERPNext
-(`apps/procedure/erpnext/create-site`), then onboard the company on it
-(`erpnext/procedure/company-onboarding`). Where another system carries the company's
-statutory books, choose ERPNext's standard chart of accounts for the company. Declare the
-applications the company needs beyond ERPNext itself, such as staff administration, in the
-same site declaration.
+(`apps/procedure/erpnext/create-site`), with the applications step 2 calls for in the same
+site declaration, then onboard the company on it (`erpnext/procedure/company-onboarding`).
 
 Read the chart of accounts the setup created before anything else depends on it: have
 ERPNext accept its customer and supplier accounts as the company's defaults, and read how
 it classifies customers, suppliers and stock. A chart that fails either is replaced before
 the first booking (`local/projects/erpnext-ops/policy/chart-before-booking`).
 
-### 2. State how the company works and what is ready
+### 4. Record the company's facts and statement
 
-Write the company's own statement: what it does, how its people work, which parts of the
-business are ready in ERPNext and which are not yet. Store it in the site setting that
-ERPNext hands to every connecting agent. End the statement with where it is kept, the
-agent instructions field of the site's system settings, and with who changes it: the
-provider, on a wish that a person's own Claude records as a to-do assigned to the provider
-(`general/principle/priming`).
-
-Establish the company's document mapping and record its outcome
-(`erpnext/policy/documents-convention`). Give customers and projects a link field to their
-documents folder, and projects a place field where the company works on location.
+Write the company's own statement: what it does, how its people work, its facts from the
+intake, which parts of the business are ready in ERPNext and which are not yet. Store it in
+the site setting that ERPNext hands to every connecting agent. End the statement with where
+it is kept, the agent instructions field of the site's system settings, and with who
+changes it: the provider, on a wish that a person's own Claude records as a to-do assigned
+to the provider (`general/principle/priming`).
 
 Create the company's getting-started project in ERPNext with one open task per step still
 ahead, in order (`erpnext/procedure/orient-a-person`).
 
-### 3. Give the people their logins
+### 5. Give the people their access
 
-Onboard the owner first, then the other people (`erpnext/procedure/person-onboarding`). Each
-receives ERPNext's own link to set a password. Set the lifetime of that link on the site
-long enough for a person who reads mail once a day.
+Onboard the owner and the organizer with owner access (`erpnext/spec/owner-access`,
+`erpnext/procedure/person-onboarding`). The administrator role stays with the provider's
+own login and the administrative agent login (`erpnext/principle/business-and-system`).
 
-Give the owner and the organizer owner access (`erpnext/spec/owner-access`). The
-administrator role stays with the provider's own login and the administrative agent login
-(`erpnext/principle/business-and-system`).
+Each person receives ERPNext's own link to set a password. Set the lifetime of that link on
+the site long enough for a person who reads mail once a day.
 
-Where the company's mandate gives its workers that reach, apply worker access on the site
-and to each worker's login (`erpnext/spec/worker-access`).
+Apply each access by its specification's table. The means are the agent's own; what counts
+is the closing test of step 9.
 
-### 4. Give the organization the plugin
+### 6. Give the organization the plugin
 
 Each company has its own small private catalog repository in the provider's GitHub
-organization, named for the company. It holds the catalog file that lists the `erpnext` plugin from this repository at a released
-version, and the updater that moves that version to the latest release.
+organization, named for the company. It holds the catalog file that lists the `erpnext`
+plugin from this repository at a released version, and the updater that moves that version
+to the latest release.
 
 Create the company's catalog by copying an existing one. Have the owner confirm their
 GitHub account name, then invite that account to the catalog with administrator rights.
@@ -77,26 +96,46 @@ The owner then connects the catalog once, in the Claude organization's settings 
 plugins and skills: sync from GitHub, the company's catalog repository, automatic sync on,
 and the plugin's default access set to installed for everyone. Those settings are the
 organization's admin pages on the web; a person's own plugin screen, which is all the
-mobile app shows, installs for that person only. Where the dialog asks for
-the Claude GitHub App on the repository, the provider approves it in the GitHub
-organization.
+mobile app shows, installs for that person only. Where the dialog asks for the Claude
+GitHub App on the repository, the provider approves it in the GitHub organization.
 
 After a release of the plugin, start each catalog's updater; it also runs on its own
 schedule.
 
-### 5. Connect ERPNext
+### 7. Connect ERPNext
 
 The owner adds the company's site as a custom connector for the organization, with the
 address of the site's MCP endpoint. Each person then connects it once and signs in with
 their own ERPNext login.
 
-### 6. Set the model
+### 8. Set the model
 
 Tell the company's people which model to use for this work and have the owner set it
 where the organization's settings offer the choice
 (`local/projects/erpnext-ops/policy/model-floor`).
 
-### 7. Check with the owner
+### 9. Prove the access
+
+Create one test login with owner access and, where the company has workers, two with worker
+access, each with a staff record. Under each login make the attempts below and compare the
+outcome with the table. Remove the test logins and everything they created. An outcome that
+differs is corrected and the test repeated before any person of the company starts.
+
+| Login | Attempt | Outcome |
+| --- | --- | --- |
+| Owner | Add a customer, a material, a stock location and a project | Allowed |
+| Owner | Change a setting of a business area and add a tax category | Allowed |
+| Owner | Change the company's statement in the system settings | Refused |
+| Owner | Give a login a role | Refused |
+| Worker | Record and submit own hours on a project | Allowed |
+| Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
+| Worker | Record a material entry as a draft | Allowed |
+| Worker | Change or cancel another worker's hours, or change another worker's draft | Refused |
+| Worker | Submit a material entry | Refused |
+| Worker | Read an invoice, a payment or a ledger entry | Refused |
+| Worker | Create a project or a task | Refused |
+
+### 10. Check with the owner
 
 With the owner present, ask their Claude what it can do for them and what comes next. The
 answer names the company's own parts of the business and the next open step, and offers
@@ -105,7 +144,9 @@ under their own login and read it back as another.
 
 ## Outputs
 
-- The company's site, with its company, its people's logins and its statement.
+- The company's site, with its company, its people's logins and its statement holding its
+  facts.
+- Access applied and proven by the closing test.
 - The company's private catalog, connected to its Claude organization with automatic sync.
 - The connector added for the organization and connected by each person.
 - A getting-started project whose open tasks are the steps still ahead.
@@ -140,6 +181,8 @@ under their own login and read it back as another.
 - docs/local/policy/model-floor.md
 - docs/local/policy/chart-before-booking.md
 - docs/local/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md
+- ~/.teleclaude/docs/erpnext/principle/business-and-system.md
+- ~/.teleclaude/docs/erpnext/policy/documents-convention.md
 - ~/.teleclaude/docs/erpnext/procedure/company-onboarding.md
 - ~/.teleclaude/docs/erpnext/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md

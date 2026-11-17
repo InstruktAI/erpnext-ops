@@ -31,6 +31,18 @@ unrestricted they let one worker change another's entries: the `Employee` role, 
 linking a login to a staff record adds, on hours and on leave requests; and the right every
 desk user holds on calendar entries.
 
+The rights on the site, each at the first permission level:
+
+| Role | Record types | Rights |
+| --- | --- | --- |
+| `Worker` | Activity Type, Address, Bin, Contact, Customer, Employee, Item, Project, Stock Entry, Supplier, Task, Timesheet, Warehouse | Read, report, print |
+| `Worker` | Leave Application | Read |
+| `Worker Own Entries` | Timesheet | Read, write, create, submit, cancel, amend, delete, on records the person created |
+| `Worker Own Entries` | Stock Entry | Read, write, create, delete, on records the person created |
+| `Employee` | Timesheet | Read, write, create, on records the person created |
+| `Employee` | Leave Application | Read, write, create, report, print, e-mail, share, on records the person created |
+| `Desk User` | Event | Read, write, create, report, print, e-mail, share, on records the person created |
+
 ## Known caveats
 
 Observed on Frappe 16.56 with ERPNext 16.55. On a site with other versions each is

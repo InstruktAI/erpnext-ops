@@ -21,6 +21,10 @@ ERPNext roles on the person's own login, so ERPNext enforces it whatever an agen
 The reach is built from one thing on the site: the login holds the user and manager roles
 of each business area and does not hold `System Manager`.
 
+| The login holds |
+| --- |
+| `Accounts Manager`, `Accounts User`, `HR Manager`, `HR User`, `Item Manager`, `Maintenance Manager`, `Maintenance User`, `Projects Manager`, `Projects User`, `Purchase Manager`, `Purchase Master Manager`, `Purchase User`, `Sales Manager`, `Sales Master Manager`, `Sales User`, `Stock Manager`, `Stock User`, `Support Team` |
+
 ## Known caveats
 
 Observed on Frappe 16.56 with ERPNext 16.55 and its HR application 16.53. On a site with
