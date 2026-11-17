@@ -46,8 +46,8 @@ folder for a customer or project by its name alone.
 A name that starts with the record's number stays unique and findable when a customer or
 a project is renamed, and it ties the folder to one record without a lookup.
 
-A company that already has a working structure keeps it: moving its files to another
-layout breaks the links and the habits it runs on. Recording that the convention was
+A company that already has a working structure keeps it: its people know where things
+are, and another layout gives them nothing they asked for. Recording that the convention was
 chosen, as well as that a company's own mapping exists, is what tells a later agent that
 somebody looked. Without it the absence of a mapping reads as permission to lay the
 default over a structure that is already there.
@@ -62,8 +62,7 @@ projects, in any document storage.
 
 ## Enforcement
 
-Reviewers of a company's onboarding look for the recorded outcome. A folder created for a
-company that has no recorded outcome is a defect.
+Reviewers of a company's onboarding look for the recorded outcome.
 
 ## Exceptions
 
