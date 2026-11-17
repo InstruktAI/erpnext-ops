@@ -160,7 +160,7 @@ nothing.
 | Owner | Change the company's statement in the system settings | Refused |
 | Owner | Give a login a role, or change another person's login | Refused |
 | Owner | Add a field to a form, a workflow or an integration, or start a bulk import | Refused |
-| Provider | For every kind of record, compare what the roles of the provider's own login allow with what the site's permission rules allow to any role, and list each difference with the kind of record, the action and why | Every difference is one of the expected kinds of step 5; none is unexplained |
+| Provider | For every kind of record, compare what the roles of the provider's own login allow with what the site's permission rules allow to any enabled role, and list each difference with the kind of record, the action and why | Every difference is one of the expected kinds of step 5; none is unexplained |
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
