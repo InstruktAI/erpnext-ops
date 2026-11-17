@@ -85,10 +85,15 @@ is the closing test of step 9.
 
 ### 6. Give the organization the plugin
 
-Each company has its own private repository in the provider's GitHub organization, named
-`company-<name>`. It is the company's home and the catalog its Claude organization reads:
-its catalog file lists the `erpnext` plugin from this repository at a released version, and
-its updater moves that version to the latest release.
+Each company has one private repository in the provider's GitHub organization, named
+`company-<name>`. It is the company's home, where what the company keeps as its own
+knowledge goes, and the catalog its Claude organization reads. Its catalog file lists the
+`erpnext` plugin from this repository at a released version, and its updater moves that
+version to the latest release.
+
+A company's own skill is a folder in the same repository, listed in the catalog file by its
+path. This procedure creates no skill for the company; until the company has one, its
+catalog lists the `erpnext` plugin alone.
 
 Create the company's repository by copying an existing one. Have the owner confirm their
 GitHub account name, then invite that account to the repository with administrator rights.
