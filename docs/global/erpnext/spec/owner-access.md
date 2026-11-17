@@ -26,8 +26,9 @@ of each business area and does not hold `System Manager`.
 Observed on Frappe 16.56 with ERPNext 16.55 and its HR application 16.53. On a site with
 other versions each is re-established before it is relied on.
 
-- ERPNext lets only `System Manager` create a login. A login with owner access adds a
-  staff record and asks the system administrator for the person's login.
+- The rights shipped for the login record type give only `System Manager` the right to
+  create one. A login with owner access adds a staff record and asks the system
+  administrator for the person's login.
 - Daily work that posts to the books goes through under this reach: a login with it
   submitted and cancelled a stock movement and drafted an invoice with a tax template.
 
@@ -36,3 +37,4 @@ other versions each is re-established before it is relied on.
 - ~/.teleclaude/docs/erpnext/principle/business-and-system.md
 - ~/.teleclaude/docs/erpnext/procedure/person-onboarding.md
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md
+- https://github.com/frappe/frappe/blob/v16.56.0/frappe/core/doctype/user/user.json

@@ -80,11 +80,11 @@ description: Disciplines for agents acting on ERPNext site data through the site
   credentials are reserved for documented administrative setup.
 - **The business is the company's, the system is its administrator's.** A person's agent
   carries out what that person asks about their own business, its configuration included,
-  within what their login allows. The system itself changes under administrator authority:
-  the company's statement, the kinds of access, forms and fields, workflows, print layouts,
-  integrations and system-wide settings (`erpnext/principle/business-and-system`). Asked for
-  such a change under another login, or refused one by ERPNext, the agent records the wish
-  as a to-do assigned to the system administrator and tells the person it is with them.
+  within what their login allows. The system itself, such as the company's statement and
+  the shape of its forms, changes under administrator authority
+  (`erpnext/principle/business-and-system`). Asked for such a change under another login,
+  or refused one by ERPNext, the agent records the wish as a to-do assigned to the system
+  administrator and tells the person it is with them.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.

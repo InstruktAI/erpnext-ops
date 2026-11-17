@@ -45,8 +45,8 @@ left to an agent's judgment in a conversation.
   administrator opens that act to the company's people.
 - An agent working under a company login that is asked for a change to the system records
   the wish for the administrator (`erpnext/policy/operating-disciplines`).
-- A company's own configuration is changed by its people with the care every write gets:
-  the intended change stated, written, and read back.
+- A company's own configuration is changed by its people with the care every write gets
+  (`erpnext/policy/operating-disciplines`).
 
 ## Tensions
 
