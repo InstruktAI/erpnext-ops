@@ -29,17 +29,11 @@ companies of the business group, scope the user to the intended company's data.
 
 Where the company's own access mandate gives the people who report their work on site
 this reach, such a person receives worker access. The company's owner or organizer adds the
-person's staff record and creates the login from it; that login holds worker access without
-anything further being assigned (`erpnext/spec/worker-access`).
+person (`erpnext/procedure/add-a-person`); the login created that way holds worker access
+without anything further being assigned (`erpnext/spec/worker-access`).
 
 The company's owner and its organizer receive owner access: the business roles without the
 administrator role (`erpnext/spec/owner-access`).
-
-Ask the person who should be called if something happens to them, and record the answer as
-their emergency contact. Where the company works on location, also ask whether there is
-anything about their health that their colleagues should be able to tell a medic, such as an
-allergy, a condition or their blood type, and record only what they want their colleagues to
-know (`erpnext/spec/worker-access`).
 
 ### 3. Send the login email
 

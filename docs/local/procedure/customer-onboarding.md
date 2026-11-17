@@ -42,8 +42,8 @@ Ask the provider these questions and take the answers as the company's facts.
 | Name, slug, owner, organizer | The site's name and the company on it (step 3); the two logins with owner access (step 5) |
 | Country | The country, currency and formats the site is set up with (step 3) |
 | Has workers | Staff administration is declared for the site; worker access is applied (`erpnext/spec/worker-access`) |
-| Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`); each new person is asked what their colleagues should be able to tell a medic (`erpnext/procedure/person-onboarding`) |
-| Messaging | Recorded as a fact; nothing is set up from it |
+| Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`); each new person is asked what their colleagues should be able to tell a medic (`erpnext/procedure/add-a-person`) |
+| Messaging | Recorded as a fact. Where the company's people are to reach the agent in Slack, a Slack app named `Agent` is created in the company's workspace, connected through the company's home, and invited to each channel where people address it; the steps are those of the Slack connector's specification |
 | Document storage, document mapping | Customers and projects carry a link field to their documents folder; the outcome of the document mapping is recorded (`erpnext/policy/documents-convention`) |
 | Legal invoicing in another system | ERPNext's standard chart of accounts; invoices and payments stay closed in the company's statement until how the two systems work together is settled |
 | Legal invoicing in ERPNext | The chart is decided with the company's accountant (`local/projects/erpnext-ops/policy/chart-before-booking`) |
@@ -196,5 +196,6 @@ under their own login and read it back as another.
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md
 - ~/.teleclaude/docs/erpnext/spec/owner-access.md
 - ~/.teleclaude/docs/erpnext/procedure/orient-a-person.md
+- https://github.com/InstruktAI/instrukt/blob/main/docs/project/spec/feature/runner/slack-connector.md
 - https://claude.com/docs/plugins/org-sync
 - https://claude.com/docs/plugins/admin
