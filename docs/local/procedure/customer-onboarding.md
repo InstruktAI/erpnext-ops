@@ -85,16 +85,16 @@ is the closing test of step 9.
 
 ### 6. Give the organization the plugin
 
-Each company has its own small private catalog repository in the provider's GitHub
-organization, named for the company. It holds the catalog file that lists the `erpnext`
-plugin from this repository at a released version, and the updater that moves that version
-to the latest release.
+Each company has its own private repository in the provider's GitHub organization, named
+`company-<name>`. It is the company's home and the catalog its Claude organization reads:
+its catalog file lists the `erpnext` plugin from this repository at a released version, and
+its updater moves that version to the latest release.
 
-Create the company's catalog by copying an existing one. Have the owner confirm their
-GitHub account name, then invite that account to the catalog with administrator rights.
+Create the company's repository by copying an existing one. Have the owner confirm their
+GitHub account name, then invite that account to the repository with administrator rights.
 
 The owner then connects the catalog once, in the Claude organization's settings for
-plugins and skills: sync from GitHub, the company's catalog repository, automatic sync on,
+plugins and skills: sync from GitHub, the company's repository, automatic sync on,
 and the plugin's default access set to installed for everyone. Those settings are the
 organization's admin pages on the web; a person's own plugin screen, which is all the
 mobile app shows, installs for that person only. Where the dialog asks for the Claude

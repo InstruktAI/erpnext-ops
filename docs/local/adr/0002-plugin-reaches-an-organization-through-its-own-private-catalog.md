@@ -77,6 +77,13 @@ Given up or newly owed:
 - **The owner uploads the plugin file.** Organization-wide at once and needs no GitHub,
   but every release needs another upload.
 
+## Status
+
+Amended on 2026-11-17: the private repository an organization reads is the company's own
+repository, which is also its home and holds the company's own skill beside the catalog's
+entry for the shared plugin. That each company's organization reads its own private
+repository in the provider's GitHub organization stands.
+
 ## See Also
 
 - https://claude.com/docs/plugins/org-sync
