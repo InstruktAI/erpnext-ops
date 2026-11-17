@@ -136,6 +136,8 @@ that differs is corrected and the test repeated before any person of the company
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
+| Worker | Read a colleague's staff record and a material | Shown, without the birth date and without the material's value |
+| Owner | Read the same staff record and material | Shown with both |
 | Worker | Add a calendar entry and record a leave request; another worker reads the leave request | Allowed |
 | Worker | Change, cancel or delete another worker's hours, draft, calendar entry or leave request | Refused |
 | Worker | Submit a material entry, or approve own leave request | Refused |
