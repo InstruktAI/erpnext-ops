@@ -1,5 +1,5 @@
 {
   "name": "erpnext",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Operate a company's ERPNext through the ERPNext connector."
 }
