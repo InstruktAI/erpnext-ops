@@ -77,6 +77,12 @@ Onboard the owner and the organizer with owner access (`erpnext/spec/owner-acces
 `erpnext/procedure/person-onboarding`). The administrator role stays with the provider's
 own login and the administrative agent login (`erpnext/principle/business-and-system`).
 
+The provider's own login holds every role the site has. Give them as every role that exists
+on the site at that moment, never as a chosen set, and give them again after an application
+is installed on the site or a role is added to it. ERPNext itself withholds the staff roles
+from a login that has no staff record. What stays refused after that is what ERPNext
+reserves to its built-in Administrator login.
+
 Each person receives ERPNext's own link to set a password. Set the lifetime of that link on
 the site long enough for a person who reads mail once a day.
 
@@ -136,6 +142,7 @@ that differs is corrected and the test repeated before any person of the company
 | Owner | Change the company's statement in the system settings | Refused |
 | Owner | Give a login a role, or change another person's login | Refused |
 | Owner | Add a field to a form, a workflow or an integration, or start a bulk import | Refused |
+| Provider | List the kinds of record the provider's own login cannot read, change, add or remove while some role on the site can | Only what ERPNext reserves to its built-in Administrator login |
 | Worker | Record and submit own hours on a project, then cancel them | Allowed |
 | Worker | Read another worker's hours, a project, a customer, a material and a stock level | Allowed |
 | Worker | Record a material entry as a draft | Allowed |
@@ -184,6 +191,8 @@ under their own login and read it back as another.
   set the company's default accounts. Afterwards read the company's defaults and the
   classification of customers, suppliers and stock, and bring the company's statement and
   its getting-started tasks in line.
+- **The provider's own login is refused something.** Give it every role the site has again
+  (step 5) and repeat the provider's row of the closing test.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Rename the login to the right address and send a new
