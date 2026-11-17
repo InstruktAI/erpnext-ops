@@ -53,8 +53,8 @@ description: Disciplines for agents acting on ERPNext site data through the site
 
 - **Follow the company's document mapping.** Where a company's documents live and how
   their folders are named follows the mapping the company states about itself. Where it
-  states that it follows the standard, or states nothing, `erpnext/policy/documents-convention`
-  applies.
+  states none of its own, `erpnext/policy/documents-convention` decides, including what
+  comes first when nothing is recorded yet.
 
 ### Native operations
 
