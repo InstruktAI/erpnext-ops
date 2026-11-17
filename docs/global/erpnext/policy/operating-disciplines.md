@@ -49,6 +49,13 @@ description: Disciplines for agents acting on ERPNext site data through the site
   agent establishes which site, user and company it is connected as, so it never relies on a
   company chosen earlier, and never uses a business company to try something out.
 
+### Documents
+
+- **Follow the company's document mapping.** Where a company's documents live and how
+  their folders are named follows the mapping the company states about itself. Where it
+  states that it follows the standard, or states nothing, `erpnext/policy/documents-convention`
+  applies.
+
 ### Native operations
 
 - **Use the site's MCP server.** Agents operate ERPNext through the MCP server the site
@@ -182,3 +189,4 @@ None.
 - ~/.teleclaude/docs/erpnext/spec/agent-surface.md
 - ~/.teleclaude/docs/erpnext/principle/business-and-system.md
 - ~/.teleclaude/docs/erpnext/spec/owner-access.md
+- ~/.teleclaude/docs/erpnext/policy/documents-convention.md

@@ -44,6 +44,10 @@ agent instructions field of the site's system settings, and with who changes it:
 provider, on a wish that a person's own Claude records as a to-do assigned to the provider
 (`general/principle/priming`).
 
+Establish the company's document mapping and record its outcome
+(`erpnext/policy/documents-convention`). Give customers and projects a link field to their
+documents folder, and projects a place field where the company works on location.
+
 Create the company's getting-started project in ERPNext with one open task per step still
 ahead, in order (`erpnext/procedure/orient-a-person`).
 
