@@ -346,6 +346,13 @@ without requiring agents to reconstruct the business from conversation alone.
   agent establishes which site, user and company it is connected as, so it never relies on a
   company chosen earlier, and never uses a business company to try something out.
 
+##### Documents
+
+- **Follow the company's document mapping.** Where a company's documents live and how
+  their folders are named follows the mapping the company states about itself. Where it
+  states none of its own, `erpnext/policy/documents-convention` decides, including what
+  comes first when nothing is recorded yet.
+
 ##### Native operations
 
 - **Use the site's MCP server.** Agents operate ERPNext through the MCP server the site
@@ -474,3 +481,4 @@ None.
 - this skill's SKILL.md
 - references/principle-business-and-system.md
 - references/spec-owner-access.md
+- references/policy-documents-convention.md
