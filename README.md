@@ -12,7 +12,7 @@ operating knowledge in this repository.
 | Path | What it is |
 | --- | --- |
 | `docs/global/erpnext/` | The operating knowledge: principles, rules, and procedures for the things a business does. Invoices and payments, credit notes and refunds, overdue debt, period close, work hours, material taken for a job, absence, getting a person started. |
-| `docs/local/` | How this project itself works: how a new company is onboarded, and which models may do this work. |
+| `docs/local/` | How this project itself works: how ERPNext is set up for a company being onboarded, and which models may do this work. |
 | `skill/` | What goes into the plugin and how: which documents load at once and which on demand. |
 | `tools/` | The builder that turns the documents into a Claude plugin, and the release tasks. |
 | `plugins/erpnext/` | The released plugin, built by CI. Not edited by hand. |

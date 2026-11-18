@@ -1,20 +1,27 @@
 ---
-description: Add a company — the intake the provider answers, what each answer leads to, the setup of site, access, skill and connector, and the closing test that proves the access before the company's people start.
-activation_trigger: Use when the provider wants to add a company, when an onboarded company's setup is to be brought in line with this procedure, or to find where a step of an onboarding stands.
+description: Set ERPNext up for a company being onboarded — the intake ERPNext needs, what each answer leads to, the site, the company's statement, its people's access, the plugin for its Claude organization and the connector, and the closing test that proves the access before the company's people start.
+activation_trigger: Use when a company that works with ERPNext is being onboarded, when an onboarded company's ERPNext setup is to be brought in line with this procedure, or to find where a step of that setup stands.
 ---
 
 # Customer Onboarding — Procedure
 
 ## Goal
 
-A company's people work in the company's own ERPNext by talking to their own Claude. Each
-person acts under their own ERPNext login, the whole organization holds the `erpnext` plugin
-and receives its updates without anyone acting, and the provider holds no seat in the
-company's Claude organization. What the company is and uses is on record as its facts, and
-its access has been proven by test.
+A company's people work in the company's own ERPNext, through their own Claude and
+through the company's agent, each person under their own ERPNext login. The whole
+organization holds the `erpnext` plugin and receives its updates without anyone acting,
+and the provider holds no seat in the company's Claude organization. What the company is
+and uses in ERPNext is on record as its facts, and its access has been proven by test.
+
+The company itself is onboarded by `general/procedure/company-onboarding/overview`: its intake, its
+home on the computer, its knowledge, its messaging connector, its services and the proof
+that a person is answered. That procedure runs this one where the company works with
+ERPNext, before ERPNext is connected as one of the company's services.
 
 ## Preconditions
 
+- The company is being onboarded through `general/procedure/company-onboarding/overview`, whose
+  intake gave the company's name, key, owner and organizer with their email addresses.
 - The provider is present to answer the intake.
 - The company has a Claude organization with an owner.
 - The provider administers the GitHub organization that publishes the plugin.
@@ -23,27 +30,25 @@ its access has been proven by test.
 
 ### 1. Take the intake
 
-Ask the provider these questions and take the answers as the company's facts.
+Ask the provider these questions and take the answers as the company's facts, beside
+those the general intake gave.
 
 | Question | Fact |
 | --- | --- |
-| What is the company called, who owns it, who organizes its work, and which e-mail address receives each one's mail? | Name, slug, owner, organizer |
 | In which country does it operate? | Country |
 | Does it have people who do its work and report it themselves? | Has workers |
 | Does it work on location? | Works on location |
 | Which document storage does it use, and does it already have a structure there? | Document storage, document mapping |
-| Which messaging app do its people use? | Messaging |
 | Which system issues its legal invoices and carries its statutory books? | Legal invoicing |
 
 ### 2. Set up what each answer leads to
 
 | Fact | What it leads to |
 | --- | --- |
-| Name, slug, owner, organizer | The site's name and the company on it (step 3); the two logins with owner access (step 5) |
+| Name, key, owner, organizer (general intake) | The site's name and the company on it (step 3); the two logins with owner access (step 5) |
 | Country | The country, currency and formats the site is set up with (step 3) |
 | Has workers | Staff administration is declared for the site; worker access is applied (`erpnext/spec/worker-access`) |
 | Works on location | Projects carry a place field; where the documents convention applies, the place is part of a folder's name (`erpnext/policy/documents-convention`); each new person is asked what their colleagues should be able to tell a medic (`erpnext/procedure/add-a-person`) |
-| Messaging | Recorded as a fact. Where the company's people are to reach the agent in Slack, a Slack app named `agent`, in lowercase, is created in the company's workspace, connected through the company's home, and invited to each channel where people address it; the steps are those of the Slack connector's specification |
 | Document storage, document mapping | Customers and projects carry a link field to their documents folder; the outcome of the document mapping is recorded (`erpnext/policy/documents-convention`) |
 | Legal invoicing in another system | ERPNext's standard chart of accounts; invoices and payments stay closed in the company's statement until how the two systems work together is settled |
 | Legal invoicing in ERPNext | The chart is decided with the company's accountant (`local/projects/erpnext-ops/policy/chart-before-booking`) |
@@ -121,8 +126,9 @@ A company's own skill is a folder in the same repository, listed in the catalog 
 path. This procedure creates no skill for the company; until the company has one, its
 catalog lists the `erpnext` plugin alone.
 
-Create the company's repository by copying an existing one. Have the owner confirm their
-GitHub account name, then invite that account to the repository with administrator rights.
+Copy the catalog file and its updater from an existing company's repository into the one
+the general onboarding created. Have the owner confirm their GitHub account name, then
+invite that account to the repository with administrator rights.
 
 The owner then connects the catalog once, in the Claude organization's settings for
 plugins and skills: sync from GitHub, the company's repository, automatic sync on,
@@ -136,9 +142,15 @@ schedule.
 
 ### 7. Connect ERPNext
 
-The owner adds the company's site as a custom connector for the organization, with the
-address of the site's MCP endpoint. Each person then connects it once and signs in with
-their own ERPNext login.
+For the people's own Claude, the owner adds the company's site as a custom connector for
+the organization, with the address of the site's MCP endpoint. Each person then connects
+it once and signs in with their own ERPNext login.
+
+For the company's agent, ERPNext is one of the company's services, connected by the
+general onboarding once the site and its people's logins exist: its server is the site's
+MCP endpoint (`local/projects/erpnext-ops/adr/0001-frappe-mcp-server-is-the-erp-agent-surface`),
+and each person signs in there with their own ERPNext login, the account whose email
+address their messaging workspace shows for them.
 
 ### 8. Set the model
 
@@ -243,7 +255,10 @@ under their own login and read it back as another.
 
 - docs/local/policy/model-floor.md
 - docs/local/policy/chart-before-booking.md
+- docs/local/adr/0001-frappe-mcp-server-is-the-erp-agent-surface.md
 - docs/local/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md
+- general/procedure/company-onboarding/overview
+- general/procedure/company-onboarding/service-connection
 - ~/.teleclaude/docs/erpnext/principle/business-and-system.md
 - ~/.teleclaude/docs/erpnext/policy/documents-convention.md
 - ~/.teleclaude/docs/erpnext/procedure/company-onboarding.md
@@ -251,6 +266,5 @@ under their own login and read it back as another.
 - ~/.teleclaude/docs/erpnext/spec/worker-access.md
 - ~/.teleclaude/docs/erpnext/spec/owner-access.md
 - ~/.teleclaude/docs/erpnext/procedure/orient-a-person.md
-- https://github.com/InstruktAI/instrukt/blob/main/docs/project/spec/feature/runner/slack-connector.md
 - https://claude.com/docs/plugins/org-sync
 - https://claude.com/docs/plugins/admin
