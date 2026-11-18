@@ -99,9 +99,9 @@ Whoever installs an application on the site, or adds or enables a role, by whate
 gives the provider's login its roles again and repeats the provider's row of the closing
 test before that work is finished.
 
-Switch off renaming for logins on the site, in the customization of the login form. A
-login's address is how a person is known, also outside ERPNext, and as shipped a person
-can change their own.
+Switch off renaming for logins on the site with a property setter on the document type
+`User`: property `allow_rename`, type `Check`, value `0`. A login's address is how a person
+is known, also outside ERPNext, and as shipped a person can change their own.
 
 Each person receives ERPNext's own link to set a password. Set the lifetime of that link on
 the site long enough for a person who reads mail once a day.
@@ -173,7 +173,7 @@ nothing.
 | Worker | Add a calendar entry and record a leave request; another worker reads the leave request | Allowed |
 | Worker | Change, cancel or delete another worker's hours, draft, calendar entry or leave request | Refused |
 | Worker | Submit a material entry, or approve own leave request | Refused |
-| Worker | Rename own login to another address | Refused |
+| Worker | Rename own login to a valid address that no login holds | Refused, because renaming is switched off |
 | Worker | Read an invoice, a payment or a ledger entry | Refused |
 | Worker | Read a record about another person, such as their attendance | Refused |
 | Worker | Create a project or a task | Refused |
@@ -222,10 +222,14 @@ under their own login and read it back as another.
   it.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
-- **A person's address was wrong.** Where the person has not signed in yet, remove the
-  login and create it again with the right address, from the staff record where it was
-  created from one. Where the login has a history, the provider renames it on the site's
-  host, which the switched-off renaming does not prevent. Then send a new link.
+- **A person's address was wrong.** Read whether the login has anything to keep: a
+  sign-in, work assigned to it, or records that it created or that name it. Where it has
+  nothing to keep, remove it and create it again with the right address. Where a staff
+  record names the login, keep that staff record: clear its link to the login first,
+  remove the login, create the new login from the same staff record, and read back that
+  the staff record names it. Where the login has something to keep, the provider renames
+  it on the site's host with ERPNext's own forced rename, which the switched-off renaming
+  does not prevent. Then send a new link.
 
 ## See Also
 
