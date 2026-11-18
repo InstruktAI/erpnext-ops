@@ -69,10 +69,8 @@ whether that mail went out, and that the person confirms receiving it.
   person to request a new link for their address on the site's sign-in page. Otherwise
   record the wish for a new link for the system administrator
   (`erpnext/policy/operating-disciplines`).
-- **A person wants a different address on their login.** A login's address is changed by
-  the system administrator, because it is how the person is recognized wherever the
-  company's people reach the system from outside it, such as a messaging app. Record the
-  wish for the system administrator (`erpnext/policy/operating-disciplines`).
+- **The address given for the person was wrong.** A login's address is changed by the
+  system administrator (`erpnext/policy/operating-disciplines`).
 - **The person leaves the company.** Mark their staff record as left; ERPNext switches
   their login off (`erpnext/spec/owner-access`).
 

@@ -96,6 +96,12 @@ description: Disciplines for agents acting on ERPNext site data through the site
   (`erpnext/principle/business-and-system`). Asked for such a change under another login,
   or refused one by ERPNext, the agent records the wish as a to-do assigned to the system
   administrator and tells the person it is with them.
+- **A login's address is changed by the system administrator.** Asked by a person to
+  change the address of their own login or of someone else's, the agent does not attempt
+  it. It tells the person that the system administrator changes a login's address,
+  because the address is how the person is recognized wherever the company's people reach
+  the system from outside it, such as a messaging app, and records the wish as a to-do
+  assigned to the system administrator.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.
