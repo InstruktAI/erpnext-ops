@@ -222,15 +222,17 @@ under their own login and read it back as another.
   it.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
-- **A person's address was wrong.** Read whether the login has anything to keep: a
-  sign-in, work assigned to it, or records that it created or that name it. A staff
-  record that names the login does not count; that record is kept either way. Then take
-  exactly one of two ways. Where the login has nothing to keep, remove it and create it
-  again with the right address; where a staff record names it, clear that record's link
-  to the login first, remove the login, create the new login from the same staff record,
-  and read back that the staff record names it. Where the login has anything to keep, do
-  not remove it: the provider renames it on the site's host with ERPNext's own forced
-  rename, which the switched-off renaming does not prevent. Then send a new link.
+- **A person's address was wrong, or changes.** The agent carries this out and keeps the
+  sides in line; it is not left to a person. Read every place that knows the person by
+  the address: the login and the staff record in ERPNext, the person's account in the
+  company's messaging app, and what the company's agent keeps for that person. In ERPNext,
+  under the administrative agent login: set the `allow_rename` property setter on `User`
+  to `1`, rename the login, set it back to `0`, and read back that the setting is `0`,
+  that a rename is refused again, and that the staff record and the work assigned to the
+  person name the new login. Nothing is removed. Change the address on each other side
+  the agent's access reaches, tell the person exactly what only they can change, and
+  finish by reading back that every side holds the same address. Then send a new link
+  where the person has not signed in yet.
 
 ## See Also
 

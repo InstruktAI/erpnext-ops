@@ -96,12 +96,17 @@ description: Disciplines for agents acting on ERPNext site data through the site
   (`erpnext/principle/business-and-system`). Asked for such a change under another login,
   or refused one by ERPNext, the agent records the wish as a to-do assigned to the system
   administrator and tells the person it is with them.
-- **A login's address is changed by the system administrator.** Asked by a person to
-  change the address of their own login or of someone else's, the agent does not attempt
-  it. It tells the person that the system administrator changes a login's address,
-  because the address is how the person is recognized wherever the company's people reach
-  the system from outside it, such as a messaging app, and records the wish as a to-do
-  assigned to the system administrator.
+- **A login's address changes on every side at once.** The address is how a person is
+  recognized by ERPNext and by whatever else the company's people reach it from, such as a
+  messaging app. Whether a person's address changes is the company's owner's or
+  organizer's to say; anyone else who asks is told to ask them. The rename itself ERPNext
+  ties to the right to edit logins, which also sets any login's password, so it is done
+  under administrator authority: asked by an owner or organizer, their agent does not
+  attempt it, records the change as a to-do assigned to the system administrator and
+  tells them it is with them. The agent that carries the change out keeps the sides in
+  line itself: it reads every place that knows the person by the old address, changes
+  each one its access reaches, tells the person exactly what only they can change, and
+  reads back that every side holds the same address.
 - **Preserve business input traces.** Human input that creates, influences, or may later
   justify ERP state is recorded as activity linked to the relevant business object when one
   is known.
