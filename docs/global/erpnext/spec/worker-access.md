@@ -110,10 +110,11 @@ re-established before it is relied on.
 - ERPNext refuses an hours record that overlaps another of the same person.
 - ERPNext refuses a material entry, also as a draft, for a material that has no known
   value.
-- A person can rename their own login to another address that no login holds. This was
-  observed for a login with one ordinary role and no administrative rights. Afterwards
-  only the new login name existed; a token issued before the rename still worked and
-  identified the person by the new name.
+- ERPNext as shipped let a person rename their own login to another address that no login
+  holds. This was observed for a login with one ordinary role and no administrative
+  rights. Afterwards only the new login name existed; a token issued before the rename
+  still worked and identified the person by the new name. With renaming switched off for
+  logins on a site, the same attempt was refused, for an administrator's login too.
 
 ## See Also
 

@@ -99,6 +99,10 @@ Whoever installs an application on the site, or adds or enables a role, by whate
 gives the provider's login its roles again and repeats the provider's row of the closing
 test before that work is finished.
 
+Switch off renaming for logins on the site, in the customization of the login form. A
+login's address is how a person is known, also outside ERPNext, and as shipped a person
+can change their own.
+
 Each person receives ERPNext's own link to set a password. Set the lifetime of that link on
 the site long enough for a person who reads mail once a day.
 
@@ -169,6 +173,7 @@ nothing.
 | Worker | Add a calendar entry and record a leave request; another worker reads the leave request | Allowed |
 | Worker | Change, cancel or delete another worker's hours, draft, calendar entry or leave request | Refused |
 | Worker | Submit a material entry, or approve own leave request | Refused |
+| Worker | Rename own login to another address | Refused |
 | Worker | Read an invoice, a payment or a ledger entry | Refused |
 | Worker | Read a record about another person, such as their attendance | Refused |
 | Worker | Create a project or a task | Refused |
@@ -217,8 +222,10 @@ under their own login and read it back as another.
   it.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
-- **A person's address was wrong.** Rename the login to the right address and send a new
-  link; do not create a second login.
+- **A person's address was wrong.** Where the person has not signed in yet, remove the
+  login and create it again with the right address, from the staff record where it was
+  created from one. Where the login has a history, the provider renames it on the site's
+  host, which the switched-off renaming does not prevent. Then send a new link.
 
 ## See Also
 
