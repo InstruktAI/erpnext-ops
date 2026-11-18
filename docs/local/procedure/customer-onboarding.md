@@ -223,13 +223,14 @@ under their own login and read it back as another.
 - **A password link expired before it was used.** Send a new one after lengthening the
   link's lifetime on the site.
 - **A person's address was wrong.** Read whether the login has anything to keep: a
-  sign-in, work assigned to it, or records that it created or that name it. Where it has
-  nothing to keep, remove it and create it again with the right address. Where a staff
-  record names the login, keep that staff record: clear its link to the login first,
-  remove the login, create the new login from the same staff record, and read back that
-  the staff record names it. Where the login has something to keep, the provider renames
-  it on the site's host with ERPNext's own forced rename, which the switched-off renaming
-  does not prevent. Then send a new link.
+  sign-in, work assigned to it, or records that it created or that name it. A staff
+  record that names the login does not count; that record is kept either way. Then take
+  exactly one of two ways. Where the login has nothing to keep, remove it and create it
+  again with the right address; where a staff record names it, clear that record's link
+  to the login first, remove the login, create the new login from the same staff record,
+  and read back that the staff record names it. Where the login has anything to keep, do
+  not remove it: the provider renames it on the site's host with ERPNext's own forced
+  rename, which the switched-off renaming does not prevent. Then send a new link.
 
 ## See Also
 
