@@ -99,9 +99,9 @@ description: Disciplines for agents acting on ERPNext site data through the site
 - **A login's address changes on every side at once.** The address is how a person is
   recognized by ERPNext and by whatever else the company's people reach it from, such as a
   messaging app. Whether a person's address changes is the company's owner's or
-  organizer's to say; anyone else who asks is told to ask them. The rename itself ERPNext
-  ties to the right to edit logins, which also sets any login's password, so it is done
-  under administrator authority: asked by an owner or organizer, their agent does not
+  organizer's to say; anyone else who asks is told to ask them. ERPNext lets only a system
+  administrator rename another person's login, so the rename is done under administrator
+  authority: asked by an owner or organizer, their agent does not
   attempt it, records the change as a to-do assigned to the system administrator and
   tells them it is with them. The agent that carries the change out keeps the sides in
   line itself: it reads every place that knows the person by the old address, changes

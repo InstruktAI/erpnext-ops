@@ -224,15 +224,20 @@ under their own login and read it back as another.
   link's lifetime on the site.
 - **A person's address was wrong, or changes.** The agent carries this out and keeps the
   sides in line; it is not left to a person. Read every place that knows the person by
-  the address: the login and the staff record in ERPNext, the person's account in the
-  company's messaging app, and what the company's agent keeps for that person. In ERPNext,
-  under the administrative agent login: set the `allow_rename` property setter on `User`
-  to `1`, rename the login, set it back to `0`, and read back that the setting is `0`,
-  that a rename is refused again, and that the staff record and the work assigned to the
-  person name the new login. Nothing is removed. Change the address on each other side
-  the agent's access reaches, tell the person exactly what only they can change, and
-  finish by reading back that every side holds the same address. Then send a new link
-  where the person has not signed in yet.
+  the address: the login and the staff record in ERPNext, and the person's account in the
+  company's messaging app as that app reports it. In ERPNext, under the administrative
+  agent login: set the `allow_rename` property setter on `User` to `1`, rename the login,
+  and set the property setter back to `0`. Set it back whatever the rename did, also after
+  a failure, before anything else; where it cannot be set back, stop, report that
+  renaming is left on, and keep the rename as unfinished work. A rename refused with a
+  database deadlock is repeated. Read back that the setting is `0`, that a rename is
+  refused again, and that the staff record and the work assigned to the person name the
+  new login. Nothing is removed. Then the other sides: change the address where the
+  agent's access reaches it, tell the person exactly what only they can change, and where
+  the company's agent holds a sign-in for the person, have it ended so that the person
+  signs in again under the new address. Finish by reading back that ERPNext and the
+  messaging app hold the same address, and send a new link where the person has not
+  signed in yet.
 
 ## See Also
 
