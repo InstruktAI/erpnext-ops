@@ -1,6 +1,6 @@
 """Build the `erpnext` Claude plugin from the published ERPNext documents.
 
-The documents under docs/global/erpnext are the only source of doctrine. This script renders
+The documents under docs/domain/erpnext are the only source of doctrine. This script renders
 them into one skill: the surface spec, principles and policy inline, procedures and
 concepts as reference files that load on demand. skill/manifest.json says which documents
 go where; skill/preamble.md is the skill's own packaging text.
@@ -17,13 +17,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DOCS = ROOT / "docs" / "global" / "erpnext"
+DOCS = ROOT / "docs" / "domain" / "erpnext"
 SKILL = ROOT / "skill"
 
 MAX_SKILL_LINES = 500
 MAX_DESCRIPTION_CHARS = 1024
 
-DOC_REF = re.compile(r"@?(?:~|/[^\s`]*?)/\.teleclaude/docs/([a-z-]+)/([a-z0-9/_-]+)\.md")
+DOC_LINK = re.compile(r"\[([a-z][a-z0-9-]*)/([a-z0-9/_-]+)\]\([^)\s]+\.md\)")
+BARE_DOC_REF = re.compile(r"^(\s*-\s+)([a-z][a-z0-9-]*)/([a-z0-9/_-]+)(?=\s|$)")
 PLANNED = re.compile(
     r"^<!-- planned:[a-z0-9-]+ -->\n.*?^<!-- /planned:[a-z0-9-]+ -->\n",
     re.MULTILINE | re.DOTALL,
@@ -104,24 +105,62 @@ def split_required_reads(body: str) -> tuple[list[str], str]:
     match = re.search(r"^## Required reads\n(.*?)(?=^## )", body, re.MULTILINE | re.DOTALL)
     if not match:
         return [], body
-    required = [f"{domain}/{rest}" for domain, rest in DOC_REF.findall(match.group(1))]
+    required: list[str] = []
+    for line in match.group(1).splitlines():
+        link = DOC_LINK.search(line)
+        if link:
+            required.append(f"{link.group(1)}/{link.group(2)}")
+            continue
+        bare = BARE_DOC_REF.match(line)
+        if bare:
+            required.append(f"{bare.group(2)}/{bare.group(3)}")
     return required, body[: match.start()] + body[match.end() :]
 
 
-def rewrite_links(body: str, published: set[str], inline: set[str]) -> str:
+def rewrite_links(body: str, published: set[str], inline: set[str], *, in_skill_md: bool = False) -> str:
     """Point document links at the skill's own files and drop links that leave it."""
-    lines = []
+    lines: list[str] = []
+    skip_continuation = False
     for line in body.splitlines():
-        match = DOC_REF.search(line)
+        if skip_continuation:
+            if line.startswith("  ") and not line.lstrip().startswith("- "):
+                continue
+            skip_continuation = False
+        match = DOC_LINK.search(line)
         if match:
             sid = f"{match.group(1)}/{match.group(2)}"
             if sid in inline:
+                if in_skill_md and line.lstrip().startswith("- "):
+                    skip_continuation = True
+                    continue
                 line = line.replace(match.group(0), "this skill's SKILL.md")
             elif sid in published:
                 line = line.replace(match.group(0), f"references/{reference_name(sid)}")
             else:
+                skip_continuation = line.lstrip().startswith("- ")
                 continue
+        else:
+            bare = BARE_DOC_REF.match(line)
+            if bare:
+                sid = f"{bare.group(2)}/{bare.group(3)}"
+                if sid in inline:
+                    if in_skill_md:
+                        skip_continuation = True
+                        continue
+                    line = f"{bare.group(1)}this skill's SKILL.md{line[bare.end() :]}"
+                elif sid in published:
+                    line = f"{bare.group(1)}references/{reference_name(sid)}{line[bare.end() :]}"
+                else:
+                    skip_continuation = True
+                    continue
         lines.append(line)
+    # Drop trailing empty "## See Also" section when all its references were filtered out.
+    while lines and not lines[-1].strip():
+        lines.pop()
+    if lines and lines[-1].strip() == "## See Also":
+        lines.pop()
+        while lines and not lines[-1].strip():
+            lines.pop()
     text = "\n".join(lines) + "\n"
     return re.sub(r"`erpnext/procedure/([a-z0-9-]+)`", r"`\1`", text)
 
@@ -136,8 +175,8 @@ def build(version: str, out: Path) -> None:
 
     snippets: dict[str, tuple[dict[str, str], str]] = {}
     for path in sorted(DOCS.rglob("*.md")):
-        if path.name.startswith("baseline") or path.stem.count("."):
-            continue  # manifests, and companions that carry a snippet's pending rewrite
+        if path.stem.count("."):
+            continue  # companions that carry a snippet's pending rewrite
         meta, body = read_snippet(path)
         if "delivered_by" in meta:
             continue  # not live yet
@@ -181,7 +220,7 @@ def build(version: str, out: Path) -> None:
     )
     for sid in inline:
         _, body = split_required_reads(snippets[sid][1])
-        body = rewrite_links(body, published, set(inline))
+        body = rewrite_links(body, published, set(inline), in_skill_md=True)
         parts.append(
             re.sub(
                 r"^(#+) ",

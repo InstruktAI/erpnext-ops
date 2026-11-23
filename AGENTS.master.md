@@ -1,13 +1,7 @@
-<!-- LOCKED_FILE: DO NOT EDIT. Human-maintained thin wrapper. Knowledge additions/modifications MUST go to the source docs/** snippets, never here. Agents edit only on explicit human override. Rule: general/policy/agent-artifact-governance. -->
-
-# AGENTS.md
+<!-- LOCKED_FILE: edit only when the human explicitly requests this master change. -->
 
 ## Purpose
 
-This file provides guidance to agents working in this project.
+This repository holds the `erpnext` documentation domain (principles, rules, and procedures for operating a company's ERPNext), the builder for its Claude plugin, and the project's onboarding and governance documentation.
 
-## Required reads
-
-- @docs/local/baseline.md
-
-<!-- /LOCKED_FILE -->
+<!-- LOCKED_FILE: edit only when the human explicitly requests this master change. -->

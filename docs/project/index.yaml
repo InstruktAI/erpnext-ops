@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=../../.instrukt/schemas/project-index.schema.json
+expanded:
+  - project/erpnext-ops/principle/business-backend-boundary
+  - project/erpnext-ops/adr/0001-frappe-mcp-server-is-the-erp-agent-surface
+listed:
+  - project/erpnext-ops/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog
+  - project/erpnext-ops/policy/chart-before-booking
+  - project/erpnext-ops/policy/model-floor
+  - project/erpnext-ops/procedure/customer-onboarding

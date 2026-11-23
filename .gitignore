@@ -5,7 +5,7 @@ __pycache__/
 /dist/
 node_modules/
 .teleclaude/
-AGENTS.md
+.instrukt/
 CLAUDE.md
 
 # TeleClaude blessed defaults
@@ -40,8 +40,6 @@ invitations.json.lock
 todos.db
 todos.db-wal
 todos.db-shm
-**/index.yaml
-docs/global/*/domain-baseline-bundle.md
 publications/inbox/*
 !publications/inbox/.gitkeep
 
@@ -55,6 +53,4 @@ _.pid
 _.db
 \*.db-journal
 \*.yml.lock
-\*_/index.yaml
-docs/global/_/domain-baseline-bundle.md
 publications/inbox/\*
