@@ -23,7 +23,7 @@ The catalogue is also the delegation surface. A description states the outcome
 and scope; an activation trigger states when the procedure applies. A coordinator
 selects from this metadata and dispatches the canonical snippet ID with the work
 reference, expected outcome, and relevant constraints. It uses the catalogue's
-`telec docs get <id> --closure` instruction rather than reproducing the body in
+`instrukt docs get <id> --closure` instruction rather than reproducing the body in
 the brief. The worker reads that closure before acting. An agent selecting work
 within its own mandate enters through the same procedure.
 

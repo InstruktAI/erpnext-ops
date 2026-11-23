@@ -121,7 +121,11 @@ def rewrite_links(body: str, published: set[str], inline: set[str], *, in_skill_
     """Point document links at the skill's own files and drop links that leave it."""
     lines: list[str] = []
     skip_continuation = False
+    in_ref_section = False
     for line in body.splitlines():
+        if line.startswith("## "):
+            in_ref_section = line.strip() in {"## Required reads", "## See Also"}
+            skip_continuation = False
         if skip_continuation:
             if line.startswith("  ") and not line.lstrip().startswith("- "):
                 continue
@@ -139,7 +143,7 @@ def rewrite_links(body: str, published: set[str], inline: set[str], *, in_skill_
             else:
                 skip_continuation = line.lstrip().startswith("- ")
                 continue
-        else:
+        elif in_ref_section:
             bare = BARE_DOC_REF.match(line)
             if bare:
                 sid = f"{bare.group(2)}/{bare.group(3)}"

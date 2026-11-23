@@ -24,7 +24,7 @@ to continue under the same mandate.
 
 - The operating site, company scope, and standing mandate or bounded assignment
   are available or resolvable from the entry context and company knowledge.
-- The applicable ERP domain baseline is loaded once for this session.
+- The `erpnext` domain documentation (`instrukt docs get --domain erpnext`) is loaded once for this session.
 - The activation identifies available input or points to the work to inspect.
   An empty queue or absence of new human input does not itself end the mandate.
 
@@ -100,7 +100,7 @@ Record a material priority change with its reason in the work trail.
 For delegation, activate `general/procedure/ai-to-ai-operations`. Select a suitable
 procedure from the self-service ERP catalogue's description and activation condition; read its
 body when needed to resolve scope. Send the native work reference, the canonical
-procedure ID and `telec docs get <id> --closure` instruction, expected outcome,
+procedure ID and `instrukt docs get <id> --closure` instruction, expected outcome,
 business references, and constraints. Record the returned session reference with
 the assignment. Do not reproduce the procedure body or invent a command wrapper.
 For work already assigned to a configured job or event owner, route the relevant
@@ -132,8 +132,7 @@ its own turn output; the platform's parent notification carries attention upward
 
 Update dependent work from the recorded outcome and current business facts.
 Retain or transfer outstanding expectations and select an appropriate configured
-event, session reminder, or periodic check. Apply `general/policy/reminder` before
-arming or cancelling reminders. Yield when no useful action is due; continue the
+event, session reminder, or periodic check. Yield when no useful action is due; continue the
 standing responsibility on its next activation. Review idle workers for reuse or
 closure only after accounting for their obligations and descendants.
 

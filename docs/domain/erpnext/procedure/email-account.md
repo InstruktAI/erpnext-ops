@@ -34,7 +34,7 @@ Both paths also require:
 - The company's expected sending volume, checked against the provider's limits before
   invoices depend on it.
 - The operator runs under the site's `System Manager` authority — the system administrator
-  or the dedicated administrative agent identity (`erpnext/principle/business-and-system`,
+  or the dedicated `agent-admin` identity (`erpnext/principle/business-and-system`,
   `erpnext/spec/owner-access`). Neither a company's owner login nor its routine operator
   identity holds this authority and neither performs this procedure.
 - The company's owner has decided the sender identity, which is a business decision about

@@ -134,8 +134,8 @@ site provisioning; agents operate an already-provisioned site.
   Agent briefs orient responsibility; procedures supply applicable knowledge;
   the site performs operations. The agent determines their order.
 - **Outward integration.** Reflecting ERP state to an external system is the job of an
-  adapter — one kind of company-coupled app in the company `apps/` home
-  (see `general/concept/company-knowledge`), running outside the tenant site. ERP is the
+  adapter — one kind of company-coupled app in the company `apps/` home,
+  running outside the tenant site. ERP is the
   system of record; projections flow one way, never a bidirectional sync into the site.
 
 ## Why
