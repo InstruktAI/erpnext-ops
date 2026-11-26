@@ -15,11 +15,7 @@
     "erpnext/concept/operation-model",
     "erpnext/concept/multi-tenancy",
     "erpnext/procedure/operating-cycle",
-    "erpnext/procedure/company-onboarding",
     "erpnext/procedure/person-onboarding",
-    "erpnext/concept/composable-business-procedures",
-    "erpnext/procedure/create-site",
-    "erpnext/procedure/delete-site",
-    "erpnext/procedure/email-account"
+    "erpnext/concept/composable-business-procedures"
   ]
 }

@@ -6,8 +6,8 @@ description: Give one ERPNext site its own outgoing sender, overriding the bench
 
 ## Required reads
 
-- [erpnext/principle/business-and-system](../principle/business-and-system.md)
-- [erpnext/spec/owner-access](../spec/owner-access.md)
+- [erpnext/principle/business-and-system](../../domain/erpnext/principle/business-and-system.md)
+- [erpnext/spec/owner-access](../../domain/erpnext/spec/owner-access.md)
 
 ## Goal
 
@@ -86,4 +86,4 @@ operation, and the company's operator identity is deliberately powerless here.
 
 ## See Also
 
-- [erpnext/procedure/create-site](create-site.md)
+- [project/erpnext-ops/procedure/create-site](create-site.md)

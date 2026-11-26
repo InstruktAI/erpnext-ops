@@ -12,8 +12,10 @@ description: Add a tenant site to the itsUP-operated ERPNext bench — desired-s
 
 A new Frappe site exists on the ERPNext bench, answers at its FQDN, and its administrator
 bootstrap password is stored in itsUP secrets. Tenancy is site-per-tenant: each tenant gets
-its own site with its own database on the bench's shared MariaDB service
-(`erpnext/concept/multi-tenancy`).
+its own site (`erpnext/concept/multi-tenancy`). One bench — one deployment of the app
+processes and one MariaDB service — hosts every site; each site has its own database and
+its own scoped database user on that service, and the bench resolves the site from the
+request's Host header.
 
 ## Preconditions
 
@@ -78,11 +80,12 @@ project-specific shape:
 ## Discipline
 
 Which sites exist is itsUP desired state and nothing else's. One provisioning service applies
-the declared site file; do not create a service or ingress row per tenant. One admin-password
+the declared site file; do not create a service or ingress row per tenant: a tenant costs a
+database, a site entry and a name on the certificate, never another container. One admin-password
 secret per site is never shared across tenants. Site creation is complete only when the FQDN
 verifiably answers; handing an unverified site to business onboarding wastes the next agent's
 session on infra diagnosis.
 
 ## See Also
 
-- [erpnext/procedure/delete-site](delete-site.md)
+- [project/erpnext-ops/procedure/delete-site](delete-site.md)

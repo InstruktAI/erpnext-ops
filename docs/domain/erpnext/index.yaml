@@ -17,9 +17,7 @@ listed:
   - erpnext/procedure/add-a-person
   - erpnext/procedure/apply-native-operation
   - erpnext/procedure/close-accounting-period
-  - erpnext/procedure/company-onboarding
   - erpnext/procedure/confirm-business-intent
-  - erpnext/procedure/create-site
   - erpnext/procedure/custom-order-to-fulfillment
   - erpnext/procedure/customer-advance-to-invoice
   - erpnext/procedure/customer-credit-and-refund
@@ -27,8 +25,6 @@ listed:
   - erpnext/procedure/customer-invoice-and-payment
   - erpnext/procedure/customer-payment-difference
   - erpnext/procedure/customer-receipt-allocation
-  - erpnext/procedure/delete-site
-  - erpnext/procedure/email-account
   - erpnext/procedure/offer-to-installation
   - erpnext/procedure/operating-cycle
   - erpnext/procedure/orient-a-person

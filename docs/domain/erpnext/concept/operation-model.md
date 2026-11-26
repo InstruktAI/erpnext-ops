@@ -13,7 +13,7 @@ agent context. The global awareness entry is small; the domain baseline and
 procedure bodies are loaded progressively when work enters ERP. Publication does
 not turn every project into an ERP project or grant access to a company's data.
 
-ERPNext sites are remote services on the shared bench. Every agent execution host
+ERPNext sites are remote services. Every agent execution host
 that carries the ERP domain reaches the same sites; the company determines the site,
 and no site, company, or test tenant is bound to a computer. Which company a piece of
 work is for comes from the human's request for business work, and is the sandbox
@@ -107,8 +107,8 @@ published contracts own the mechanics:
 ### ERPNext operating surface
 
 Agents operate ERPNext through the MCP server each per-tenant Frappe site serves. The site
-is the tenant boundary; companies inside a site are legal and accounting scopes. itsUP owns
-site provisioning; agents operate an already-provisioned site.
+is the tenant boundary; companies inside a site are legal and accounting scopes. The
+deployment that hosts ERPNext provisions sites; agents operate an already-provisioned site.
 
 - **Operating surface.** The site's MCP server is the agent-facing surface for metadata,
   resolution, document operations, native methods, activity records, and reports

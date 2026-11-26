@@ -68,6 +68,5 @@ not send passwords or secrets through chat.
 ## See Also
 
 - [erpnext/concept/multi-tenancy](../concept/multi-tenancy.md)
-- [erpnext/procedure/company-onboarding](company-onboarding.md)
 - [erpnext/spec/worker-access](../spec/worker-access.md)
 - [erpnext/spec/owner-access](../spec/owner-access.md)

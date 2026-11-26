@@ -14,7 +14,7 @@ work on that site.
 ## Canonical fields
 
 - **site FQDN** — the site's fully qualified domain name; resolves the tenant and its
-  database on the shared bench.
+  database.
 - **company-slug** — stable kebab-case identity for a company operated on a site, unique in
   the TeleClaude company registry.
 - **Company record** — ERPNext `Company` document inside the site; a legal and accounting
@@ -33,7 +33,7 @@ work on that site.
 
 ## Allowed values
 
-- `site FQDN`: lower-case DNS name routed to the shared bench.
+- `site FQDN`: lower-case DNS name routed to the site.
 - `company-slug`: lower-case kebab-case, unique in the TeleClaude company registry.
 - Credential fields: site base URL, company name, operator API key and secret, and optional
   agent-admin user, API key, and secret. Selecting a privilege whose credentials are absent
@@ -47,8 +47,8 @@ work on that site.
 - An unattended agent names the company whose credential home it uses; platform lineage
   does not select it.
 - Bootstrap `Administrator` credentials never belong in the company credential home; they
-  remain deployment secrets in itsUP. The company credential home may carry only the
-  dedicated agent-admin identity used for explicit administrative operations.
+  remain secrets of the deployment that hosts the site. The company credential home may
+  carry only the dedicated agent-admin identity used for explicit administrative operations.
 - Human ERPNext users are distinct from the site operator identity.
 - Companies sharing one site belong to the same business group and share the site's operator
   identity.
