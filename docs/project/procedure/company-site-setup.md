@@ -40,7 +40,7 @@ verified wizard is skipped, and additional companies on a site are created as or
 
 Confirm the site inherits the bench-wide outgoing sender and prove it with a received test
 message. ERPNext delivers person invitations, password resets, and business correspondence
-through this path, so onboarding does not continue on configuration presence alone. A
+through this path, so the setup does not continue on configuration presence alone. A
 company that supplies its own sender follows `project/erpnext-ops/procedure/email-account`; its
 site-local Email Account overrides the bench-wide fallback. Re-running either verification
 or an already-matching override changes nothing.
@@ -89,8 +89,8 @@ authority.
 People other than the operator receive their logins in customer onboarding
 (`project/erpnext-ops/procedure/customer-onboarding`), through
 `erpnext/procedure/person-onboarding`, which grants each person the roles their company role
-carries. The site's own Getting Started checklist enumerates this same ground; onboarding is
-complete when every one of its steps is satisfied or deliberately skipped.
+carries. This setup is complete when its outputs are read back; the site's own Getting
+Started checklist also lists those logins, which this setup leaves to customer onboarding.
 
 ### 9. Create the dedicated agent-admin user
 
@@ -106,7 +106,7 @@ Generate the dedicated agent-admin user's API key and one-time API secret. Store
 the admin entry in the same owner-readable company credential home as the operator entry,
 including the declared agent-admin user identity. Never copy the bootstrap `Administrator`
 credential into this file. Re-generation is rotation and updates only the agent-admin entry.
-This uses Frappe's native per-user token and role model; onboarding introduces no parallel
+This uses Frappe's native per-user token and role model; the setup introduces no parallel
 authentication or credential-brokering mechanism.
 
 ### 11. Verify both operating identities
@@ -114,7 +114,7 @@ authentication or credential-brokering mechanism.
 Authenticate once with the operator credentials and once with the agent-admin credentials.
 For each, read the live authenticated user, its roles and the company it reaches. Require
 the two identities to differ and the operator to hold no administrator authority. On
-mismatch, missing credentials, or bootstrap `Administrator` authentication, onboarding fails
+mismatch, missing credentials, or bootstrap `Administrator` authentication, the setup fails
 closed before administrative work begins.
 
 ## Outputs
