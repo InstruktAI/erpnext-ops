@@ -6,4 +6,8 @@ listed:
   - project/erpnext-ops/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog
   - project/erpnext-ops/policy/chart-before-booking
   - project/erpnext-ops/policy/model-floor
+  - project/erpnext-ops/procedure/company-site-setup
+  - project/erpnext-ops/procedure/create-site
   - project/erpnext-ops/procedure/customer-onboarding
+  - project/erpnext-ops/procedure/delete-site
+  - project/erpnext-ops/procedure/email-account

@@ -55,9 +55,9 @@ those the general intake gave.
 
 ### 3. Create the site and the company
 
-Create the company's site through the deployment that hosts ERPNext
-(`erpnext/procedure/create-site`), with the applications step 2 calls for in the same
-site declaration, then onboard the company on it (`erpnext/procedure/company-onboarding`).
+Create the company's site (`project/erpnext-ops/procedure/create-site`), with the
+applications step 2 calls for in the same site declaration, then set the company up on it
+(`project/erpnext-ops/procedure/company-site-setup`).
 
 Read the chart of accounts the setup created before anything else depends on it: have
 ERPNext accept its customer and supplier accounts as the company's defaults, and read how
@@ -257,11 +257,12 @@ under their own login and read it back as another.
 - [project/erpnext-ops/policy/chart-before-booking](../policy/chart-before-booking.md)
 - [project/erpnext-ops/adr/0001-frappe-mcp-server-is-the-erp-agent-surface](../adr/0001-frappe-mcp-server-is-the-erp-agent-surface.md)
 - [project/erpnext-ops/adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog](../adr/0002-plugin-reaches-an-organization-through-its-own-private-catalog.md)
+- [project/erpnext-ops/procedure/create-site](create-site.md)
+- [project/erpnext-ops/procedure/company-site-setup](company-site-setup.md)
 - general/procedure/company-onboarding/overview
 - general/procedure/company-onboarding/service-connection
 - [erpnext/principle/business-and-system](../../domain/erpnext/principle/business-and-system.md)
 - [erpnext/policy/documents-convention](../../domain/erpnext/policy/documents-convention.md)
-- [erpnext/procedure/company-onboarding](../../domain/erpnext/procedure/company-onboarding.md)
 - [erpnext/procedure/person-onboarding](../../domain/erpnext/procedure/person-onboarding.md)
 - [erpnext/spec/worker-access](../../domain/erpnext/spec/worker-access.md)
 - [erpnext/spec/owner-access](../../domain/erpnext/spec/owner-access.md)

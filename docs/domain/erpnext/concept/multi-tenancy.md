@@ -1,16 +1,14 @@
 ---
-description: Site-per-tenant ERPNext hosting — Frappe sites as the isolation boundary, companies as accounting scopes inside a site.
+description: Site-per-tenant ERPNext — Frappe sites as the isolation boundary, companies as accounting scopes inside a site, identities scoped to a site.
 ---
 
 # ERP Multi-Tenancy — Concept
 
 ## What
 
-Each tenant runs on its own Frappe site: a dedicated FQDN and a dedicated logical database
-with its own scoped database user on the shared database server. One bench — one deployment
-of the app processes and one MariaDB service — hosts many sites; Frappe resolves the site
-from the request's Host header. itsUP provisions sites (database, files, routing, DNS)
-through GitOps.
+Each tenant runs on its own Frappe site: a dedicated FQDN and a dedicated database that only
+that site's connection reaches. How sites are provisioned and hosted belongs to the
+deployment that runs ERPNext, not to the work done on a site.
 
 The sandbox is a dedicated test tenant: its own site, holding the sandbox company and
 reserved for development and testing. It is not a variant or copy of a business's site,
@@ -36,13 +34,10 @@ Company-based isolation inside one shared site rides on opt-in permission filter
 through shared masters, reports, and link searches, and needs continuous behavioral proof to
 trust. Site-per-tenant makes isolation structural: a site's database connection can only
 reach its own schema, so no ERPNext permission misconfiguration can cross tenants, and a
-leaked operator secret exposes one site rather than the fleet. The marginal cost of a tenant
-is a schema, a site entry, and a DNS route — no additional containers. This mirrors the
-vendor's own production architecture: Frappe Cloud hosts one site per tenant on shared
-benches backed by MariaDB.
+leaked operator secret exposes one site rather than every tenant. This mirrors the vendor's
+own production architecture: Frappe Cloud hosts one site per tenant.
 
 ## See Also
 
-- [erpnext/procedure/company-onboarding](../procedure/company-onboarding.md)
 - [erpnext/procedure/person-onboarding](../procedure/person-onboarding.md)
 - [erpnext/policy/operating-disciplines](../policy/operating-disciplines.md)

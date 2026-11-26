@@ -41,7 +41,7 @@ the host.
 ## Recovery
 
 - **Deletion was a mistake:** recreate the empty site
-  (`erpnext/procedure/create-site`); restoring prior tenant data is outside this
+  (`project/erpnext-ops/procedure/create-site`); restoring prior tenant data is outside this
   procedure.
 - **The reconciler recreated the site:** step 1 was skipped or not committed — remove the
   desired-state entries and re-apply before dropping again.
@@ -55,4 +55,4 @@ desired-state cleanup that keeps the drop from silently reverting.
 
 ## See Also
 
-- [erpnext/procedure/create-site](create-site.md)
+- [project/erpnext-ops/procedure/create-site](create-site.md)
