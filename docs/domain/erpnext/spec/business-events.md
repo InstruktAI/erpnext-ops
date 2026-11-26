@@ -52,9 +52,7 @@ they do not require another ERP event family or an ERP-owned polling service.
 ### Payload and correlation
 
 Events use the platform's established envelope, occurrence identity, timestamps,
-and routing metadata. The platform contract is discoverable with
-`telec docs get teleclaude/spec/event-vocabulary`; this spec adds no second
-envelope or transport protocol.
+and routing metadata; this spec adds no second envelope or transport protocol.
 
 The ERP payload supplies:
 
@@ -100,4 +98,3 @@ ownership remains distinct from self-service procedure selection.
 - [erpnext/principle/business-input-traceability](../principle/business-input-traceability.md)
 - [erpnext/concept/operating-state](../concept/operating-state.md)
 - [erpnext/spec/feature/erp-operations/business-event-mapping](feature/erp-operations/business-event-mapping.md)
-- sdlc/policy/domain-ownership

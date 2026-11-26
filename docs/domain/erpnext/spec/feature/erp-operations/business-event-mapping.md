@@ -196,5 +196,4 @@ Then it emits no generic business-record-change event for a subscribed agent
 - [erpnext/spec/business-events](../../business-events.md)
 - [erpnext/principle/operational-attention](../../../principle/operational-attention.md)
 - [erpnext/concept/operation-model](../../../concept/operation-model.md)
-- sdlc/policy/domain-ownership
 - https://docs.frappe.io/framework/user/en/guides/integration/webhooks
